@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { movePostToTrashAction } from "./actions";
+import { movePostToTrashAction, restorePostAction } from "./actions";
 import { listAdminPosts } from "@/lib/admin/posts";
 
 type AdminPostsPageProps = {
@@ -11,6 +11,7 @@ type AdminPostsPageProps = {
     created?: string;
     updated?: string;
     trashed?: string;
+    restored?: string;
     error?: string;
   }>;
 };
@@ -32,7 +33,7 @@ export default async function AdminPostsPage({
   params,
   searchParams,
 }: AdminPostsPageProps) {
-  const [{ adminPath }, { created, updated, trashed, error }] = await Promise.all([
+  const [{ adminPath }, { created, updated, trashed, restored, error }] = await Promise.all([
     params,
     searchParams,
   ]);
@@ -77,9 +78,21 @@ export default async function AdminPostsPage({
         </p>
       ) : null}
 
+      {restored === "1" ? (
+        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200">
+          文章已恢复为草稿。
+        </p>
+      ) : null}
+
       {error === "trash_failed" ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
           移入回收站失败，请稍后重试。
+        </p>
+      ) : null}
+
+      {error === "restore_failed" ? (
+        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
+          恢复文章失败，请稍后重试。
         </p>
       ) : null}
 
@@ -121,7 +134,18 @@ export default async function AdminPostsPage({
                     <td className="px-4 py-3">{post.updatedAt.toLocaleString()}</td>
                     <td className="px-4 py-3">{post.publishedAt ? post.publishedAt.toLocaleString() : "—"}</td>
                     <td className="px-4 py-3 text-right">
-                      {post.status !== "trash" ? (
+                      {post.status === "trash" ? (
+                        <form action={restorePostAction} className="inline-flex">
+                          <input type="hidden" name="adminPath" value={adminPath} />
+                          <input type="hidden" name="postId" value={post.id} />
+                          <button
+                            className="inline-flex items-center justify-center rounded-lg border border-emerald-300 px-3 py-2 text-xs font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+                            type="submit"
+                          >
+                            恢复为草稿
+                          </button>
+                        </form>
+                      ) : (
                         <form action={movePostToTrashAction} className="inline-flex">
                           <input type="hidden" name="adminPath" value={adminPath} />
                           <input type="hidden" name="postId" value={post.id} />
@@ -132,8 +156,6 @@ export default async function AdminPostsPage({
                             移入回收站
                           </button>
                         </form>
-                      ) : (
-                        <span className="text-xs text-slate-400">已在回收站</span>
                       )}
                     </td>
                   </tr>

@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import {
   createAdminPost,
   moveAdminPostToTrash,
+  restoreAdminPostFromTrash,
   updateAdminPost,
   type CreateAdminPostResult,
   type UpdateAdminPostResult,
@@ -136,4 +137,30 @@ export async function movePostToTrashAction(formData: FormData): Promise<void> {
   }
 
   redirect(`/${effectiveAdminPath}/posts?trashed=1`);
+}
+
+export async function restorePostAction(formData: FormData): Promise<void> {
+  const adminPath = String(formData.get("adminPath") ?? "");
+  const configuredAdminPath = await getAdminPath();
+  const effectiveAdminPath =
+    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
+  const session = await getAdminSession();
+
+  if (!session.isAuthenticated) {
+    redirect(
+      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/posts`)}`,
+    );
+  }
+
+  const postId = Number.parseInt(String(formData.get("postId") ?? ""), 10);
+  const result = await restoreAdminPostFromTrash(postId);
+
+  revalidatePath(`/${effectiveAdminPath}/posts`);
+  revalidatePath(`/${effectiveAdminPath}/posts/${postId}`);
+
+  if (!result.success) {
+    redirect(`/${effectiveAdminPath}/posts?error=restore_failed`);
+  }
+
+  redirect(`/${effectiveAdminPath}/posts?restored=1`);
 }

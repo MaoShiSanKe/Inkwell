@@ -9,7 +9,7 @@ import {
   listPostTagOptions,
 } from "@/lib/admin/posts";
 
-import { movePostToTrashAction } from "../actions";
+import { movePostToTrashAction, restorePostAction } from "../actions";
 
 type AdminPostEditPageProps = {
   params: Promise<{
@@ -67,7 +67,18 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
         initialValues={post.values}
       />
 
-      {post.currentStatus !== "trash" ? (
+      {post.currentStatus === "trash" ? (
+        <form action={restorePostAction} className="flex justify-end">
+          <input type="hidden" name="adminPath" value={adminPath} />
+          <input type="hidden" name="postId" value={post.id} />
+          <button
+            className="inline-flex items-center justify-center rounded-lg border border-emerald-300 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/40"
+            type="submit"
+          >
+            恢复为草稿
+          </button>
+        </form>
+      ) : (
         <form action={movePostToTrashAction} className="flex justify-end">
           <input type="hidden" name="adminPath" value={adminPath} />
           <input type="hidden" name="postId" value={post.id} />
@@ -78,7 +89,7 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
             移入回收站
           </button>
         </form>
-      ) : null}
+      )}
     </main>
   );
 }

@@ -95,6 +95,16 @@ export type MoveAdminPostToTrashResult =
       error: string;
     };
 
+export type RestoreAdminPostResult =
+  | {
+      success: true;
+      postId: number;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
 export type AdminPostEditorData = {
   id: number;
   currentStatus: "draft" | "published" | "scheduled" | "trash";
@@ -642,6 +652,85 @@ export async function moveAdminPostToTrash(
     return {
       success: false,
       error: error instanceof Error ? error.message : "移入回收站失败。",
+    };
+  }
+}
+
+export async function restoreAdminPostFromTrash(
+  postId: number,
+): Promise<RestoreAdminPostResult> {
+  const session = await requireAdminSession();
+
+  if (!session) {
+    return {
+      success: false,
+      error: "当前会话无效，请重新登录。",
+    };
+  }
+
+  if (!Number.isInteger(postId) || postId <= 0) {
+    return {
+      success: false,
+      error: "文章不存在。",
+    };
+  }
+
+  const [existingPost] = await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      excerpt: posts.excerpt,
+      content: posts.content,
+      status: posts.status,
+    })
+    .from(posts)
+    .where(eq(posts.id, postId))
+    .limit(1);
+
+  if (!existingPost) {
+    return {
+      success: false,
+      error: "文章不存在。",
+    };
+  }
+
+  if (existingPost.status !== "trash") {
+    return {
+      success: true,
+      postId,
+    };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(posts)
+        .set({
+          status: "draft",
+          publishedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(posts.id, postId));
+
+      await tx.insert(postRevisions).values({
+        postId,
+        editorId: session.userId,
+        title: existingPost.title,
+        excerpt: existingPost.excerpt,
+        content: existingPost.content,
+        status: "draft",
+        reason: "restored from trash",
+      });
+    });
+
+    return {
+      success: true,
+      postId,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "恢复文章失败。",
     };
   }
 }
