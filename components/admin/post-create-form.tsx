@@ -2,9 +2,8 @@
 
 import { useActionState } from "react";
 
-import { initialPostFormState } from "@/lib/admin/post-form";
-
 import { createPostAction } from "@/app/(admin)/[adminPath]/(protected)/posts/actions";
+import { initialCreatePostState } from "@/app/(admin)/[adminPath]/(protected)/posts/form-state";
 
 type PostCategoryOption = {
   id: number;
@@ -18,13 +17,16 @@ type PostCreateFormProps = {
 };
 
 export function PostCreateForm({ adminPath, categories }: PostCreateFormProps) {
-  const [state = initialPostFormState, formAction, isPending] = useActionState(
+  const [state = initialCreatePostState, formAction, isPending] = useActionState(
     createPostAction,
-    initialPostFormState,
+    initialCreatePostState,
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
+    <form
+      action={formAction}
+      className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800"
+    >
       <input type="hidden" name="adminPath" value={adminPath} />
 
       {state.errors.form ? (
@@ -42,7 +44,9 @@ export function PostCreateForm({ adminPath, categories }: PostCreateFormProps) {
           defaultValue={state.values.title}
           required
         />
-        {state.errors.title ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.title}</span> : null}
+        {state.errors.title ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.title}</span>
+        ) : null}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -54,7 +58,9 @@ export function PostCreateForm({ adminPath, categories }: PostCreateFormProps) {
           defaultValue={state.values.slug}
           required
         />
-        {state.errors.slug ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.slug}</span> : null}
+        {state.errors.slug ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.slug}</span>
+        ) : null}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -71,7 +77,9 @@ export function PostCreateForm({ adminPath, categories }: PostCreateFormProps) {
             </option>
           ))}
         </select>
-        {state.errors.categoryId ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.categoryId}</span> : null}
+        {state.errors.categoryId ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.categoryId}</span>
+        ) : null}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -91,7 +99,9 @@ export function PostCreateForm({ adminPath, categories }: PostCreateFormProps) {
           defaultValue={state.values.content}
           required
         />
-        {state.errors.content ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.content}</span> : null}
+        {state.errors.content ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.content}</span>
+        ) : null}
       </label>
 
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -104,7 +114,9 @@ export function PostCreateForm({ adminPath, categories }: PostCreateFormProps) {
           <option value="draft">草稿</option>
           <option value="published">立即发布</option>
         </select>
-        {state.errors.status ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.status}</span> : null}
+        {state.errors.status ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.status}</span>
+        ) : null}
       </label>
 
       <div className="flex items-center gap-3">
