@@ -7,6 +7,14 @@ export type PostFormValues = {
   status: "draft" | "published";
   tagIds: string[];
   seriesIds: string[];
+  metaTitle: string;
+  metaDescription: string;
+  ogTitle: string;
+  ogDescription: string;
+  canonicalUrl: string;
+  breadcrumbEnabled: boolean;
+  noindex: boolean;
+  nofollow: boolean;
 };
 
 export type PostFormErrors = Partial<Record<keyof PostFormValues | "form", string>>;
@@ -25,6 +33,14 @@ export const initialPostFormValues: PostFormValues = {
   status: "draft",
   tagIds: [],
   seriesIds: [],
+  metaTitle: "",
+  metaDescription: "",
+  ogTitle: "",
+  ogDescription: "",
+  canonicalUrl: "",
+  breadcrumbEnabled: false,
+  noindex: false,
+  nofollow: false,
 };
 
 export const initialPostFormState: PostFormState = {
@@ -42,6 +58,10 @@ export function createPostFormState(
       ...values,
       tagIds: values.tagIds ?? initialPostFormValues.tagIds,
       seriesIds: values.seriesIds ?? initialPostFormValues.seriesIds,
+      breadcrumbEnabled:
+        values.breadcrumbEnabled ?? initialPostFormValues.breadcrumbEnabled,
+      noindex: values.noindex ?? initialPostFormValues.noindex,
+      nofollow: values.nofollow ?? initialPostFormValues.nofollow,
     },
     errors,
   };

@@ -6,6 +6,7 @@ import { getAdminSession, type AdminRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   categories,
+  postMeta,
   postRevisions,
   postSeries,
   posts,
@@ -61,6 +62,14 @@ export type CreateAdminPostInput = {
   status: "draft" | "published";
   tagIds?: string[];
   seriesIds?: string[];
+  metaTitle?: string;
+  metaDescription?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  canonicalUrl?: string;
+  breadcrumbEnabled?: boolean;
+  noindex?: boolean;
+  nofollow?: boolean;
 };
 
 export type CreateAdminPostResult =
@@ -109,6 +118,14 @@ function buildExcerpt(content: string, length: number) {
   return stripHtml(content).slice(0, length).trim();
 }
 
+function normalizeOptionalText(value: string | undefined) {
+  return value?.trim() ?? "";
+}
+
+function normalizeCanonicalUrl(value: string | undefined) {
+  return value?.trim() ?? "";
+}
+
 function getInitialValues(input: CreateAdminPostInput): PostFormValues {
   return {
     title: input.title.trim(),
@@ -119,6 +136,14 @@ function getInitialValues(input: CreateAdminPostInput): PostFormValues {
     status: input.status,
     tagIds: normalizeSelectedIds(input.tagIds),
     seriesIds: normalizeSelectedIds(input.seriesIds),
+    metaTitle: normalizeOptionalText(input.metaTitle),
+    metaDescription: normalizeOptionalText(input.metaDescription),
+    ogTitle: normalizeOptionalText(input.ogTitle),
+    ogDescription: normalizeOptionalText(input.ogDescription),
+    canonicalUrl: normalizeCanonicalUrl(input.canonicalUrl),
+    breadcrumbEnabled: input.breadcrumbEnabled ?? false,
+    noindex: input.noindex ?? false,
+    nofollow: input.nofollow ?? false,
   };
 }
 
@@ -192,7 +217,7 @@ export async function listPostSeriesOptions(): Promise<PostSeriesOption[]> {
 export async function getAdminPostEditorData(
   postId: number,
 ): Promise<AdminPostEditorData | null> {
-  const [[post], tagRows, seriesRows] = await Promise.all([
+  const [[post], tagRows, seriesRows, [meta]] = await Promise.all([
     db
       .select({
         id: posts.id,
@@ -215,6 +240,20 @@ export async function getAdminPostEditorData(
       .from(postSeries)
       .where(eq(postSeries.postId, postId))
       .orderBy(postSeries.orderIndex),
+    db
+      .select({
+        metaTitle: postMeta.metaTitle,
+        metaDescription: postMeta.metaDescription,
+        ogTitle: postMeta.ogTitle,
+        ogDescription: postMeta.ogDescription,
+        canonicalUrl: postMeta.canonicalUrl,
+        breadcrumbEnabled: postMeta.breadcrumbEnabled,
+        noindex: postMeta.noindex,
+        nofollow: postMeta.nofollow,
+      })
+      .from(postMeta)
+      .where(eq(postMeta.postId, postId))
+      .limit(1),
   ]);
 
   if (!post) {
@@ -232,6 +271,14 @@ export async function getAdminPostEditorData(
       status: post.status === "published" ? "published" : "draft",
       tagIds: tagRows.map((row) => String(row.tagId)),
       seriesIds: seriesRows.map((row) => String(row.seriesId)),
+      metaTitle: meta?.metaTitle ?? "",
+      metaDescription: meta?.metaDescription ?? "",
+      ogTitle: meta?.ogTitle ?? "",
+      ogDescription: meta?.ogDescription ?? "",
+      canonicalUrl: meta?.canonicalUrl ?? "",
+      breadcrumbEnabled: meta?.breadcrumbEnabled ?? false,
+      noindex: meta?.noindex ?? false,
+      nofollow: meta?.nofollow ?? false,
     }).values,
   };
 }
@@ -268,6 +315,7 @@ export async function createAdminPost(
     parsedSeriesIds,
     resolvedExcerpt,
     publishedAt,
+    seo,
   } = validation;
   const now = new Date();
 
@@ -306,6 +354,19 @@ export async function createAdminPost(
           })),
         );
       }
+
+      await tx.insert(postMeta).values({
+        postId: post.id,
+        metaTitle: seo.metaTitle,
+        metaDescription: seo.metaDescription,
+        ogTitle: seo.ogTitle,
+        ogDescription: seo.ogDescription,
+        canonicalUrl: seo.canonicalUrl,
+        breadcrumbEnabled: seo.breadcrumbEnabled,
+        noindex: seo.noindex,
+        nofollow: seo.nofollow,
+        updatedAt: now,
+      });
 
       await tx.insert(postRevisions).values({
         postId: post.id,
@@ -396,6 +457,7 @@ export async function updateAdminPost(
     parsedSeriesIds,
     resolvedExcerpt,
     publishedAt,
+    seo,
   } = validation;
   const now = new Date();
 
@@ -436,6 +498,35 @@ export async function updateAdminPost(
           })),
         );
       }
+
+      await tx
+        .insert(postMeta)
+        .values({
+          postId,
+          metaTitle: seo.metaTitle,
+          metaDescription: seo.metaDescription,
+          ogTitle: seo.ogTitle,
+          ogDescription: seo.ogDescription,
+          canonicalUrl: seo.canonicalUrl,
+          breadcrumbEnabled: seo.breadcrumbEnabled,
+          noindex: seo.noindex,
+          nofollow: seo.nofollow,
+          updatedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: postMeta.postId,
+          set: {
+            metaTitle: seo.metaTitle,
+            metaDescription: seo.metaDescription,
+            ogTitle: seo.ogTitle,
+            ogDescription: seo.ogDescription,
+            canonicalUrl: seo.canonicalUrl,
+            breadcrumbEnabled: seo.breadcrumbEnabled,
+            noindex: seo.noindex,
+            nofollow: seo.nofollow,
+            updatedAt: now,
+          },
+        });
 
       await tx.insert(postRevisions).values({
         postId,
@@ -486,6 +577,26 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
 
   if (values.status !== "draft" && values.status !== "published") {
     errors.status = "仅支持保存草稿或直接发布。";
+  }
+
+  if (values.metaTitle.length > 255) {
+    errors.metaTitle = "Meta Title 不能超过 255 个字符。";
+  }
+
+  if (values.ogTitle.length > 255) {
+    errors.ogTitle = "OG Title 不能超过 255 个字符。";
+  }
+
+  if (values.canonicalUrl) {
+    try {
+      const url = new URL(values.canonicalUrl);
+
+      if (url.protocol !== "http:" && url.protocol !== "https:") {
+        errors.canonicalUrl = "Canonical URL 必须使用 http 或 https。";
+      }
+    } catch {
+      errors.canonicalUrl = "Canonical URL 格式无效。";
+    }
   }
 
   let parsedCategoryId: number | null = null;
@@ -599,6 +710,16 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
     parsedSeriesIds: seriesIds,
     resolvedExcerpt,
     publishedAt,
+    seo: {
+      metaTitle: values.metaTitle || null,
+      metaDescription: values.metaDescription || null,
+      ogTitle: values.ogTitle || null,
+      ogDescription: values.ogDescription || null,
+      canonicalUrl: values.canonicalUrl || null,
+      breadcrumbEnabled: values.breadcrumbEnabled,
+      noindex: values.noindex,
+      nofollow: values.nofollow,
+    },
   };
 }
 

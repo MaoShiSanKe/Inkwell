@@ -45,6 +45,14 @@ export async function createPostAction(
       | "published",
     tagIds: formData.getAll("tagIds").map(String),
     seriesIds: formData.getAll("seriesIds").map(String),
+    metaTitle: String(formData.get("metaTitle") ?? ""),
+    metaDescription: String(formData.get("metaDescription") ?? ""),
+    ogTitle: String(formData.get("ogTitle") ?? ""),
+    ogDescription: String(formData.get("ogDescription") ?? ""),
+    canonicalUrl: String(formData.get("canonicalUrl") ?? ""),
+    breadcrumbEnabled: formData.get("breadcrumbEnabled") === "on",
+    noindex: formData.get("noindex") === "on",
+    nofollow: formData.get("nofollow") === "on",
   })) as CreateAdminPostResult;
 
   if (!result.success) {
@@ -85,6 +93,14 @@ export async function updatePostAction(
       | "published",
     tagIds: formData.getAll("tagIds").map(String),
     seriesIds: formData.getAll("seriesIds").map(String),
+    metaTitle: String(formData.get("metaTitle") ?? ""),
+    metaDescription: String(formData.get("metaDescription") ?? ""),
+    ogTitle: String(formData.get("ogTitle") ?? ""),
+    ogDescription: String(formData.get("ogDescription") ?? ""),
+    canonicalUrl: String(formData.get("canonicalUrl") ?? ""),
+    breadcrumbEnabled: formData.get("breadcrumbEnabled") === "on",
+    noindex: formData.get("noindex") === "on",
+    nofollow: formData.get("nofollow") === "on",
   })) as UpdateAdminPostResult;
 
   if (!result.success) {

@@ -155,6 +155,90 @@ export function PostEditForm({
         ) : null}
       </fieldset>
 
+      <details className="rounded-2xl border border-slate-200 p-4 dark:border-slate-800">
+        <summary className="cursor-pointer text-sm font-semibold text-slate-700 dark:text-slate-200">
+          SEO 设置
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            Meta Title
+            <input
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              type="text"
+              name="metaTitle"
+              defaultValue={state.values.metaTitle}
+              placeholder="用于搜索结果标题，留空则沿用文章标题"
+            />
+            {state.errors.metaTitle ? (
+              <span className="text-sm text-red-600 dark:text-red-300">{state.errors.metaTitle}</span>
+            ) : null}
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            Meta Description
+            <textarea
+              className="min-h-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              name="metaDescription"
+              defaultValue={state.values.metaDescription}
+              placeholder="用于搜索结果摘要，留空则由前台自行决定。"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            OG Title
+            <input
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              type="text"
+              name="ogTitle"
+              defaultValue={state.values.ogTitle}
+              placeholder="用于社交分享标题"
+            />
+            {state.errors.ogTitle ? (
+              <span className="text-sm text-red-600 dark:text-red-300">{state.errors.ogTitle}</span>
+            ) : null}
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            OG Description
+            <textarea
+              className="min-h-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              name="ogDescription"
+              defaultValue={state.values.ogDescription}
+              placeholder="用于社交分享摘要"
+            />
+          </label>
+
+          <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            Canonical URL
+            <input
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              type="url"
+              name="canonicalUrl"
+              defaultValue={state.values.canonicalUrl}
+              placeholder="https://example.com/post"
+            />
+            {state.errors.canonicalUrl ? (
+              <span className="text-sm text-red-600 dark:text-red-300">{state.errors.canonicalUrl}</span>
+            ) : null}
+          </label>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <input type="checkbox" name="breadcrumbEnabled" defaultChecked={state.values.breadcrumbEnabled} />
+              启用面包屑
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <input type="checkbox" name="noindex" defaultChecked={state.values.noindex} />
+              noindex
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              <input type="checkbox" name="nofollow" defaultChecked={state.values.nofollow} />
+              nofollow
+            </label>
+          </div>
+        </div>
+      </details>
+
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
         摘要
         <textarea
