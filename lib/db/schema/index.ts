@@ -6,6 +6,7 @@ import { ipBlacklist } from "./ip-blacklist";
 import { media } from "./media";
 import { postLikes } from "./post-likes";
 import { postMeta } from "./post-meta";
+import { postSlugAliases } from "./post-slug-aliases";
 import { postRevisions } from "./post-revisions";
 import { postSeries } from "./post-series";
 import { posts } from "./posts";
@@ -26,6 +27,7 @@ export * from "./media";
 export * from "./post-likes";
 export * from "./post-meta";
 export * from "./post-revisions";
+export * from "./post-slug-aliases";
 export * from "./post-series";
 export * from "./post-tags";
 export * from "./post-views";
@@ -70,6 +72,7 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   postSeries: many(postSeries),
   comments: many(comments),
   postMeta: one(postMeta),
+  slugAliases: many(postSlugAliases),
   views: many(postViews),
   likes: many(postLikes),
   sitemapEntry: one(sitemapEntries),
@@ -113,6 +116,13 @@ export const postSeriesRelations = relations(postSeries, ({ one }) => ({
   series: one(series, {
     fields: [postSeries.seriesId],
     references: [series.id],
+  }),
+}));
+
+export const postSlugAliasesRelations = relations(postSlugAliases, ({ one }) => ({
+  post: one(posts, {
+    fields: [postSlugAliases.postId],
+    references: [posts.id],
   }),
 }));
 

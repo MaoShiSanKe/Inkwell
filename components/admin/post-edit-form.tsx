@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { updatePostAction } from "@/app/(admin)/[adminPath]/(protected)/posts/actions";
 import { createPostFormState, type PostFormValues } from "@/lib/admin/post-form";
@@ -45,6 +45,11 @@ export function PostEditForm({
     updatePostAction,
     initialState,
   );
+  const initialSlug = initialValues.slug;
+  const currentSlugValue = state.values.slug;
+  const [slugDraft, setSlugDraft] = useState<string | null>(null);
+  const slugValue = slugDraft ?? currentSlugValue;
+  const slugChanged = slugValue !== initialSlug;
 
   return (
     <form
@@ -80,9 +85,43 @@ export function PostEditForm({
           className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
           type="text"
           name="slug"
-          defaultValue={state.values.slug}
+          value={slugValue}
+          onChange={(event) => setSlugDraft(event.target.value)}
           required
+          spellCheck={false}
+          autoCapitalize="none"
+          autoCorrect="off"
+          aria-describedby={slugChanged ? "slug-warning" : "slug-helper"}
         />
+        <span
+          id="slug-helper"
+          className="text-xs font-normal text-slate-500 dark:text-slate-400"
+        >
+          修改 slug 后，旧 slug 会被保留，并永久重定向到当前 slug。历史 slug 不能再被其他文章复用。
+        </span>
+        {slugChanged ? (
+          <div
+            id="slug-warning"
+            role="alert"
+            className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200"
+          >
+            <p className="font-semibold">Slug 变更警告</p>
+            <p className="mt-1">
+              旧地址 <code className="rounded bg-amber-100 px-1 py-0.5 dark:bg-amber-900/60">/post/{initialSlug}</code>
+              将永久跳转到
+              <code className="ml-1 rounded bg-amber-100 px-1 py-0.5 dark:bg-amber-900/60">
+                /post/{slugValue.trim() || "(待输入)"}
+              </code>
+              。
+            </p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5">
+              <li>旧链接会持续可访问，但会直接跳转到最新 slug。</li>
+              <li>历史 slug 会被系统保留，不能再分配给其他文章。</li>
+              <li>如果你手动填写了 Canonical URL，请同步检查是否需要修改。</li>
+            </ul>
+          </div>
+        ) : null}
+
         {state.errors.slug ? (
           <span className="text-sm text-red-600 dark:text-red-300">{state.errors.slug}</span>
         ) : null}

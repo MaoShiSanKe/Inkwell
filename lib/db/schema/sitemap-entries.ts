@@ -1,4 +1,4 @@
-import { index, integer, real, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { index, integer, real, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 import { pgTable } from "drizzle-orm/pg-core";
 
@@ -11,7 +11,7 @@ export const sitemapEntries = pgTable(
     postId: integer("post_id").references(() => posts.id, {
       onDelete: "cascade",
     }),
-    loc: varchar("loc", { length: 255 }).notNull(),
+    loc: text("loc").notNull(),
     changeFreq: varchar("change_freq", { length: 32 }),
     priority: real("priority"),
     lastModifiedAt: timestamp("last_modified_at", { withTimezone: true })

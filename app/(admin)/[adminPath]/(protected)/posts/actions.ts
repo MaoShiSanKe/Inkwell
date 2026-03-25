@@ -20,6 +20,14 @@ import type {
   UpdatePostActionState,
 } from "./form-state";
 
+function revalidateBlogPostPaths(slugs: string[]) {
+  for (const slug of Array.from(
+    new Set(slugs.map((value) => value.trim()).filter(Boolean)),
+  )) {
+    revalidatePath(`/post/${slug}`);
+  }
+}
+
 export async function createPostAction(
   _prevState: CreatePostActionState,
   formData: FormData,
@@ -62,6 +70,7 @@ export async function createPostAction(
   }
 
   revalidatePath(`/${effectiveAdminPath}/posts`);
+  revalidateBlogPostPaths(result.affectedSlugs);
   redirect(`/${effectiveAdminPath}/posts?created=1`);
 }
 
@@ -110,6 +119,7 @@ export async function updatePostAction(
   }
 
   revalidatePath(`/${effectiveAdminPath}/posts`);
+  revalidateBlogPostPaths(result.affectedSlugs);
   redirect(`/${effectiveAdminPath}/posts?updated=1`);
 }
 
@@ -129,13 +139,13 @@ export async function movePostToTrashAction(formData: FormData): Promise<void> {
   const postId = Number.parseInt(String(formData.get("postId") ?? ""), 10);
   const result = await moveAdminPostToTrash(postId);
 
-  revalidatePath(`/${effectiveAdminPath}/posts`);
-  revalidatePath(`/${effectiveAdminPath}/posts/${postId}`);
-
   if (!result.success) {
     redirect(`/${effectiveAdminPath}/posts?error=trash_failed`);
   }
 
+  revalidatePath(`/${effectiveAdminPath}/posts`);
+  revalidatePath(`/${effectiveAdminPath}/posts/${postId}`);
+  revalidateBlogPostPaths(result.affectedSlugs);
   redirect(`/${effectiveAdminPath}/posts?trashed=1`);
 }
 
@@ -155,12 +165,12 @@ export async function restorePostAction(formData: FormData): Promise<void> {
   const postId = Number.parseInt(String(formData.get("postId") ?? ""), 10);
   const result = await restoreAdminPostFromTrash(postId);
 
-  revalidatePath(`/${effectiveAdminPath}/posts`);
-  revalidatePath(`/${effectiveAdminPath}/posts/${postId}`);
-
   if (!result.success) {
     redirect(`/${effectiveAdminPath}/posts?error=restore_failed`);
   }
 
+  revalidatePath(`/${effectiveAdminPath}/posts`);
+  revalidatePath(`/${effectiveAdminPath}/posts/${postId}`);
+  revalidateBlogPostPaths(result.affectedSlugs);
   redirect(`/${effectiveAdminPath}/posts?restored=1`);
 }

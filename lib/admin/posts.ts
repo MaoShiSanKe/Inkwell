@@ -9,9 +9,11 @@ import {
   postMeta,
   postRevisions,
   postSeries,
+  postSlugAliases,
   posts,
   postTags,
   series,
+  sitemapEntries,
   tags,
   users,
 } from "@/lib/db/schema";
@@ -72,11 +74,14 @@ export type CreateAdminPostInput = {
   nofollow?: boolean;
 };
 
+type SuccessfulAdminPostMutation = {
+  success: true;
+  postId: number;
+  affectedSlugs: string[];
+};
+
 export type CreateAdminPostResult =
-  | {
-      success: true;
-      postId: number;
-    }
+  | SuccessfulAdminPostMutation
   | {
       success: false;
       values: PostFormValues;
@@ -86,20 +91,14 @@ export type CreateAdminPostResult =
 export type UpdateAdminPostResult = CreateAdminPostResult;
 
 export type MoveAdminPostToTrashResult =
-  | {
-      success: true;
-      postId: number;
-    }
+  | SuccessfulAdminPostMutation
   | {
       success: false;
       error: string;
     };
 
 export type RestoreAdminPostResult =
-  | {
-      success: true;
-      postId: number;
-    }
+  | SuccessfulAdminPostMutation
   | {
       success: false;
       error: string;
@@ -165,6 +164,57 @@ function getInitialValues(input: CreateAdminPostInput): PostFormValues {
     breadcrumbEnabled: input.breadcrumbEnabled ?? false,
     noindex: input.noindex ?? false,
     nofollow: input.nofollow ?? false,
+  };
+}
+
+function buildPostPath(slug: string) {
+  return `/post/${slug}`;
+}
+
+function collectAffectedSlugs(...slugs: Array<string | null | undefined>) {
+  return Array.from(
+    new Set(slugs.filter((value): value is string => Boolean(value))),
+  );
+}
+
+type DatabaseConstraintError = {
+  code?: string;
+  constraint?: string;
+  constraint_name?: string;
+};
+
+function getUniqueConstraintName(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  const databaseError = error as DatabaseConstraintError;
+
+  if (databaseError.code !== "23505") {
+    return null;
+  }
+
+  return databaseError.constraint_name ?? databaseError.constraint ?? null;
+}
+
+function getPostMutationErrors(
+  error: unknown,
+  fallbackMessage: string,
+): PostFormErrors {
+  const constraintName = getUniqueConstraintName(error);
+
+  if (
+    constraintName === "posts_slug_unique" ||
+    constraintName === "post_slug_aliases_slug_unique" ||
+    constraintName === "sitemap_entries_loc_unique"
+  ) {
+    return {
+      slug: "该 slug 已存在，请更换。",
+    };
+  }
+
+  return {
+    form: fallbackMessage,
   };
 }
 
@@ -400,22 +450,36 @@ export async function createAdminPost(
         reason: "initial create",
       });
 
+      if (values.status === "published") {
+        await tx
+          .insert(sitemapEntries)
+          .values({
+            postId: post.id,
+            loc: buildPostPath(values.slug),
+            lastModifiedAt: now,
+          })
+          .onConflictDoUpdate({
+            target: sitemapEntries.postId,
+            set: {
+              loc: buildPostPath(values.slug),
+              lastModifiedAt: now,
+            },
+          });
+      }
+
       return post;
     });
 
     return {
       success: true,
       postId: insertedPost.id,
+      affectedSlugs: collectAffectedSlugs(values.slug),
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "创建文章失败。";
-
     return {
       success: false,
       values,
-      errors: {
-        form: message,
-      },
+      errors: getPostMutationErrors(error, "创建文章失败，请重试。"),
     };
   }
 }
@@ -447,7 +511,10 @@ export async function updateAdminPost(
   }
 
   const [existingPost] = await db
-    .select({ id: posts.id })
+    .select({
+      id: posts.id,
+      slug: posts.slug,
+    })
     .from(posts)
     .where(eq(posts.id, postId))
     .limit(1);
@@ -473,6 +540,17 @@ export async function updateAdminPost(
     };
   }
 
+  const existingAliasRows = await db
+    .select({ slug: postSlugAliases.slug })
+    .from(postSlugAliases)
+    .where(eq(postSlugAliases.postId, postId));
+
+  const affectedSlugs = collectAffectedSlugs(
+    existingPost.slug,
+    values.slug,
+    ...existingAliasRows.map((row) => row.slug),
+  );
+
   const {
     parsedCategoryId,
     parsedTagIds,
@@ -482,9 +560,34 @@ export async function updateAdminPost(
     seo,
   } = validation;
   const now = new Date();
+  const slugChanged = values.slug !== existingPost.slug;
 
   try {
     await db.transaction(async (tx) => {
+      if (slugChanged) {
+        const [restoredAlias] = await tx
+          .select({ id: postSlugAliases.id })
+          .from(postSlugAliases)
+          .where(
+            and(
+              eq(postSlugAliases.postId, postId),
+              eq(postSlugAliases.slug, values.slug),
+            ),
+          )
+          .limit(1);
+
+        if (restoredAlias) {
+          await tx
+            .delete(postSlugAliases)
+            .where(eq(postSlugAliases.id, restoredAlias.id));
+        }
+
+        await tx.insert(postSlugAliases).values({
+          postId,
+          slug: existingPost.slug,
+        });
+      }
+
       await tx
         .update(posts)
         .set({
@@ -559,21 +662,37 @@ export async function updateAdminPost(
         status: values.status,
         reason: "manual update",
       });
+
+      if (values.status === "published") {
+        await tx
+          .insert(sitemapEntries)
+          .values({
+            postId,
+            loc: buildPostPath(values.slug),
+            lastModifiedAt: now,
+          })
+          .onConflictDoUpdate({
+            target: sitemapEntries.postId,
+            set: {
+              loc: buildPostPath(values.slug),
+              lastModifiedAt: now,
+            },
+          });
+      } else {
+        await tx.delete(sitemapEntries).where(eq(sitemapEntries.postId, postId));
+      }
     });
 
     return {
       success: true,
       postId,
+      affectedSlugs,
     };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "更新文章失败。";
-
     return {
       success: false,
       values,
-      errors: {
-        form: message,
-      },
+      errors: getPostMutationErrors(error, "更新文章失败，请重试。"),
     };
   }
 }
@@ -601,6 +720,7 @@ export async function moveAdminPostToTrash(
     .select({
       id: posts.id,
       title: posts.title,
+      slug: posts.slug,
       excerpt: posts.excerpt,
       content: posts.content,
       status: posts.status,
@@ -616,10 +736,21 @@ export async function moveAdminPostToTrash(
     };
   }
 
+  const existingAliasRows = await db
+    .select({ slug: postSlugAliases.slug })
+    .from(postSlugAliases)
+    .where(eq(postSlugAliases.postId, postId));
+
+  const affectedSlugs = collectAffectedSlugs(
+    existingPost.slug,
+    ...existingAliasRows.map((row) => row.slug),
+  );
+
   if (existingPost.status === "trash") {
     return {
       success: true,
       postId,
+      affectedSlugs,
     };
   }
 
@@ -632,6 +763,8 @@ export async function moveAdminPostToTrash(
           updatedAt: new Date(),
         })
         .where(eq(posts.id, postId));
+
+      await tx.delete(sitemapEntries).where(eq(sitemapEntries.postId, postId));
 
       await tx.insert(postRevisions).values({
         postId,
@@ -647,6 +780,7 @@ export async function moveAdminPostToTrash(
     return {
       success: true,
       postId,
+      affectedSlugs,
     };
   } catch (error) {
     return {
@@ -679,6 +813,7 @@ export async function restoreAdminPostFromTrash(
     .select({
       id: posts.id,
       title: posts.title,
+      slug: posts.slug,
       excerpt: posts.excerpt,
       content: posts.content,
       status: posts.status,
@@ -694,10 +829,21 @@ export async function restoreAdminPostFromTrash(
     };
   }
 
+  const existingAliasRows = await db
+    .select({ slug: postSlugAliases.slug })
+    .from(postSlugAliases)
+    .where(eq(postSlugAliases.postId, postId));
+
+  const affectedSlugs = collectAffectedSlugs(
+    existingPost.slug,
+    ...existingAliasRows.map((row) => row.slug),
+  );
+
   if (existingPost.status !== "trash") {
     return {
       success: true,
       postId,
+      affectedSlugs,
     };
   }
 
@@ -711,6 +857,8 @@ export async function restoreAdminPostFromTrash(
           updatedAt: new Date(),
         })
         .where(eq(posts.id, postId));
+
+      await tx.delete(sitemapEntries).where(eq(sitemapEntries.postId, postId));
 
       await tx.insert(postRevisions).values({
         postId,
@@ -726,6 +874,7 @@ export async function restoreAdminPostFromTrash(
     return {
       success: true,
       postId,
+      affectedSlugs,
     };
   } catch (error) {
     return {
@@ -734,6 +883,7 @@ export async function restoreAdminPostFromTrash(
     };
   }
 }
+
 
 async function validatePostInput(values: PostFormValues, currentPostId?: number) {
   const errors: PostFormErrors = {};
@@ -859,21 +1009,28 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
     }
   }
 
-  const [existingPost] = await db
-    .select({ id: posts.id })
-    .from(posts)
-    .where(
-      currentPostId
-        ? and(eq(posts.slug, values.slug), ne(posts.id, currentPostId))
-        : eq(posts.slug, values.slug),
-    )
-    .limit(1);
+  const [[existingPost], [existingAlias]] = await Promise.all([
+    db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(
+        currentPostId
+          ? and(eq(posts.slug, values.slug), ne(posts.id, currentPostId))
+          : eq(posts.slug, values.slug),
+      )
+      .limit(1),
+    db
+      .select({ postId: postSlugAliases.postId })
+      .from(postSlugAliases)
+      .where(eq(postSlugAliases.slug, values.slug))
+      .limit(1),
+  ]);
 
-  if (existingPost) {
+  if (existingPost || (existingAlias && existingAlias.postId !== currentPostId)) {
     return {
       success: false as const,
       errors: {
-        slug: "该 slug 已存在，请更换。",
+        slug: existingPost ? "该 slug 已被其他文章使用。" : "该 slug 已存在于历史记录中，请更换。",
       },
     };
   }
