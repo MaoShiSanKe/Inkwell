@@ -85,8 +85,19 @@ export type CreateAdminPostResult =
 
 export type UpdateAdminPostResult = CreateAdminPostResult;
 
+export type MoveAdminPostToTrashResult =
+  | {
+      success: true;
+      postId: number;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
 export type AdminPostEditorData = {
   id: number;
+  currentStatus: "draft" | "published" | "scheduled" | "trash";
   values: PostFormValues;
 };
 
@@ -262,6 +273,7 @@ export async function getAdminPostEditorData(
 
   return {
     id: post.id,
+    currentStatus: post.status,
     values: createPostFormState({
       title: post.title,
       slug: post.slug,
@@ -552,6 +564,84 @@ export async function updateAdminPost(
       errors: {
         form: message,
       },
+    };
+  }
+}
+
+export async function moveAdminPostToTrash(
+  postId: number,
+): Promise<MoveAdminPostToTrashResult> {
+  const session = await requireAdminSession();
+
+  if (!session) {
+    return {
+      success: false,
+      error: "当前会话无效，请重新登录。",
+    };
+  }
+
+  if (!Number.isInteger(postId) || postId <= 0) {
+    return {
+      success: false,
+      error: "文章不存在。",
+    };
+  }
+
+  const [existingPost] = await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      excerpt: posts.excerpt,
+      content: posts.content,
+      status: posts.status,
+    })
+    .from(posts)
+    .where(eq(posts.id, postId))
+    .limit(1);
+
+  if (!existingPost) {
+    return {
+      success: false,
+      error: "文章不存在。",
+    };
+  }
+
+  if (existingPost.status === "trash") {
+    return {
+      success: true,
+      postId,
+    };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(posts)
+        .set({
+          status: "trash",
+          updatedAt: new Date(),
+        })
+        .where(eq(posts.id, postId));
+
+      await tx.insert(postRevisions).values({
+        postId,
+        editorId: session.userId,
+        title: existingPost.title,
+        excerpt: existingPost.excerpt,
+        content: existingPost.content,
+        status: "trash",
+        reason: "moved to trash",
+      });
+    });
+
+    return {
+      success: true,
+      postId,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "移入回收站失败。",
     };
   }
 }
