@@ -121,3 +121,17 @@ export async function getExcerptLength() {
 export async function getCommentModeration() {
   return getSetting("comment_moderation");
 }
+
+export function getSiteOrigin() {
+  const siteOrigin = process.env.NEXTAUTH_URL?.trim();
+
+  if (!siteOrigin) {
+    return null;
+  }
+
+  try {
+    return new URL(siteOrigin).origin;
+  } catch {
+    return null;
+  }
+}
