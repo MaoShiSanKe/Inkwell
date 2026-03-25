@@ -5,6 +5,8 @@ export type PostFormValues = {
   excerpt: string;
   content: string;
   status: "draft" | "published";
+  tagIds: string[];
+  seriesIds: string[];
 };
 
 export type PostFormErrors = Partial<Record<keyof PostFormValues | "form", string>>;
@@ -21,6 +23,8 @@ export const initialPostFormValues: PostFormValues = {
   excerpt: "",
   content: "",
   status: "draft",
+  tagIds: [],
+  seriesIds: [],
 };
 
 export const initialPostFormState: PostFormState = {
@@ -36,6 +40,8 @@ export function createPostFormState(
     values: {
       ...initialPostFormValues,
       ...values,
+      tagIds: values.tagIds ?? initialPostFormValues.tagIds,
+      seriesIds: values.seriesIds ?? initialPostFormValues.seriesIds,
     },
     errors,
   };

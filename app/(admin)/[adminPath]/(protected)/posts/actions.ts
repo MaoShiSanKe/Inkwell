@@ -43,6 +43,8 @@ export async function createPostAction(
     status: String(formData.get("status") ?? "draft") as
       | "draft"
       | "published",
+    tagIds: formData.getAll("tagIds").map(String),
+    seriesIds: formData.getAll("seriesIds").map(String),
   })) as CreateAdminPostResult;
 
   if (!result.success) {
@@ -81,6 +83,8 @@ export async function updatePostAction(
     status: String(formData.get("status") ?? "draft") as
       | "draft"
       | "published",
+    tagIds: formData.getAll("tagIds").map(String),
+    seriesIds: formData.getAll("seriesIds").map(String),
   })) as UpdateAdminPostResult;
 
   if (!result.success) {

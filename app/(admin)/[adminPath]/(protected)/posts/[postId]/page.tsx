@@ -2,7 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PostEditForm } from "@/components/admin/post-edit-form";
-import { getAdminPostEditorData, listPostCategoryOptions } from "@/lib/admin/posts";
+import {
+  getAdminPostEditorData,
+  listPostCategoryOptions,
+  listPostSeriesOptions,
+  listPostTagOptions,
+} from "@/lib/admin/posts";
 
 type AdminPostEditPageProps = {
   params: Promise<{
@@ -19,9 +24,11 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
     notFound();
   }
 
-  const [post, categories] = await Promise.all([
+  const [post, categories, tags, series] = await Promise.all([
     getAdminPostEditorData(numericPostId),
     listPostCategoryOptions(),
+    listPostTagOptions(),
+    listPostSeriesOptions(),
   ]);
 
   if (!post) {
@@ -37,7 +44,7 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">编辑文章</h1>
           <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
-            修改文章内容并保存，系统会自动记录新的修订版本。
+            修改文章内容、标签与系列，并保存新的修订记录。
           </p>
         </div>
 
@@ -49,7 +56,14 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
         </Link>
       </div>
 
-      <PostEditForm adminPath={adminPath} postId={post.id} categories={categories} initialValues={post.values} />
+      <PostEditForm
+        adminPath={adminPath}
+        postId={post.id}
+        categories={categories}
+        tags={tags}
+        series={series}
+        initialValues={post.values}
+      />
     </main>
   );
 }

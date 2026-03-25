@@ -11,10 +11,24 @@ type PostCategoryOption = {
   slug: string;
 };
 
+type PostTagOption = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
+type PostSeriesOption = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
 type PostEditFormProps = {
   adminPath: string;
   postId: number;
   categories: PostCategoryOption[];
+  tags: PostTagOption[];
+  series: PostSeriesOption[];
   initialValues: PostFormValues;
 };
 
@@ -22,6 +36,8 @@ export function PostEditForm({
   adminPath,
   postId,
   categories,
+  tags,
+  series,
   initialValues,
 }: PostEditFormProps) {
   const initialState = createPostFormState(initialValues);
@@ -90,6 +106,54 @@ export function PostEditForm({
           <span className="text-sm text-red-600 dark:text-red-300">{state.errors.categoryId}</span>
         ) : null}
       </label>
+
+      <fieldset className="flex flex-col gap-3 text-sm font-medium text-slate-700 dark:text-slate-200">
+        <legend>标签</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {tags.length === 0 ? (
+            <p className="text-sm font-normal text-slate-500 dark:text-slate-400">当前还没有标签可选。</p>
+          ) : (
+            tags.map((tag) => (
+              <label key={tag.id} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
+                <input
+                  type="checkbox"
+                  name="tagIds"
+                  value={tag.id}
+                  defaultChecked={state.values.tagIds.includes(String(tag.id))}
+                />
+                <span>{tag.name}</span>
+              </label>
+            ))
+          )}
+        </div>
+        {state.errors.tagIds ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.tagIds}</span>
+        ) : null}
+      </fieldset>
+
+      <fieldset className="flex flex-col gap-3 text-sm font-medium text-slate-700 dark:text-slate-200">
+        <legend>系列</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {series.length === 0 ? (
+            <p className="text-sm font-normal text-slate-500 dark:text-slate-400">当前还没有系列可选。</p>
+          ) : (
+            series.map((item) => (
+              <label key={item.id} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
+                <input
+                  type="checkbox"
+                  name="seriesIds"
+                  value={item.id}
+                  defaultChecked={state.values.seriesIds.includes(String(item.id))}
+                />
+                <span>{item.name}</span>
+              </label>
+            ))
+          )}
+        </div>
+        {state.errors.seriesIds ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.seriesIds}</span>
+        ) : null}
+      </fieldset>
 
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
         摘要

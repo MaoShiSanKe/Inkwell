@@ -1,10 +1,19 @@
 import "server-only";
 
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, ne } from "drizzle-orm";
 
 import { getAdminSession, type AdminRole } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { categories, postRevisions, posts, users } from "@/lib/db/schema";
+import {
+  categories,
+  postRevisions,
+  postSeries,
+  posts,
+  postTags,
+  series,
+  tags,
+  users,
+} from "@/lib/db/schema";
 import { getExcerptLength } from "@/lib/settings";
 
 import {
@@ -31,6 +40,18 @@ export type PostCategoryOption = {
   slug: string;
 };
 
+export type PostTagOption = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
+export type PostSeriesOption = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
 export type CreateAdminPostInput = {
   title: string;
   slug: string;
@@ -38,6 +59,8 @@ export type CreateAdminPostInput = {
   excerpt?: string;
   content: string;
   status: "draft" | "published";
+  tagIds?: string[];
+  seriesIds?: string[];
 };
 
 export type CreateAdminPostResult =
@@ -68,6 +91,16 @@ function normalizeSlug(value: string) {
     .replace(/^-|-$/g, "");
 }
 
+function normalizeSelectedIds(values: string[] | undefined) {
+  return Array.from(
+    new Set(
+      (values ?? [])
+        .map((value) => value.trim())
+        .filter(Boolean),
+    ),
+  );
+}
+
 function stripHtml(value: string) {
   return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -84,6 +117,8 @@ function getInitialValues(input: CreateAdminPostInput): PostFormValues {
     excerpt: input.excerpt?.trim() ?? "",
     content: input.content.trim(),
     status: input.status,
+    tagIds: normalizeSelectedIds(input.tagIds),
+    seriesIds: normalizeSelectedIds(input.seriesIds),
   };
 }
 
@@ -132,22 +167,55 @@ export async function listPostCategoryOptions(): Promise<PostCategoryOption[]> {
     .orderBy(categories.name);
 }
 
+export async function listPostTagOptions(): Promise<PostTagOption[]> {
+  return db
+    .select({
+      id: tags.id,
+      name: tags.name,
+      slug: tags.slug,
+    })
+    .from(tags)
+    .orderBy(tags.name);
+}
+
+export async function listPostSeriesOptions(): Promise<PostSeriesOption[]> {
+  return db
+    .select({
+      id: series.id,
+      name: series.name,
+      slug: series.slug,
+    })
+    .from(series)
+    .orderBy(series.name);
+}
+
 export async function getAdminPostEditorData(
   postId: number,
 ): Promise<AdminPostEditorData | null> {
-  const [post] = await db
-    .select({
-      id: posts.id,
-      title: posts.title,
-      slug: posts.slug,
-      categoryId: posts.categoryId,
-      excerpt: posts.excerpt,
-      content: posts.content,
-      status: posts.status,
-    })
-    .from(posts)
-    .where(eq(posts.id, postId))
-    .limit(1);
+  const [[post], tagRows, seriesRows] = await Promise.all([
+    db
+      .select({
+        id: posts.id,
+        title: posts.title,
+        slug: posts.slug,
+        categoryId: posts.categoryId,
+        excerpt: posts.excerpt,
+        content: posts.content,
+        status: posts.status,
+      })
+      .from(posts)
+      .where(eq(posts.id, postId))
+      .limit(1),
+    db
+      .select({ tagId: postTags.tagId })
+      .from(postTags)
+      .where(eq(postTags.postId, postId)),
+    db
+      .select({ seriesId: postSeries.seriesId })
+      .from(postSeries)
+      .where(eq(postSeries.postId, postId))
+      .orderBy(postSeries.orderIndex),
+  ]);
 
   if (!post) {
     return null;
@@ -162,6 +230,8 @@ export async function getAdminPostEditorData(
       excerpt: post.excerpt ?? "",
       content: post.content,
       status: post.status === "published" ? "published" : "draft",
+      tagIds: tagRows.map((row) => String(row.tagId)),
+      seriesIds: seriesRows.map((row) => String(row.seriesId)),
     }).values,
   };
 }
@@ -192,7 +262,13 @@ export async function createAdminPost(
     };
   }
 
-  const { parsedCategoryId, resolvedExcerpt, publishedAt } = validation;
+  const {
+    parsedCategoryId,
+    parsedTagIds,
+    parsedSeriesIds,
+    resolvedExcerpt,
+    publishedAt,
+  } = validation;
   const now = new Date();
 
   try {
@@ -211,6 +287,25 @@ export async function createAdminPost(
           updatedAt: now,
         })
         .returning({ id: posts.id });
+
+      if (parsedTagIds.length > 0) {
+        await tx.insert(postTags).values(
+          parsedTagIds.map((tagId) => ({
+            postId: post.id,
+            tagId,
+          })),
+        );
+      }
+
+      if (parsedSeriesIds.length > 0) {
+        await tx.insert(postSeries).values(
+          parsedSeriesIds.map((seriesId, index) => ({
+            postId: post.id,
+            seriesId,
+            orderIndex: index,
+          })),
+        );
+      }
 
       await tx.insert(postRevisions).values({
         postId: post.id,
@@ -295,7 +390,13 @@ export async function updateAdminPost(
     };
   }
 
-  const { parsedCategoryId, resolvedExcerpt, publishedAt } = validation;
+  const {
+    parsedCategoryId,
+    parsedTagIds,
+    parsedSeriesIds,
+    resolvedExcerpt,
+    publishedAt,
+  } = validation;
   const now = new Date();
 
   try {
@@ -313,6 +414,28 @@ export async function updateAdminPost(
           updatedAt: now,
         })
         .where(eq(posts.id, postId));
+
+      await tx.delete(postTags).where(eq(postTags.postId, postId));
+      await tx.delete(postSeries).where(eq(postSeries.postId, postId));
+
+      if (parsedTagIds.length > 0) {
+        await tx.insert(postTags).values(
+          parsedTagIds.map((tagId) => ({
+            postId,
+            tagId,
+          })),
+        );
+      }
+
+      if (parsedSeriesIds.length > 0) {
+        await tx.insert(postSeries).values(
+          parsedSeriesIds.map((seriesId, index) => ({
+            postId,
+            seriesId,
+            orderIndex: index,
+          })),
+        );
+      }
 
       await tx.insert(postRevisions).values({
         postId,
@@ -375,6 +498,18 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
     }
   }
 
+  const parsedTagIds = parseSelectedIds(values.tagIds);
+
+  if (parsedTagIds === null) {
+    errors.tagIds = "标签数据无效。";
+  }
+
+  const parsedSeriesIds = parseSelectedIds(values.seriesIds);
+
+  if (parsedSeriesIds === null) {
+    errors.seriesIds = "系列数据无效。";
+  }
+
   if (Object.keys(errors).length > 0) {
     return {
       success: false as const,
@@ -394,6 +529,41 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
         success: false as const,
         errors: {
           categoryId: "所选分类不存在。",
+        },
+      };
+    }
+  }
+
+  const tagIds = parsedTagIds ?? [];
+  const seriesIds = parsedSeriesIds ?? [];
+
+  if (tagIds.length > 0) {
+    const existingTags = await db
+      .select({ id: tags.id })
+      .from(tags)
+      .where(inArray(tags.id, tagIds));
+
+    if (existingTags.length !== tagIds.length) {
+      return {
+        success: false as const,
+        errors: {
+          tagIds: "所选标签不存在。",
+        },
+      };
+    }
+  }
+
+  if (seriesIds.length > 0) {
+    const existingSeries = await db
+      .select({ id: series.id })
+      .from(series)
+      .where(inArray(series.id, seriesIds));
+
+    if (existingSeries.length !== seriesIds.length) {
+      return {
+        success: false as const,
+        errors: {
+          seriesIds: "所选系列不存在。",
         },
       };
     }
@@ -425,7 +595,19 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
   return {
     success: true as const,
     parsedCategoryId,
+    parsedTagIds: tagIds,
+    parsedSeriesIds: seriesIds,
     resolvedExcerpt,
     publishedAt,
   };
+}
+
+function parseSelectedIds(values: string[]) {
+  const parsed = values.map((value) => Number.parseInt(value, 10));
+
+  if (parsed.some((value) => !Number.isInteger(value) || value <= 0)) {
+    return null;
+  }
+
+  return Array.from(new Set(parsed));
 }

@@ -1,7 +1,11 @@
 import Link from "next/link";
 
 import { PostCreateForm } from "@/components/admin/post-create-form";
-import { listPostCategoryOptions } from "@/lib/admin/posts";
+import {
+  listPostCategoryOptions,
+  listPostSeriesOptions,
+  listPostTagOptions,
+} from "@/lib/admin/posts";
 
 type AdminPostNewPageProps = {
   params: Promise<{
@@ -11,7 +15,11 @@ type AdminPostNewPageProps = {
 
 export default async function AdminPostNewPage({ params }: AdminPostNewPageProps) {
   const { adminPath } = await params;
-  const categories = await listPostCategoryOptions();
+  const [categories, tags, series] = await Promise.all([
+    listPostCategoryOptions(),
+    listPostTagOptions(),
+    listPostSeriesOptions(),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-16">
@@ -22,7 +30,7 @@ export default async function AdminPostNewPage({ params }: AdminPostNewPageProps
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">新建文章</h1>
           <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
-            填写文章基础信息并保存为草稿，或直接发布。
+            填写文章基础信息、选择标签与系列，并保存为草稿或直接发布。
           </p>
         </div>
 
@@ -34,7 +42,7 @@ export default async function AdminPostNewPage({ params }: AdminPostNewPageProps
         </Link>
       </div>
 
-      <PostCreateForm adminPath={adminPath} categories={categories} />
+      <PostCreateForm adminPath={adminPath} categories={categories} tags={tags} series={series} />
     </main>
   );
 }
