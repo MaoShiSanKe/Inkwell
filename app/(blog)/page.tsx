@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
 import { listPublishedPosts } from "@/lib/blog/posts";
 import { getSiteOrigin } from "@/lib/settings";
@@ -35,14 +36,18 @@ export default async function BlogHomePage() {
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-16">
-      <div className="flex flex-col gap-3">
-        <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
-          Inkwell
-        </p>
-        <h1 className="text-4xl font-semibold tracking-tight">最新文章</h1>
-        <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
-          浏览站点中已经发布的文章与公开归档。
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3">
+          <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            Inkwell
+          </p>
+          <h1 className="text-4xl font-semibold tracking-tight">最新文章</h1>
+          <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
+            浏览站点中已经发布的文章与公开归档。
+          </p>
+        </div>
+
+        <ThemeToggle />
       </div>
 
       {posts.length === 0 ? (

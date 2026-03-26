@@ -9,6 +9,10 @@ vi.mock("@/lib/auth", () => ({
   getAdminSession: getAdminSessionMock,
 }));
 
+vi.mock("@/components/theme-toggle", () => ({
+  ThemeToggle: () => <div>theme-toggle</div>,
+}));
+
 vi.mock("../actions", () => ({
   logoutAction: vi.fn(),
 }));
@@ -32,6 +36,7 @@ describe("admin dashboard page", () => {
 
     const markup = renderToStaticMarkup(element);
 
+    expect(markup).toContain("theme-toggle");
     expect(markup).toContain("评论管理");
     expect(markup).toContain("分类管理");
     expect(markup).toContain("媒体库");
