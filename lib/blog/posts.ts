@@ -12,6 +12,7 @@ import {
   posts,
   postTags,
   series,
+  sitemapEntries,
   tags,
   users,
 } from "@/lib/db/schema";
@@ -74,6 +75,23 @@ type BlogArchiveTerm = {
   description: string | null;
 };
 
+export type SitemapEntryItem = {
+  loc: string;
+  lastModifiedAt: Date;
+};
+
+export type PublishedRssPostItem = {
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string;
+  publishedAt: Date | null;
+  updatedAt: Date;
+  author: {
+    displayName: string;
+  };
+};
+
 export type ResolvedPublishedCategoryArchive =
   | {
       kind: "archive";
@@ -123,6 +141,47 @@ export async function listPublishedPosts(): Promise<PublishedPostListItem[]> {
     .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
 
   return rows.map(mapPublishedPostListItem);
+}
+
+export async function listSitemapEntries(): Promise<SitemapEntryItem[]> {
+  const rows = await db
+    .select({
+      loc: sitemapEntries.loc,
+      lastModifiedAt: sitemapEntries.lastModifiedAt,
+    })
+    .from(sitemapEntries)
+    .orderBy(desc(sitemapEntries.lastModifiedAt), sitemapEntries.loc);
+
+  return rows;
+}
+
+export async function listPublishedRssPosts(): Promise<PublishedRssPostItem[]> {
+  const rows = await db
+    .select({
+      title: posts.title,
+      slug: posts.slug,
+      excerpt: posts.excerpt,
+      content: posts.content,
+      publishedAt: posts.publishedAt,
+      updatedAt: posts.updatedAt,
+      authorDisplayName: users.displayName,
+    })
+    .from(posts)
+    .innerJoin(users, eq(posts.authorId, users.id))
+    .where(eq(posts.status, "published"))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return rows.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    excerpt: row.excerpt,
+    content: row.content,
+    publishedAt: row.publishedAt,
+    updatedAt: row.updatedAt,
+    author: {
+      displayName: row.authorDisplayName,
+    },
+  }));
 }
 
 export async function resolvePublishedCategoryArchiveBySlug(

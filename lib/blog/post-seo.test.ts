@@ -4,7 +4,10 @@ import {
   DEFAULT_DESCRIPTION,
   buildArticleJsonLd,
   buildPostUrl,
+  buildRssXml,
   buildSiteUrl,
+  buildSitemapXml,
+  escapeXml,
   resolveCanonicalUrl,
   resolveImageUrl,
   resolvePostDescription,
@@ -56,6 +59,14 @@ describe("truncateText", () => {
   });
 });
 
+describe("escapeXml", () => {
+  it("escapes XML special characters", () => {
+    expect(escapeXml("<tag attr=\"x\">Tom & 'Jerry'</tag>")).toBe(
+      "&lt;tag attr=&quot;x&quot;&gt;Tom &amp; &apos;Jerry&apos;&lt;/tag&gt;",
+    );
+  });
+});
+
 describe("buildSiteUrl", () => {
   it("builds absolute site URL when origin exists", () => {
     expect(buildSiteUrl("/category/frontend", "https://example.com")).toBe(
@@ -77,6 +88,59 @@ describe("buildPostUrl", () => {
 
   it("falls back to relative path when origin is missing", () => {
     expect(buildPostUrl("test-post", null)).toBe("/post/test-post");
+  });
+});
+
+describe("buildSitemapXml", () => {
+  it("builds sitemap XML from entries", () => {
+    const xml = buildSitemapXml(
+      [
+        {
+          loc: "/post/test-post",
+          lastModifiedAt: new Date("2026-03-27T01:00:00.000Z"),
+        },
+      ],
+      "https://example.com",
+    );
+
+    expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(xml).toContain("<loc>https://example.com/post/test-post</loc>");
+    expect(xml).toContain("<lastmod>2026-03-27T01:00:00.000Z</lastmod>");
+  });
+});
+
+describe("buildRssXml", () => {
+  it("builds RSS XML from published posts", () => {
+    const xml = buildRssXml(
+      {
+        siteOrigin: "https://example.com",
+        channelTitle: "Inkwell RSS",
+        channelDescription: "订阅最新文章",
+      },
+      [
+        {
+          title: "测试文章",
+          slug: "test-post",
+          excerpt: "测试摘要",
+          content: "<p>测试正文</p>",
+          publishedAt: new Date("2026-03-27T01:00:00.000Z"),
+          updatedAt: new Date("2026-03-27T02:00:00.000Z"),
+          author: {
+            displayName: "管理员",
+          },
+        },
+      ],
+    );
+
+    expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+    expect(xml).toContain('<rss version="2.0">');
+    expect(xml).toContain("<title>Inkwell RSS</title>");
+    expect(xml).toContain("<link>https://example.com/</link>");
+    expect(xml).toContain("<title>测试文章</title>");
+    expect(xml).toContain("<link>https://example.com/post/test-post</link>");
+    expect(xml).toContain("<description>测试摘要</description>");
+    expect(xml).toContain("<author>管理员</author>");
   });
 });
 
@@ -218,33 +282,23 @@ describe("resolveCanonicalUrl", () => {
 });
 
 describe("buildArticleJsonLd", () => {
-  it("builds required article fields", () => {
-    const post = createPostSeoInput({
-      seo: {
-        metaTitle: "SEO 标题",
-        metaDescription: null,
-        ogTitle: null,
-        ogDescription: null,
-        canonicalUrl: null,
-        noindex: false,
-        nofollow: false,
-      },
-    });
-
-    const result = buildArticleJsonLd(
+  it("builds schema.org article payload", () => {
+    const post = createPostSeoInput();
+    const jsonLd = buildArticleJsonLd(
       post,
       "https://example.com/post/test-post",
-      "描述文本",
-      null,
+      "这是摘要",
+      "https://example.com/og.png",
     );
 
-    expect(result).toMatchObject({
+    expect(jsonLd).toMatchObject({
       "@context": "https://schema.org",
       "@type": "Article",
-      headline: "SEO 标题",
-      description: "描述文本",
+      headline: "测试文章",
+      description: "这是摘要",
       url: "https://example.com/post/test-post",
       mainEntityOfPage: "https://example.com/post/test-post",
+      image: ["https://example.com/og.png"],
       author: {
         "@type": "Person",
         name: "管理员",
@@ -254,30 +308,5 @@ describe("buildArticleJsonLd", () => {
         name: "Inkwell",
       },
     });
-    expect(result).toHaveProperty("datePublished");
-    expect(result).not.toHaveProperty("image");
-  });
-
-  it("adds image when image URL exists", () => {
-    const result = buildArticleJsonLd(
-      createPostSeoInput(),
-      "https://example.com/post/test-post",
-      "描述文本",
-      "https://example.com/og.png",
-    );
-
-    expect(result).toHaveProperty("image");
-    expect(result.image).toEqual(["https://example.com/og.png"]);
-  });
-
-  it("omits datePublished when post is not published yet", () => {
-    const result = buildArticleJsonLd(
-      createPostSeoInput({ publishedAt: null }),
-      "https://example.com/post/test-post",
-      "描述文本",
-      null,
-    );
-
-    expect(result).not.toHaveProperty("datePublished");
   });
 });

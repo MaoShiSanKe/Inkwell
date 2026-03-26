@@ -48,6 +48,15 @@ export function truncateText(value: string, length: number) {
   return `${value.slice(0, Math.max(0, length - 1)).trimEnd()}…`;
 }
 
+export function escapeXml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
 export function buildSiteUrl(path: string, siteOrigin: string | null) {
   if (!siteOrigin) {
     return path;
@@ -147,4 +156,89 @@ export function buildArticleJsonLd(
   }
 
   return articleJsonLd;
+}
+
+export function buildSitemapXml(
+  entries: Array<{ loc: string; lastModifiedAt: Date }>,
+  siteOrigin: string | null,
+) {
+  const body = entries
+    .map((entry) => {
+      const loc = escapeXml(buildSiteUrl(entry.loc, siteOrigin));
+      const lastModifiedAt = escapeXml(entry.lastModifiedAt.toISOString());
+
+      return [
+        "  <url>",
+        `    <loc>${loc}</loc>`,
+        `    <lastmod>${lastModifiedAt}</lastmod>`,
+        "  </url>",
+      ].join("\n");
+    })
+    .join("\n");
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    body,
+    "</urlset>",
+  ].join("\n");
+}
+
+export function buildRssXml(
+  input: {
+    siteOrigin: string | null;
+    channelTitle?: string;
+    channelDescription?: string;
+    channelPath?: string;
+  },
+  items: Array<{
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    content: string;
+    publishedAt: Date | null;
+    updatedAt: Date;
+    author: { displayName: string };
+  }>,
+) {
+  const channelTitle = input.channelTitle ?? SITE_NAME;
+  const channelDescription = input.channelDescription ?? DEFAULT_DESCRIPTION;
+  const channelLink = buildSiteUrl(input.channelPath ?? "/", input.siteOrigin);
+  const lastBuildDate = (items[0]?.updatedAt ?? new Date()).toUTCString();
+  const body = items
+    .map((item) => {
+      const link = escapeXml(buildPostUrl(item.slug, input.siteOrigin));
+      const title = escapeXml(item.title);
+      const description = escapeXml(
+        item.excerpt?.trim() || truncateText(stripHtml(item.content), 160) || DEFAULT_DESCRIPTION,
+      );
+      const pubDate = (item.publishedAt ?? item.updatedAt).toUTCString();
+      const author = escapeXml(item.author.displayName);
+      const guid = link;
+
+      return [
+        "    <item>",
+        `      <title>${title}</title>`,
+        `      <link>${link}</link>`,
+        `      <guid>${guid}</guid>`,
+        `      <description>${description}</description>`,
+        `      <author>${author}</author>`,
+        `      <pubDate>${escapeXml(pubDate)}</pubDate>`,
+        "    </item>",
+      ].join("\n");
+    })
+    .join("\n");
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0">',
+    "  <channel>",
+    `    <title>${escapeXml(channelTitle)}</title>`,
+    `    <link>${escapeXml(channelLink)}</link>`,
+    `    <description>${escapeXml(channelDescription)}</description>`,
+    `    <lastBuildDate>${escapeXml(lastBuildDate)}</lastBuildDate>`,
+    body,
+    "  </channel>",
+    "</rss>",
+  ].join("\n");
 }
