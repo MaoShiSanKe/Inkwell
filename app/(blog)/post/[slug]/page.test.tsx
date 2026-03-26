@@ -183,7 +183,7 @@ describe("blog post page", () => {
     expect(permanentRedirectMock).toHaveBeenCalledWith("/post/canonical-slug");
   });
 
-  it("renders the published post page with approved comments, likes, and views when the requested slug matches", async () => {
+  it("renders the published post page with reading time, views, likes, and comments when the requested slug matches", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",
       post: createPostPageData(),
@@ -221,6 +221,7 @@ describe("blog post page", () => {
     expect(markup).toContain("作者：Author Name");
     expect(markup).toContain("Canonical content body");
     expect(markup).toContain("发布时间：");
+    expect(markup).toContain("预计阅读 1 分钟。");
     expect(markup).toContain("当前累计 7 次浏览。");
     expect(markup).toContain("application/ld+json");
     expect(markup).toContain("post-like-button count:3");

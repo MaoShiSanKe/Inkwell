@@ -10,6 +10,7 @@ import {
   buildSitemapUrl,
   buildSitemapXml,
   escapeXml,
+  estimateReadingTimeMinutes,
   resolveCanonicalUrl,
   resolveImageUrl,
   resolvePostDescription,
@@ -58,6 +59,17 @@ describe("truncateText", () => {
 
   it("truncates and appends ellipsis when exceeding limit", () => {
     expect(truncateText("hello world", 6)).toBe("hello…");
+  });
+});
+
+describe("estimateReadingTimeMinutes", () => {
+  it("returns at least one minute for short content", () => {
+    expect(estimateReadingTimeMinutes("short text")).toBe(1);
+  });
+
+  it("estimates from mixed CJK characters and words", () => {
+    const longContent = `${"word ".repeat(300)}${"测试".repeat(40)}`;
+    expect(estimateReadingTimeMinutes(longContent)).toBeGreaterThan(1);
   });
 });
 

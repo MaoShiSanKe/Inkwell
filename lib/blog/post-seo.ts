@@ -98,6 +98,21 @@ export function resolveImageUrl(
   return new URL(`/${localPath.replace(/^\/+/, "")}`, siteOrigin).toString();
 }
 
+export function estimateReadingTimeMinutes(content: string) {
+  const plainTextContent = stripHtml(content);
+
+  if (!plainTextContent) {
+    return 1;
+  }
+
+  const cjkCharacterCount = (plainTextContent.match(/[\u3400-\u9fff]/g) ?? []).length;
+  const nonCjkText = plainTextContent.replace(/[\u3400-\u9fff]/g, " ");
+  const wordCount = nonCjkText.split(/\s+/).filter(Boolean).length;
+  const unitCount = cjkCharacterCount + wordCount;
+
+  return Math.max(1, Math.ceil(unitCount / 250));
+}
+
 export function resolvePostDescription(post: PostSeoInput) {
   const metaDescription = post.seo.metaDescription?.trim();
 
