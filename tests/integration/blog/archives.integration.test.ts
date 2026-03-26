@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   categories,
+  postSeries,
   postTags,
   posts,
+  series,
   settings,
   tags,
   users,
@@ -264,6 +266,153 @@ describe("published blog archives", () => {
       posts: [],
     });
   });
+
+  it("returns the series archive when the slug exists and excludes unpublished posts", async () => {
+    const seed = createSeed();
+    const author = await createUser(seed);
+    const category = await createCategory(seed);
+    const seriesItem = await createSeries(seed);
+    const publishedPost = await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Published series post",
+      slug: buildSlug(`published-series-${seed}`),
+      excerpt: "Published series excerpt",
+      content: "Published series content",
+      status: "published",
+      publishedAt: new Date("2026-03-26T13:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T13:30:00.000Z"),
+    });
+    const draftPost = await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Draft series post",
+      slug: buildSlug(`draft-series-${seed}`),
+      excerpt: "Draft series excerpt",
+      content: "Draft series content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T13:40:00.000Z"),
+    });
+
+    await createPostSeries(publishedPost.id, seriesItem.id, 0);
+    await createPostSeries(draftPost.id, seriesItem.id, 1);
+
+    const { resolvePublishedSeriesArchiveBySlug } = await import("@/lib/blog/posts");
+    const result = await resolvePublishedSeriesArchiveBySlug(`  ${seriesItem.slug.toUpperCase()}  `);
+
+    expect(result.kind).toBe("archive");
+
+    if (result.kind !== "archive") {
+      throw new Error("Expected series archive result.");
+    }
+
+    expect(result.series).toMatchObject({
+      id: seriesItem.id,
+      name: seriesItem.name,
+      slug: seriesItem.slug,
+      description: seriesItem.description,
+    });
+    expect(result.posts).toHaveLength(1);
+    expect(result.posts[0]).toMatchObject({
+      title: "Published series post",
+      slug: buildSlug(`published-series-${seed}`),
+      category: {
+        name: category.name,
+        slug: category.slug,
+      },
+    });
+  });
+
+  it("returns not-found when the series slug does not exist", async () => {
+    const { resolvePublishedSeriesArchiveBySlug } = await import("@/lib/blog/posts");
+
+    await expect(resolvePublishedSeriesArchiveBySlug(buildSlug("missing-series"))).resolves.toEqual({
+      kind: "not-found",
+    });
+  });
+
+  it("orders series posts by publish time instead of per-post checkbox order", async () => {
+    const seed = createSeed();
+    const author = await createUser(seed);
+    const category = await createCategory(seed);
+    const primarySeries = await createSeries(seed);
+    const secondarySeries = await createSeries(`${seed}-secondary`);
+    const newerPost = await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Newer series post",
+      slug: buildSlug(`newer-series-${seed}`),
+      excerpt: "Newer series excerpt",
+      content: "Newer series content",
+      status: "published",
+      publishedAt: new Date("2026-03-26T15:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T15:30:00.000Z"),
+    });
+    const olderPost = await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Older series post",
+      slug: buildSlug(`older-series-${seed}`),
+      excerpt: "Older series excerpt",
+      content: "Older series content",
+      status: "published",
+      publishedAt: new Date("2026-03-26T14:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T14:30:00.000Z"),
+    });
+
+    await createPostSeries(newerPost.id, secondarySeries.id, 0);
+    await createPostSeries(newerPost.id, primarySeries.id, 1);
+    await createPostSeries(olderPost.id, primarySeries.id, 0);
+
+    const { resolvePublishedSeriesArchiveBySlug } = await import("@/lib/blog/posts");
+    const result = await resolvePublishedSeriesArchiveBySlug(primarySeries.slug);
+
+    expect(result.kind).toBe("archive");
+
+    if (result.kind !== "archive") {
+      throw new Error("Expected series archive result.");
+    }
+
+    expect(result.posts.map((post) => post.title)).toEqual([
+      "Newer series post",
+      "Older series post",
+    ]);
+  });
+
+  it("returns an empty series archive when the series exists without published posts", async () => {
+    const seed = createSeed();
+    const author = await createUser(seed);
+    const category = await createCategory(seed);
+    const seriesItem = await createSeries(seed);
+    const draftPost = await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Draft series post",
+      slug: buildSlug(`draft-only-series-${seed}`),
+      excerpt: "Draft series excerpt",
+      content: "Draft series content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T14:00:00.000Z"),
+    });
+
+    await createPostSeries(draftPost.id, seriesItem.id, 0);
+
+    const { resolvePublishedSeriesArchiveBySlug } = await import("@/lib/blog/posts");
+    const result = await resolvePublishedSeriesArchiveBySlug(seriesItem.slug);
+
+    expect(result).toEqual({
+      kind: "archive",
+      series: {
+        id: seriesItem.id,
+        name: seriesItem.name,
+        slug: seriesItem.slug,
+        description: seriesItem.description,
+      },
+      posts: [],
+    });
+  });
 });
 
 function createSeed() {
@@ -358,6 +507,25 @@ async function createTag(seed: string) {
   return tag;
 }
 
+async function createSeries(seed: string) {
+  const db = await getDb();
+  const [seriesItem] = await db
+    .insert(series)
+    .values({
+      name: `Series ${seed}`,
+      slug: buildSlug(`series-${seed}`),
+      description: `Series description ${seed}`,
+    })
+    .returning({
+      id: series.id,
+      name: series.name,
+      slug: series.slug,
+      description: series.description,
+    });
+
+  return seriesItem;
+}
+
 async function createPost(input: {
   authorId: number;
   categoryId: number | null;
@@ -397,5 +565,15 @@ async function createPostTag(postId: number, tagId: number) {
   await db.insert(postTags).values({
     postId,
     tagId,
+  });
+}
+
+async function createPostSeries(postId: number, seriesId: number, orderIndex: number) {
+  const db = await getDb();
+
+  await db.insert(postSeries).values({
+    postId,
+    seriesId,
+    orderIndex,
   });
 }

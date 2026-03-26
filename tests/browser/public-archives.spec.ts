@@ -6,7 +6,7 @@ import { and, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { categories, postTags, posts, tags, users } from "../../lib/db/schema";
+import { categories, postSeries, postTags, posts, series, tags, users } from "../../lib/db/schema";
 
 loadEnv({ path: ".env.local" });
 
@@ -14,7 +14,7 @@ const BROWSER_PREFIX = "integration-browser-archives-";
 const databaseUrl = getDatabaseUrl();
 
 test.describe("public archive pages", () => {
-  test("show published posts and hide drafts across homepage, category, and tag routes", async ({ page }) => {
+  test("show published posts and hide drafts across homepage, category, tag, and series routes", async ({ page }) => {
     const fixture = await seedArchiveFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
@@ -33,10 +33,18 @@ test.describe("public archive pages", () => {
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
 
+      await page.goto(`/series/${fixture.seriesSlug}`);
+      await expect(page.getByRole("heading", { name: fixture.seriesName })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
+      await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
+
       await page.goto(`/category/${fixture.missingCategorySlug}`);
       await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
 
       await page.goto(`/tag/${fixture.missingTagSlug}`);
+      await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
+
+      await page.goto(`/series/${fixture.missingSeriesSlug}`);
       await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
     } finally {
       await cleanupArchiveFixture();
@@ -49,10 +57,13 @@ type ArchiveFixture = {
   categorySlug: string;
   tagName: string;
   tagSlug: string;
+  seriesName: string;
+  seriesSlug: string;
   publishedTitle: string;
   draftTitle: string;
   missingCategorySlug: string;
   missingTagSlug: string;
+  missingSeriesSlug: string;
 };
 
 async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
@@ -60,10 +71,13 @@ async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
   const categorySlug = `${BROWSER_PREFIX}category-${seed}`;
   const tagName = `Archive Tag ${seed}`;
   const tagSlug = `${BROWSER_PREFIX}tag-${seed}`;
+  const seriesName = `Archive Series ${seed}`;
+  const seriesSlug = `${BROWSER_PREFIX}series-${seed}`;
   const publishedTitle = `Archive Published ${seed}`;
   const draftTitle = `Archive Draft ${seed}`;
   const missingCategorySlug = `${BROWSER_PREFIX}missing-category-${seed}`;
   const missingTagSlug = `${BROWSER_PREFIX}missing-tag-${seed}`;
+  const missingSeriesSlug = `${BROWSER_PREFIX}missing-series-${seed}`;
 
   await cleanupArchiveFixture();
 
@@ -96,6 +110,15 @@ async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
         description: `Archive tag description ${seed}`,
       })
       .returning({ id: tags.id });
+
+    const [seriesItem] = await db
+      .insert(series)
+      .values({
+        name: seriesName,
+        slug: seriesSlug,
+        description: `Archive series description ${seed}`,
+      })
+      .returning({ id: series.id });
 
     const [publishedPost] = await db
       .insert(posts)
@@ -137,6 +160,19 @@ async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
         tagId: tag.id,
       },
     ]);
+
+    await db.insert(postSeries).values([
+      {
+        postId: publishedPost.id,
+        seriesId: seriesItem.id,
+        orderIndex: 0,
+      },
+      {
+        postId: draftPost.id,
+        seriesId: seriesItem.id,
+        orderIndex: 1,
+      },
+    ]);
   });
 
   return {
@@ -144,10 +180,13 @@ async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
     categorySlug,
     tagName,
     tagSlug,
+    seriesName,
+    seriesSlug,
     publishedTitle,
     draftTitle,
     missingCategorySlug,
     missingTagSlug,
+    missingSeriesSlug,
   };
 }
 
@@ -168,6 +207,7 @@ async function cleanupArchiveFixture() {
     }
 
     await db.delete(categories).where(like(categories.slug, `${BROWSER_PREFIX}%`));
+    await db.delete(series).where(like(series.slug, `${BROWSER_PREFIX}%`));
     await db.delete(tags).where(like(tags.slug, `${BROWSER_PREFIX}%`));
 
     const browserUsers = await db
@@ -192,7 +232,7 @@ async function cleanupArchiveFixture() {
 async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {
   const client = postgres(databaseUrl, { max: 1 });
   const db = drizzle(client, {
-    schema: { categories, postTags, posts, tags, users },
+    schema: { categories, postSeries, postTags, posts, series, tags, users },
     casing: "snake_case",
   });
 

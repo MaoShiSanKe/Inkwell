@@ -7,9 +7,11 @@ import {
   categories,
   media,
   postMeta,
+  postSeries,
   postSlugAliases,
   posts,
   postTags,
+  series,
   tags,
   users,
 } from "@/lib/db/schema";
@@ -86,6 +88,16 @@ export type ResolvedPublishedTagArchive =
   | {
       kind: "archive";
       tag: BlogArchiveTerm;
+      posts: PublishedPostListItem[];
+    }
+  | {
+      kind: "not-found";
+    };
+
+export type ResolvedPublishedSeriesArchive =
+  | {
+      kind: "archive";
+      series: BlogArchiveTerm;
       posts: PublishedPostListItem[];
     }
   | {
@@ -180,6 +192,42 @@ export async function resolvePublishedTagArchiveBySlug(
   return {
     kind: "archive",
     tag,
+    posts: archivePosts.map(mapPublishedPostListItem),
+  };
+}
+
+export async function resolvePublishedSeriesArchiveBySlug(
+  slug: string,
+): Promise<ResolvedPublishedSeriesArchive> {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return { kind: "not-found" };
+  }
+
+  const [seriesEntry] = await db
+    .select({
+      id: series.id,
+      name: series.name,
+      slug: series.slug,
+      description: series.description,
+    })
+    .from(series)
+    .where(eq(series.slug, normalizedSlug))
+    .limit(1);
+
+  if (!seriesEntry) {
+    return { kind: "not-found" };
+  }
+
+  const archivePosts = await buildPublishedPostListQuery()
+    .innerJoin(postSeries, eq(postSeries.postId, posts.id))
+    .where(and(eq(posts.status, "published"), eq(postSeries.seriesId, seriesEntry.id)))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return {
+    kind: "archive",
+    series: seriesEntry,
     posts: archivePosts.map(mapPublishedPostListItem),
   };
 }
