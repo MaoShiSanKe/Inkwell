@@ -48,14 +48,16 @@ export function truncateText(value: string, length: number) {
   return `${value.slice(0, Math.max(0, length - 1)).trimEnd()}…`;
 }
 
-export function buildPostUrl(slug: string, siteOrigin: string | null) {
-  const path = `/post/${slug}`;
-
+export function buildSiteUrl(path: string, siteOrigin: string | null) {
   if (!siteOrigin) {
     return path;
   }
 
   return new URL(path, siteOrigin).toString();
+}
+
+export function buildPostUrl(slug: string, siteOrigin: string | null) {
+  return buildSiteUrl(`/post/${slug}`, siteOrigin);
 }
 
 export function resolveImageUrl(

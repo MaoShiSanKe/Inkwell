@@ -4,6 +4,7 @@ import {
   DEFAULT_DESCRIPTION,
   buildArticleJsonLd,
   buildPostUrl,
+  buildSiteUrl,
   resolveCanonicalUrl,
   resolveImageUrl,
   resolvePostDescription,
@@ -52,6 +53,18 @@ describe("truncateText", () => {
 
   it("truncates and appends ellipsis when exceeding limit", () => {
     expect(truncateText("hello world", 6)).toBe("hello…");
+  });
+});
+
+describe("buildSiteUrl", () => {
+  it("builds absolute site URL when origin exists", () => {
+    expect(buildSiteUrl("/category/frontend", "https://example.com")).toBe(
+      "https://example.com/category/frontend",
+    );
+  });
+
+  it("falls back to relative site path when origin is missing", () => {
+    expect(buildSiteUrl("/tag/nextjs", null)).toBe("/tag/nextjs");
   });
 });
 

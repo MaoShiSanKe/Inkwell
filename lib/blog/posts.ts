@@ -1,9 +1,18 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { media, postMeta, postSlugAliases, posts, users } from "@/lib/db/schema";
+import {
+  categories,
+  media,
+  postMeta,
+  postSlugAliases,
+  posts,
+  postTags,
+  tags,
+  users,
+} from "@/lib/db/schema";
 
 export type BlogPostSeoData = {
   metaTitle: string | null;
@@ -41,6 +50,48 @@ export type BlogPostPageData = {
   ogImage: BlogPostOgImageData | null;
 };
 
+export type PublishedPostListItem = {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  publishedAt: Date | null;
+  author: {
+    displayName: string;
+  };
+  category: {
+    name: string;
+    slug: string;
+  } | null;
+};
+
+type BlogArchiveTerm = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+};
+
+export type ResolvedPublishedCategoryArchive =
+  | {
+      kind: "archive";
+      category: BlogArchiveTerm;
+      posts: PublishedPostListItem[];
+    }
+  | {
+      kind: "not-found";
+    };
+
+export type ResolvedPublishedTagArchive =
+  | {
+      kind: "archive";
+      tag: BlogArchiveTerm;
+      posts: PublishedPostListItem[];
+    }
+  | {
+      kind: "not-found";
+    };
+
 export type ResolvedPublishedPost =
   | {
       kind: "post";
@@ -54,10 +105,89 @@ export type ResolvedPublishedPost =
       kind: "not-found";
     };
 
+export async function listPublishedPosts(): Promise<PublishedPostListItem[]> {
+  const rows = await buildPublishedPostListQuery()
+    .where(eq(posts.status, "published"))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return rows.map(mapPublishedPostListItem);
+}
+
+export async function resolvePublishedCategoryArchiveBySlug(
+  slug: string,
+): Promise<ResolvedPublishedCategoryArchive> {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return { kind: "not-found" };
+  }
+
+  const [category] = await db
+    .select({
+      id: categories.id,
+      name: categories.name,
+      slug: categories.slug,
+      description: categories.description,
+    })
+    .from(categories)
+    .where(eq(categories.slug, normalizedSlug))
+    .limit(1);
+
+  if (!category) {
+    return { kind: "not-found" };
+  }
+
+  const archivePosts = await buildPublishedPostListQuery()
+    .where(and(eq(posts.status, "published"), eq(posts.categoryId, category.id)))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return {
+    kind: "archive",
+    category,
+    posts: archivePosts.map(mapPublishedPostListItem),
+  };
+}
+
+export async function resolvePublishedTagArchiveBySlug(
+  slug: string,
+): Promise<ResolvedPublishedTagArchive> {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return { kind: "not-found" };
+  }
+
+  const [tag] = await db
+    .select({
+      id: tags.id,
+      name: tags.name,
+      slug: tags.slug,
+      description: tags.description,
+    })
+    .from(tags)
+    .where(eq(tags.slug, normalizedSlug))
+    .limit(1);
+
+  if (!tag) {
+    return { kind: "not-found" };
+  }
+
+  const archivePosts = await buildPublishedPostListQuery()
+    .innerJoin(postTags, eq(postTags.postId, posts.id))
+    .where(and(eq(posts.status, "published"), eq(postTags.tagId, tag.id)))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return {
+    kind: "archive",
+    tag,
+    posts: archivePosts.map(mapPublishedPostListItem),
+  };
+}
+
 export async function resolvePublishedPostBySlug(
   slug: string,
 ): Promise<ResolvedPublishedPost> {
-  const normalizedSlug = slug.trim().toLowerCase();
+  const normalizedSlug = normalizeSlug(slug);
 
   if (!normalizedSlug) {
     return { kind: "not-found" };
@@ -155,4 +285,54 @@ export async function resolvePublishedPostBySlug(
     kind: "redirect",
     currentSlug: aliasMatch.currentSlug,
   };
+}
+
+function buildPublishedPostListQuery() {
+  return db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      slug: posts.slug,
+      excerpt: posts.excerpt,
+      publishedAt: posts.publishedAt,
+      authorDisplayName: users.displayName,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
+    })
+    .from(posts)
+    .innerJoin(users, eq(posts.authorId, users.id))
+    .leftJoin(categories, eq(posts.categoryId, categories.id));
+}
+
+function mapPublishedPostListItem(row: {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  publishedAt: Date | null;
+  authorDisplayName: string;
+  categoryName: string | null;
+  categorySlug: string | null;
+}): PublishedPostListItem {
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    excerpt: row.excerpt,
+    publishedAt: row.publishedAt,
+    author: {
+      displayName: row.authorDisplayName,
+    },
+    category:
+      row.categoryName && row.categorySlug
+        ? {
+            name: row.categoryName,
+            slug: row.categorySlug,
+          }
+        : null,
+  };
+}
+
+function normalizeSlug(value: string) {
+  return value.trim().toLowerCase();
 }
