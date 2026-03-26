@@ -1,13 +1,17 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, resolvePublishedPostBySlugMock, listApprovedCommentsForPostMock } = vi.hoisted(
-  () => ({
-    getSiteOriginMock: vi.fn(),
-    resolvePublishedPostBySlugMock: vi.fn(),
-    listApprovedCommentsForPostMock: vi.fn(),
-  }),
-);
+const {
+  getSiteOriginMock,
+  resolvePublishedPostBySlugMock,
+  listApprovedCommentsForPostMock,
+  getPublishedPostLikeCountMock,
+} = vi.hoisted(() => ({
+  getSiteOriginMock: vi.fn(),
+  resolvePublishedPostBySlugMock: vi.fn(),
+  listApprovedCommentsForPostMock: vi.fn(),
+  getPublishedPostLikeCountMock: vi.fn(),
+}));
 
 class RedirectSignal extends Error {
   constructor(readonly destination: string) {
@@ -46,6 +50,10 @@ vi.mock("@/lib/blog/comments", () => ({
   listApprovedCommentsForPost: listApprovedCommentsForPostMock,
 }));
 
+vi.mock("@/lib/blog/likes", () => ({
+  getPublishedPostLikeCount: getPublishedPostLikeCountMock,
+}));
+
 vi.mock("@/lib/settings", () => ({
   getSiteOrigin: getSiteOriginMock,
 }));
@@ -75,6 +83,12 @@ vi.mock("@/components/blog/comment-list", () => ({
   ),
 }));
 
+vi.mock("@/components/blog/post-like-button", () => ({
+  PostLikeButton: ({ initialLikeCount }: { initialLikeCount: number }) => (
+    <div>{`post-like-button count:${initialLikeCount}`}</div>
+  ),
+}));
+
 describe("blog post page", () => {
   beforeEach(() => {
     getSiteOriginMock.mockReset();
@@ -82,6 +96,8 @@ describe("blog post page", () => {
     resolvePublishedPostBySlugMock.mockReset();
     listApprovedCommentsForPostMock.mockReset();
     listApprovedCommentsForPostMock.mockResolvedValue([]);
+    getPublishedPostLikeCountMock.mockReset();
+    getPublishedPostLikeCountMock.mockResolvedValue(3);
     notFoundMock.mockClear();
     permanentRedirectMock.mockClear();
   });
@@ -154,7 +170,7 @@ describe("blog post page", () => {
     expect(permanentRedirectMock).toHaveBeenCalledWith("/post/canonical-slug");
   });
 
-  it("renders the published post page with approved comments when the requested slug matches", async () => {
+  it("renders the published post page with approved comments and like count when the requested slug matches", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",
       post: createPostPageData(),
@@ -193,6 +209,7 @@ describe("blog post page", () => {
     expect(markup).toContain("Canonical content body");
     expect(markup).toContain("发布时间：");
     expect(markup).toContain("application/ld+json");
+    expect(markup).toContain("post-like-button count:3");
     expect(markup).toContain("当前共有 2 条已公开评论。");
     expect(markup).toContain("comment-list");
     expect(markup).toContain("Top Level");

@@ -3,7 +3,9 @@ import { notFound, permanentRedirect } from "next/navigation";
 
 import { CommentForm } from "@/components/blog/comment-form";
 import { CommentList } from "@/components/blog/comment-list";
+import { PostLikeButton } from "@/components/blog/post-like-button";
 import { listApprovedCommentsForPost } from "@/lib/blog/comments";
+import { getPublishedPostLikeCount } from "@/lib/blog/likes";
 import { resolvePublishedPostBySlug } from "@/lib/blog/posts";
 import {
   SITE_NAME,
@@ -107,6 +109,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   }
 
   const approvedComments = await listApprovedCommentsForPost(post.id);
+  const likeCount = await getPublishedPostLikeCount(post.id);
   const replyToId = Number.parseInt(replyTo ?? "", 10);
   const replyTarget = Number.isInteger(replyToId)
     ? approvedComments.find((comment) => comment.id === replyToId) ?? null
@@ -154,6 +157,8 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
       <article className="rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 whitespace-pre-wrap dark:border-slate-800">
         {post.content}
       </article>
+
+      <PostLikeButton postId={post.id} postSlug={post.slug} initialLikeCount={likeCount} />
 
       <section className="mt-6 flex flex-col gap-6">
         <div className="flex flex-col gap-2">

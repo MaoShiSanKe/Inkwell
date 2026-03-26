@@ -5,26 +5,18 @@ import { headers } from "next/headers";
 
 import { submitPublicComment } from "@/lib/blog/comments";
 import { createCommentFormState, type CommentFormState } from "@/lib/blog/comment-form";
+import { likePublishedPost, type LikePostResult } from "@/lib/blog/likes";
+import { resolveRequestIp } from "@/lib/ip-blacklist";
 
-function resolveClientIp(forwardedFor: string | null, realIp: string | null) {
-  const forwardedCandidate = forwardedFor
-    ?.split(",")
-    .map((value) => value.trim())
-    .find(Boolean);
-
-  if (forwardedCandidate) {
-    return forwardedCandidate;
-  }
-
-  if (realIp?.trim()) {
-    return realIp.trim();
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return "127.0.0.1";
-  }
-
-  return null;
+function resolveCommentValues(formData: FormData) {
+  return {
+    postId: String(formData.get("postId") ?? ""),
+    parentId: String(formData.get("parentId") ?? ""),
+    authorName: String(formData.get("authorName") ?? "").trim(),
+    authorEmail: String(formData.get("authorEmail") ?? "").trim().toLowerCase(),
+    authorUrl: String(formData.get("authorUrl") ?? "").trim(),
+    content: String(formData.get("content") ?? "").trim(),
+  };
 }
 
 export async function submitCommentAction(
@@ -32,25 +24,15 @@ export async function submitCommentAction(
   formData: FormData,
 ): Promise<CommentFormState> {
   const headerStore = await headers();
-  const ipAddress = resolveClientIp(
+  const ipAddress = resolveRequestIp(
     headerStore.get("x-forwarded-for"),
     headerStore.get("x-real-ip"),
   );
 
   if (!ipAddress) {
-    return createCommentFormState(
-      {
-        postId: String(formData.get("postId") ?? ""),
-        parentId: String(formData.get("parentId") ?? ""),
-        authorName: String(formData.get("authorName") ?? "").trim(),
-        authorEmail: String(formData.get("authorEmail") ?? "").trim().toLowerCase(),
-        authorUrl: String(formData.get("authorUrl") ?? "").trim(),
-        content: String(formData.get("content") ?? "").trim(),
-      },
-      {
-        form: "无法识别当前请求来源，请稍后重试。",
-      },
-    );
+    return createCommentFormState(resolveCommentValues(formData), {
+      form: "无法识别当前请求来源，请稍后重试。",
+    });
   }
 
   const result = await submitPublicComment({
@@ -85,4 +67,32 @@ export async function submitCommentAction(
     result.status,
     result.status === "approved" ? "评论已发布。" : "评论已提交，等待审核。",
   );
+}
+
+export async function likePostAction(formData: FormData): Promise<LikePostResult> {
+  const headerStore = await headers();
+  const ipAddress = resolveRequestIp(
+    headerStore.get("x-forwarded-for"),
+    headerStore.get("x-real-ip"),
+  );
+  const postId = String(formData.get("postId") ?? "");
+  const postSlug = String(formData.get("postSlug") ?? "").trim();
+
+  if (!ipAddress) {
+    return {
+      success: false,
+      error: "无法识别当前请求来源，请稍后重试。",
+    };
+  }
+
+  const result = await likePublishedPost({
+    postId,
+    ipAddress,
+  });
+
+  if (result.success && postSlug) {
+    revalidatePath(`/post/${postSlug}`);
+  }
+
+  return result;
 }
