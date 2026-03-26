@@ -14,6 +14,7 @@ import {
   resolveImageUrl,
   resolvePostDescription,
 } from "@/lib/blog/post-seo";
+import { getPublishedPostViewCount, recordPublishedPostView } from "@/lib/blog/views";
 import { getSiteOrigin } from "@/lib/settings";
 
 type PostPageProps = {
@@ -108,8 +109,11 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
     permanentRedirect(`/post/${post.slug}`);
   }
 
+  await recordPublishedPostView({ postId: post.id });
+
   const approvedComments = await listApprovedCommentsForPost(post.id);
   const likeCount = await getPublishedPostLikeCount(post.id);
+  const viewCount = await getPublishedPostViewCount(post.id);
   const replyToId = Number.parseInt(replyTo ?? "", 10);
   const replyTarget = Number.isInteger(replyToId)
     ? approvedComments.find((comment) => comment.id === replyToId) ?? null
@@ -154,6 +158,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           </time>
         </p>
       ) : null}
+      <p className="text-sm text-slate-500 dark:text-slate-400">当前累计 {viewCount} 次浏览。</p>
       <article className="rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 whitespace-pre-wrap dark:border-slate-800">
         {post.content}
       </article>

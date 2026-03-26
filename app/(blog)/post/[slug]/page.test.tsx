@@ -6,11 +6,15 @@ const {
   resolvePublishedPostBySlugMock,
   listApprovedCommentsForPostMock,
   getPublishedPostLikeCountMock,
+  getPublishedPostViewCountMock,
+  recordPublishedPostViewMock,
 } = vi.hoisted(() => ({
   getSiteOriginMock: vi.fn(),
   resolvePublishedPostBySlugMock: vi.fn(),
   listApprovedCommentsForPostMock: vi.fn(),
   getPublishedPostLikeCountMock: vi.fn(),
+  getPublishedPostViewCountMock: vi.fn(),
+  recordPublishedPostViewMock: vi.fn(),
 }));
 
 class RedirectSignal extends Error {
@@ -52,6 +56,11 @@ vi.mock("@/lib/blog/comments", () => ({
 
 vi.mock("@/lib/blog/likes", () => ({
   getPublishedPostLikeCount: getPublishedPostLikeCountMock,
+}));
+
+vi.mock("@/lib/blog/views", () => ({
+  getPublishedPostViewCount: getPublishedPostViewCountMock,
+  recordPublishedPostView: recordPublishedPostViewMock,
 }));
 
 vi.mock("@/lib/settings", () => ({
@@ -98,6 +107,10 @@ describe("blog post page", () => {
     listApprovedCommentsForPostMock.mockResolvedValue([]);
     getPublishedPostLikeCountMock.mockReset();
     getPublishedPostLikeCountMock.mockResolvedValue(3);
+    getPublishedPostViewCountMock.mockReset();
+    getPublishedPostViewCountMock.mockResolvedValue(7);
+    recordPublishedPostViewMock.mockReset();
+    recordPublishedPostViewMock.mockResolvedValue(true);
     notFoundMock.mockClear();
     permanentRedirectMock.mockClear();
   });
@@ -170,7 +183,7 @@ describe("blog post page", () => {
     expect(permanentRedirectMock).toHaveBeenCalledWith("/post/canonical-slug");
   });
 
-  it("renders the published post page with approved comments and like count when the requested slug matches", async () => {
+  it("renders the published post page with approved comments, likes, and views when the requested slug matches", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",
       post: createPostPageData(),
@@ -208,6 +221,7 @@ describe("blog post page", () => {
     expect(markup).toContain("作者：Author Name");
     expect(markup).toContain("Canonical content body");
     expect(markup).toContain("发布时间：");
+    expect(markup).toContain("当前累计 7 次浏览。");
     expect(markup).toContain("application/ld+json");
     expect(markup).toContain("post-like-button count:3");
     expect(markup).toContain("当前共有 2 条已公开评论。");
@@ -215,6 +229,7 @@ describe("blog post page", () => {
     expect(markup).toContain("Top Level");
     expect(markup).toContain("Reply User");
     expect(markup).toContain("comment-form replying:Top Level");
+    expect(recordPublishedPostViewMock).toHaveBeenCalledWith({ postId: 1 });
   });
 });
 
