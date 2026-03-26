@@ -36,11 +36,11 @@ describe("admin dashboard page", () => {
     expect(markup).toContain("分类管理");
     expect(markup).toContain("媒体库");
     expect(markup).toContain("标签管理");
-    expect(markup).toContain("系列管理");
+    expect(markup).toContain("后台设置");
     expect(markup).toContain("/admin/comments");
     expect(markup).toContain("/admin/categories");
     expect(markup).toContain("/admin/media");
     expect(markup).toContain("/admin/tags");
-    expect(markup).toContain("/admin/series");
+    expect(markup).toContain("/admin/settings");
   });
 });

@@ -103,6 +103,16 @@ export default async function AdminPage({ params }: AdminPageProps) {
             管理系列信息，先补齐后台内容组织能力与文章关联入口。
           </span>
         </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/settings`}
+        >
+          <span className="text-lg font-semibold">后台设置</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            配置后台路径、修订保留策略、自动摘要长度和评论默认审核模式。
+          </span>
+        </Link>
       </div>
 
       <form action={logoutAction}>
