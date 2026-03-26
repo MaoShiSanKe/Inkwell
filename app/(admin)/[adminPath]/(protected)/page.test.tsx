@@ -32,9 +32,11 @@ describe("admin dashboard page", () => {
 
     const markup = renderToStaticMarkup(element);
 
+    expect(markup).toContain("评论管理");
     expect(markup).toContain("分类管理");
     expect(markup).toContain("标签管理");
     expect(markup).toContain("系列管理");
+    expect(markup).toContain("/admin/comments");
     expect(markup).toContain("/admin/categories");
     expect(markup).toContain("/admin/tags");
     expect(markup).toContain("/admin/series");

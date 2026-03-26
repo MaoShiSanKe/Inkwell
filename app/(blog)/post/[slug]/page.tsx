@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 
+import { CommentForm } from "@/components/blog/comment-form";
+import { CommentList } from "@/components/blog/comment-list";
+import { listApprovedCommentsForPost } from "@/lib/blog/comments";
 import { resolvePublishedPostBySlug } from "@/lib/blog/posts";
 import {
   SITE_NAME,
@@ -14,6 +17,9 @@ import { getSiteOrigin } from "@/lib/settings";
 type PostPageProps = {
   params: Promise<{
     slug: string;
+  }>;
+  searchParams?: Promise<{
+    replyTo?: string;
   }>;
 };
 
@@ -75,8 +81,15 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   };
 }
 
-export default async function PostPage({ params }: PostPageProps) {
-  const { slug } = await params;
+function countApprovedComments(comments: Awaited<ReturnType<typeof listApprovedCommentsForPost>>) {
+  return comments.reduce((total, comment) => total + 1 + comment.replies.length, 0);
+}
+
+export default async function PostPage({ params, searchParams }: PostPageProps) {
+  const [{ slug }, { replyTo }] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve<{ replyTo?: string }>({}),
+  ]);
   const result = await resolvePublishedPostBySlug(slug);
 
   if (result.kind === "redirect") {
@@ -93,6 +106,12 @@ export default async function PostPage({ params }: PostPageProps) {
     permanentRedirect(`/post/${post.slug}`);
   }
 
+  const approvedComments = await listApprovedCommentsForPost(post.id);
+  const replyToId = Number.parseInt(replyTo ?? "", 10);
+  const replyTarget = Number.isInteger(replyToId)
+    ? approvedComments.find((comment) => comment.id === replyToId) ?? null
+    : null;
+  const publicCommentCount = countApprovedComments(approvedComments);
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = resolveCanonicalUrl(post, siteOrigin);
   const description = resolvePostDescription(post);
@@ -135,6 +154,29 @@ export default async function PostPage({ params }: PostPageProps) {
       <article className="rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 whitespace-pre-wrap dark:border-slate-800">
         {post.content}
       </article>
+
+      <section className="mt-6 flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-semibold tracking-tight">评论</h2>
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            {publicCommentCount > 0
+              ? `当前共有 ${publicCommentCount} 条已公开评论。`
+              : "当前还没有公开评论。"}
+          </p>
+        </div>
+
+        <CommentList comments={approvedComments} postSlug={post.slug} />
+        <CommentForm
+          postId={post.id}
+          postSlug={post.slug}
+          replyTarget={replyTarget
+            ? {
+                id: replyTarget.id,
+                authorName: replyTarget.authorName,
+              }
+            : null}
+        />
+      </section>
     </main>
   );
 }

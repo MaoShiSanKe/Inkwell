@@ -56,6 +56,16 @@ export default async function AdminPage({ params }: AdminPageProps) {
 
         <Link
           className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/comments`}
+        >
+          <span className="text-lg font-semibold">评论管理</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            查看前台评论审核队列，完成批准、垃圾标记与回收站恢复操作。
+          </span>
+        </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
           href={`/${adminPath}/categories`}
         >
           <span className="text-lg font-semibold">分类管理</span>

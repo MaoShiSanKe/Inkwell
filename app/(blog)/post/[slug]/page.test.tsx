@@ -1,10 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, resolvePublishedPostBySlugMock } = vi.hoisted(() => ({
-  getSiteOriginMock: vi.fn(),
-  resolvePublishedPostBySlugMock: vi.fn(),
-}));
+const { getSiteOriginMock, resolvePublishedPostBySlugMock, listApprovedCommentsForPostMock } = vi.hoisted(
+  () => ({
+    getSiteOriginMock: vi.fn(),
+    resolvePublishedPostBySlugMock: vi.fn(),
+    listApprovedCommentsForPostMock: vi.fn(),
+  }),
+);
 
 class RedirectSignal extends Error {
   constructor(readonly destination: string) {
@@ -30,14 +33,46 @@ const { notFoundMock, permanentRedirectMock } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   notFound: notFoundMock,
   permanentRedirect: permanentRedirectMock,
+  useRouter: () => ({
+    refresh: vi.fn(),
+  }),
 }));
 
 vi.mock("@/lib/blog/posts", () => ({
   resolvePublishedPostBySlug: resolvePublishedPostBySlugMock,
 }));
 
+vi.mock("@/lib/blog/comments", () => ({
+  listApprovedCommentsForPost: listApprovedCommentsForPostMock,
+}));
+
 vi.mock("@/lib/settings", () => ({
   getSiteOrigin: getSiteOriginMock,
+}));
+
+vi.mock("@/components/blog/comment-form", () => ({
+  CommentForm: ({ replyTarget }: { replyTarget?: { authorName: string } | null }) => (
+    <div>
+      comment-form
+      {replyTarget ? ` replying:${replyTarget.authorName}` : " top-level"}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/blog/comment-list", () => ({
+  CommentList: ({ comments }: { comments: Array<{ authorName: string; replies: Array<{ authorName: string }> }> }) => (
+    <div>
+      comment-list
+      {comments.map((comment) => (
+        <span key={comment.authorName}>
+          {comment.authorName}
+          {comment.replies.map((reply) => (
+            <span key={reply.authorName}>{reply.authorName}</span>
+          ))}
+        </span>
+      ))}
+    </div>
+  ),
 }));
 
 describe("blog post page", () => {
@@ -45,6 +80,8 @@ describe("blog post page", () => {
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     resolvePublishedPostBySlugMock.mockReset();
+    listApprovedCommentsForPostMock.mockReset();
+    listApprovedCommentsForPostMock.mockResolvedValue([]);
     notFoundMock.mockClear();
     permanentRedirectMock.mockClear();
   });
@@ -117,15 +154,36 @@ describe("blog post page", () => {
     expect(permanentRedirectMock).toHaveBeenCalledWith("/post/canonical-slug");
   });
 
-  it("renders the published post page when the requested slug matches", async () => {
+  it("renders the published post page with approved comments when the requested slug matches", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",
       post: createPostPageData(),
     });
+    listApprovedCommentsForPostMock.mockResolvedValue([
+      {
+        id: 10,
+        parentId: null,
+        authorName: "Top Level",
+        authorUrl: null,
+        content: "First comment",
+        createdAt: new Date("2026-03-26T14:00:00.000Z"),
+        replies: [
+          {
+            id: 11,
+            parentId: 10,
+            authorName: "Reply User",
+            authorUrl: null,
+            content: "Reply comment",
+            createdAt: new Date("2026-03-26T14:05:00.000Z"),
+          },
+        ],
+      },
+    ]);
 
     const { default: PostPage } = await import("./page");
     const element = await PostPage({
       params: Promise.resolve({ slug: "canonical-slug" }),
+      searchParams: Promise.resolve({ replyTo: "10" }),
     });
     const markup = renderToStaticMarkup(element);
 
@@ -135,6 +193,11 @@ describe("blog post page", () => {
     expect(markup).toContain("Canonical content body");
     expect(markup).toContain("发布时间：");
     expect(markup).toContain("application/ld+json");
+    expect(markup).toContain("当前共有 2 条已公开评论。");
+    expect(markup).toContain("comment-list");
+    expect(markup).toContain("Top Level");
+    expect(markup).toContain("Reply User");
+    expect(markup).toContain("comment-form replying:Top Level");
   });
 });
 
