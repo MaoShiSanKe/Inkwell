@@ -21,7 +21,7 @@ const connectionInfo = getConnectionInfo(databaseUrl);
 assertSafeTestConnection(testEnvPath, connectionInfo);
 
 export async function cleanupIntegrationTables() {
-  const [{ db }, { categories, media, postTags, posts, settings, tags, users }] = await Promise.all([
+  const [{ db }, { categories, media, postSeries, postTags, posts, series, settings, tags, users }] = await Promise.all([
     import("@/lib/db"),
     import("@/lib/db/schema"),
   ]);
@@ -37,6 +37,13 @@ export async function cleanupIntegrationTables() {
     .where(like(users.username, `${INTEGRATION_PREFIX}%`));
 
   if (integrationPosts.length > 0) {
+    await db.delete(postSeries).where(
+      inArray(
+        postSeries.postId,
+        integrationPosts.map((post) => post.id),
+      ),
+    );
+
     await db.delete(postTags).where(
       inArray(
         postTags.postId,
@@ -54,6 +61,7 @@ export async function cleanupIntegrationTables() {
 
   await db.delete(media).where(like(media.altText, `${INTEGRATION_PREFIX}%`));
   await db.delete(categories).where(like(categories.slug, `${INTEGRATION_PREFIX}%`));
+  await db.delete(series).where(like(series.slug, `${INTEGRATION_PREFIX}%`));
   await db.delete(tags).where(like(tags.slug, `${INTEGRATION_PREFIX}%`));
 
   if (integrationUserIds.length > 0) {

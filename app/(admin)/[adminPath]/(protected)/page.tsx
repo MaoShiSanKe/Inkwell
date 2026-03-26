@@ -33,7 +33,7 @@ export default async function AdminPage({ params }: AdminPageProps) {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
           href={`/${adminPath}/posts`}
@@ -51,6 +51,36 @@ export default async function AdminPage({ params }: AdminPageProps) {
           <span className="text-lg font-semibold">新建文章</span>
           <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
             创建新的草稿或直接发布文章，并自动写入初始修订记录。
+          </span>
+        </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/categories`}
+        >
+          <span className="text-lg font-semibold">分类管理</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            管理文章分类与两级层级结构，支撑前台分类归档和文章归类。
+          </span>
+        </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/tags`}
+        >
+          <span className="text-lg font-semibold">标签管理</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            管理文章标签，供标签归档页和文章编辑表单统一复用。
+          </span>
+        </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/series`}
+        >
+          <span className="text-lg font-semibold">系列管理</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            管理系列信息，先补齐后台内容组织能力与文章关联入口。
           </span>
         </Link>
       </div>
