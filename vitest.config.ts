@@ -13,6 +13,11 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    exclude: [...configDefaults.exclude, "tests/integration/**/*.test.ts"],
+    exclude: [
+      ...configDefaults.exclude,
+      "tests/integration/**/*.test.ts",
+      "tests/browser/**/*.spec.ts",
+    ],
   },
 });
+

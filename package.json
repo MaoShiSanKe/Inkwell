@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run --exclude tests/integration/**/*.test.ts",
     "test:integration": "vitest run -c vitest.integration.config.ts",
+    "test:browser": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:test": "drizzle-kit migrate --config drizzle.test.config.ts",
@@ -26,6 +27,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
