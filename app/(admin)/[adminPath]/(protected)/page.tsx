@@ -113,6 +113,16 @@ export default async function AdminPage({ params }: AdminPageProps) {
             配置后台路径、修订保留策略、自动摘要长度和评论默认审核模式。
           </span>
         </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/ip-blacklist`}
+        >
+          <span className="text-lg font-semibold">IP 黑名单</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            管理被应用层直接拦截的 IP 与 CIDR 网段，快速阻断恶意访问来源。
+          </span>
+        </Link>
       </div>
 
       <form action={logoutAction}>

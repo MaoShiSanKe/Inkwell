@@ -22,10 +22,21 @@ const connectionInfo = getConnectionInfo(databaseUrl);
 assertSafeTestConnection(testEnvPath, connectionInfo);
 
 export async function cleanupIntegrationTables() {
-  const [{ db }, { categories, media, postSeries, postTags, posts, series, settings, tags, users }] = await Promise.all([
-    import("@/lib/db"),
-    import("@/lib/db/schema"),
-  ]);
+  const [
+    { db },
+    {
+      categories,
+      ipBlacklist,
+      media,
+      postSeries,
+      postTags,
+      posts,
+      series,
+      settings,
+      tags,
+      users,
+    },
+  ] = await Promise.all([import("@/lib/db"), import("@/lib/db/schema")]);
 
   const integrationUserIds = await db
     .select({ id: users.id })
@@ -55,6 +66,11 @@ export async function cleanupIntegrationTables() {
     })
     .from(media)
     .where(like(media.altText, `${INTEGRATION_PREFIX}%`));
+
+  const integrationBlacklistRows = await db
+    .select({ id: ipBlacklist.id })
+    .from(ipBlacklist)
+    .where(like(ipBlacklist.reason, `${INTEGRATION_PREFIX}%`));
 
   if (integrationPosts.length > 0) {
     await db.delete(postSeries).where(
@@ -92,6 +108,15 @@ export async function cleanupIntegrationTables() {
         .flatMap((item) => [item.storagePath, item.thumbnailPath])
         .filter((value): value is string => Boolean(value))
         .map(removeIntegrationMediaFile),
+    );
+  }
+
+  if (integrationBlacklistRows.length > 0) {
+    await db.delete(ipBlacklist).where(
+      inArray(
+        ipBlacklist.id,
+        integrationBlacklistRows.map((row) => row.id),
+      ),
     );
   }
 
