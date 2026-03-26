@@ -1,7 +1,8 @@
 import { existsSync } from "node:fs";
+import { rm } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 
-import { and, inArray, like } from "drizzle-orm";
+import { and, inArray, like, or } from "drizzle-orm";
 import { config } from "dotenv";
 import { afterAll } from "vitest";
 
@@ -26,15 +27,34 @@ export async function cleanupIntegrationTables() {
     import("@/lib/db/schema"),
   ]);
 
-  const integrationPosts = await db
-    .select({ id: posts.id })
-    .from(posts)
-    .where(like(posts.slug, `${INTEGRATION_PREFIX}%`));
-
   const integrationUserIds = await db
     .select({ id: users.id })
     .from(users)
     .where(like(users.username, `${INTEGRATION_PREFIX}%`));
+
+  const integrationPosts = await db
+    .select({ id: posts.id })
+    .from(posts)
+    .where(
+      integrationUserIds.length > 0
+        ? or(
+            like(posts.slug, `${INTEGRATION_PREFIX}%`),
+            inArray(
+              posts.authorId,
+              integrationUserIds.map((user) => user.id),
+            ),
+          )
+        : like(posts.slug, `${INTEGRATION_PREFIX}%`),
+    );
+
+  const integrationMediaRows = await db
+    .select({
+      id: media.id,
+      storagePath: media.storagePath,
+      thumbnailPath: media.thumbnailPath,
+    })
+    .from(media)
+    .where(like(media.altText, `${INTEGRATION_PREFIX}%`));
 
   if (integrationPosts.length > 0) {
     await db.delete(postSeries).where(
@@ -59,7 +79,22 @@ export async function cleanupIntegrationTables() {
     );
   }
 
-  await db.delete(media).where(like(media.altText, `${INTEGRATION_PREFIX}%`));
+  if (integrationMediaRows.length > 0) {
+    await db.delete(media).where(
+      inArray(
+        media.id,
+        integrationMediaRows.map((item) => item.id),
+      ),
+    );
+
+    await Promise.allSettled(
+      integrationMediaRows
+        .flatMap((item) => [item.storagePath, item.thumbnailPath])
+        .filter((value): value is string => Boolean(value))
+        .map(removeIntegrationMediaFile),
+    );
+  }
+
   await db.delete(categories).where(like(categories.slug, `${INTEGRATION_PREFIX}%`));
   await db.delete(series).where(like(series.slug, `${INTEGRATION_PREFIX}%`));
   await db.delete(tags).where(like(tags.slug, `${INTEGRATION_PREFIX}%`));
@@ -77,6 +112,12 @@ export async function cleanupIntegrationTables() {
   }
 
   await db.delete(settings).where(like(settings.key, `${INTEGRATION_PREFIX}%`));
+}
+
+async function removeIntegrationMediaFile(relativePath: string) {
+  await rm(resolve(process.cwd(), "public", relativePath.replace(/^\/+/, "")), {
+    force: true,
+  });
 }
 
 afterAll(async () => {

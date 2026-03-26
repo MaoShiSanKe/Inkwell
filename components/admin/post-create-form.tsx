@@ -4,6 +4,7 @@ import { useActionState } from "react";
 
 import { createPostAction } from "@/app/(admin)/[adminPath]/(protected)/posts/actions";
 import { initialCreatePostState } from "@/app/(admin)/[adminPath]/(protected)/posts/form-state";
+import { MediaPicker, type MediaPickerOption } from "@/components/admin/media-picker";
 
 type PostCategoryOption = {
   id: number;
@@ -28,6 +29,7 @@ type PostCreateFormProps = {
   categories: PostCategoryOption[];
   tags: PostTagOption[];
   series: PostSeriesOption[];
+  mediaOptions: MediaPickerOption[];
 };
 
 export function PostCreateForm({
@@ -35,6 +37,7 @@ export function PostCreateForm({
   categories,
   tags,
   series,
+  mediaOptions,
 }: PostCreateFormProps) {
   const [state = initialCreatePostState, formAction, isPending] = useActionState(
     createPostAction,
@@ -201,6 +204,13 @@ export function PostCreateForm({
               placeholder="用于社交分享摘要"
             />
           </label>
+
+          <MediaPicker
+            adminPath={adminPath}
+            mediaOptions={mediaOptions}
+            value={state.values.ogImageMediaId}
+            error={state.errors.ogImageMediaId}
+          />
 
           <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
             Canonical URL

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PostEditForm } from "@/components/admin/post-edit-form";
+import { listAdminMediaOptions } from "@/lib/admin/media";
 import {
   getAdminPostEditorData,
   listPostCategoryOptions,
@@ -26,11 +27,12 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
     notFound();
   }
 
-  const [post, categories, tags, series] = await Promise.all([
+  const [post, categories, tags, series, mediaOptions] = await Promise.all([
     getAdminPostEditorData(numericPostId),
     listPostCategoryOptions(),
     listPostTagOptions(),
     listPostSeriesOptions(),
+    listAdminMediaOptions(),
   ]);
 
   if (!post) {
@@ -64,6 +66,7 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
         categories={categories}
         tags={tags}
         series={series}
+        mediaOptions={mediaOptions}
         initialValues={post.values}
       />
 

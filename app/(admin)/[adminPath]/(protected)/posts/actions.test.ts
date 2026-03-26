@@ -117,6 +117,49 @@ describe("admin post actions", () => {
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
+  it("passes ogImageMediaId through create and update payloads", async () => {
+    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
+    createAdminPostMock.mockResolvedValue({
+      success: false,
+      values: {
+        ...initialPostFormState.values,
+        ogImageMediaId: "12",
+      },
+      errors: {
+        ogImageMediaId: "所选 OG 图片不存在。",
+      },
+    });
+    updateAdminPostMock.mockResolvedValue({
+      success: false,
+      values: {
+        ...initialPostFormState.values,
+        ogImageMediaId: "12",
+      },
+      errors: {
+        ogImageMediaId: "所选 OG 图片不存在。",
+      },
+    });
+
+    const { createPostAction, updatePostAction } = await import("./actions");
+
+    await createPostAction(
+      initialPostFormState,
+      createFormData({ postId: "", ogImageMediaId: "12" }),
+    );
+    await updatePostAction(
+      initialPostFormState,
+      createFormData({ postId: "42", ogImageMediaId: "12" }),
+    );
+
+    expect(createAdminPostMock).toHaveBeenCalledWith(
+      expect.objectContaining({ ogImageMediaId: "12" }),
+    );
+    expect(updateAdminPostMock).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({ ogImageMediaId: "12" }),
+    );
+  });
+
   it("revalidates admin and public paths then redirects after a successful update", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminPostMock.mockResolvedValue({
@@ -231,6 +274,7 @@ function createFormData(
     metaDescription: string;
     ogTitle: string;
     ogDescription: string;
+    ogImageMediaId: string;
     canonicalUrl: string;
     breadcrumbEnabled: boolean;
     noindex: boolean;
@@ -250,6 +294,7 @@ function createFormData(
     metaDescription: "",
     ogTitle: "",
     ogDescription: "",
+    ogImageMediaId: "",
     canonicalUrl: "",
     breadcrumbEnabled: false,
     noindex: false,
@@ -270,6 +315,7 @@ function createFormData(
   formData.set("metaDescription", values.metaDescription);
   formData.set("ogTitle", values.ogTitle);
   formData.set("ogDescription", values.ogDescription);
+  formData.set("ogImageMediaId", values.ogImageMediaId);
   formData.set("canonicalUrl", values.canonicalUrl);
 
   if (values.breadcrumbEnabled) {

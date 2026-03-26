@@ -6,6 +6,7 @@ import { getAdminSession, type AdminRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   categories,
+  media,
   postMeta,
   postRevisions,
   postSeries,
@@ -68,6 +69,7 @@ export type CreateAdminPostInput = {
   metaDescription?: string;
   ogTitle?: string;
   ogDescription?: string;
+  ogImageMediaId?: string;
   canonicalUrl?: string;
   breadcrumbEnabled?: boolean;
   noindex?: boolean;
@@ -160,6 +162,7 @@ function getInitialValues(input: CreateAdminPostInput): PostFormValues {
     metaDescription: normalizeOptionalText(input.metaDescription),
     ogTitle: normalizeOptionalText(input.ogTitle),
     ogDescription: normalizeOptionalText(input.ogDescription),
+    ogImageMediaId: input.ogImageMediaId?.trim() ?? "",
     canonicalUrl: normalizeCanonicalUrl(input.canonicalUrl),
     breadcrumbEnabled: input.breadcrumbEnabled ?? false,
     noindex: input.noindex ?? false,
@@ -317,6 +320,7 @@ export async function getAdminPostEditorData(
         metaDescription: postMeta.metaDescription,
         ogTitle: postMeta.ogTitle,
         ogDescription: postMeta.ogDescription,
+        ogImageMediaId: postMeta.ogImageMediaId,
         canonicalUrl: postMeta.canonicalUrl,
         breadcrumbEnabled: postMeta.breadcrumbEnabled,
         noindex: postMeta.noindex,
@@ -347,6 +351,7 @@ export async function getAdminPostEditorData(
       metaDescription: meta?.metaDescription ?? "",
       ogTitle: meta?.ogTitle ?? "",
       ogDescription: meta?.ogDescription ?? "",
+      ogImageMediaId: meta?.ogImageMediaId ? String(meta.ogImageMediaId) : "",
       canonicalUrl: meta?.canonicalUrl ?? "",
       breadcrumbEnabled: meta?.breadcrumbEnabled ?? false,
       noindex: meta?.noindex ?? false,
@@ -433,6 +438,7 @@ export async function createAdminPost(
         metaDescription: seo.metaDescription,
         ogTitle: seo.ogTitle,
         ogDescription: seo.ogDescription,
+        ogImageMediaId: seo.ogImageMediaId,
         canonicalUrl: seo.canonicalUrl,
         breadcrumbEnabled: seo.breadcrumbEnabled,
         noindex: seo.noindex,
@@ -632,6 +638,7 @@ export async function updateAdminPost(
           metaDescription: seo.metaDescription,
           ogTitle: seo.ogTitle,
           ogDescription: seo.ogDescription,
+          ogImageMediaId: seo.ogImageMediaId,
           canonicalUrl: seo.canonicalUrl,
           breadcrumbEnabled: seo.breadcrumbEnabled,
           noindex: seo.noindex,
@@ -645,6 +652,7 @@ export async function updateAdminPost(
             metaDescription: seo.metaDescription,
             ogTitle: seo.ogTitle,
             ogDescription: seo.ogDescription,
+            ogImageMediaId: seo.ogImageMediaId,
             canonicalUrl: seo.canonicalUrl,
             breadcrumbEnabled: seo.breadcrumbEnabled,
             noindex: seo.noindex,
@@ -916,6 +924,17 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
     errors.ogTitle = "OG Title 不能超过 255 个字符。";
   }
 
+  let parsedOgImageMediaId: number | null = null;
+
+  if (values.ogImageMediaId) {
+    parsedOgImageMediaId = Number.parseInt(values.ogImageMediaId, 10);
+
+    if (!Number.isInteger(parsedOgImageMediaId) || parsedOgImageMediaId <= 0) {
+      errors.ogImageMediaId = "所选 OG 图片无效。";
+      parsedOgImageMediaId = null;
+    }
+  }
+
   if (values.canonicalUrl) {
     try {
       const url = new URL(values.canonicalUrl);
@@ -969,6 +988,23 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
         success: false as const,
         errors: {
           categoryId: "所选分类不存在。",
+        },
+      };
+    }
+  }
+
+  if (parsedOgImageMediaId !== null) {
+    const [ogImage] = await db
+      .select({ id: media.id })
+      .from(media)
+      .where(eq(media.id, parsedOgImageMediaId))
+      .limit(1);
+
+    if (!ogImage) {
+      return {
+        success: false as const,
+        errors: {
+          ogImageMediaId: "所选 OG 图片不存在。",
         },
       };
     }
@@ -1051,6 +1087,7 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
       metaDescription: values.metaDescription || null,
       ogTitle: values.ogTitle || null,
       ogDescription: values.ogDescription || null,
+      ogImageMediaId: parsedOgImageMediaId,
       canonicalUrl: values.canonicalUrl || null,
       breadcrumbEnabled: values.breadcrumbEnabled,
       noindex: values.noindex,

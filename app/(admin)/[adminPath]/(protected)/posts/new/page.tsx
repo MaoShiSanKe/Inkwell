@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PostCreateForm } from "@/components/admin/post-create-form";
+import { listAdminMediaOptions } from "@/lib/admin/media";
 import {
   listPostCategoryOptions,
   listPostSeriesOptions,
@@ -15,10 +16,11 @@ type AdminPostNewPageProps = {
 
 export default async function AdminPostNewPage({ params }: AdminPostNewPageProps) {
   const { adminPath } = await params;
-  const [categories, tags, series] = await Promise.all([
+  const [categories, tags, series, mediaOptions] = await Promise.all([
     listPostCategoryOptions(),
     listPostTagOptions(),
     listPostSeriesOptions(),
+    listAdminMediaOptions(),
   ]);
 
   return (
@@ -42,7 +44,13 @@ export default async function AdminPostNewPage({ params }: AdminPostNewPageProps
         </Link>
       </div>
 
-      <PostCreateForm adminPath={adminPath} categories={categories} tags={tags} series={series} />
+      <PostCreateForm
+        adminPath={adminPath}
+        categories={categories}
+        tags={tags}
+        series={series}
+        mediaOptions={mediaOptions}
+      />
     </main>
   );
 }

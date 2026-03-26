@@ -11,6 +11,7 @@ export type PostFormValues = {
   metaDescription: string;
   ogTitle: string;
   ogDescription: string;
+  ogImageMediaId: string;
   canonicalUrl: string;
   breadcrumbEnabled: boolean;
   noindex: boolean;
@@ -37,6 +38,7 @@ export const initialPostFormValues: PostFormValues = {
   metaDescription: "",
   ogTitle: "",
   ogDescription: "",
+  ogImageMediaId: "",
   canonicalUrl: "",
   breadcrumbEnabled: false,
   noindex: false,

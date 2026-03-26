@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { updatePostAction } from "@/app/(admin)/[adminPath]/(protected)/posts/actions";
+import { MediaPicker, type MediaPickerOption } from "@/components/admin/media-picker";
 import { createPostFormState, type PostFormValues } from "@/lib/admin/post-form";
 
 type PostCategoryOption = {
@@ -29,6 +30,7 @@ type PostEditFormProps = {
   categories: PostCategoryOption[];
   tags: PostTagOption[];
   series: PostSeriesOption[];
+  mediaOptions: MediaPickerOption[];
   initialValues: PostFormValues;
 };
 
@@ -38,6 +40,7 @@ export function PostEditForm({
   categories,
   tags,
   series,
+  mediaOptions,
   initialValues,
 }: PostEditFormProps) {
   const initialState = createPostFormState(initialValues);
@@ -246,6 +249,13 @@ export function PostEditForm({
               placeholder="用于社交分享摘要"
             />
           </label>
+
+          <MediaPicker
+            adminPath={adminPath}
+            mediaOptions={mediaOptions}
+            value={state.values.ogImageMediaId}
+            error={state.errors.ogImageMediaId}
+          />
 
           <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
             Canonical URL
