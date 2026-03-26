@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { initialSettingsFormState } from "@/lib/admin/settings-form";
+import {
+  createEmailNotificationsFormState,
+  initialSettingsFormState,
+} from "@/lib/admin/settings-form";
 
-const { updateAdminSettingsMock } = vi.hoisted(() => ({
+const { updateAdminSettingsMock, updateAdminEmailNotificationsMock } = vi.hoisted(() => ({
   updateAdminSettingsMock: vi.fn(),
+  updateAdminEmailNotificationsMock: vi.fn(),
 }));
 
 const { getAdminSessionMock, getAdminPathMock } = vi.hoisted(() => ({
@@ -34,6 +38,8 @@ vi.mock("next/cache", () => ({
 
 vi.mock("@/lib/admin/settings", () => ({
   updateAdminSettings: updateAdminSettingsMock,
+  updateAdminEmailNotifications: updateAdminEmailNotificationsMock,
+  getAdminEmailNotifications: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -47,6 +53,7 @@ vi.mock("@/lib/settings", () => ({
 describe("admin settings actions", () => {
   beforeEach(() => {
     updateAdminSettingsMock.mockReset();
+    updateAdminEmailNotificationsMock.mockReset();
     getAdminSessionMock.mockReset();
     getAdminPathMock.mockReset();
     getAdminPathMock.mockResolvedValue("admin");
@@ -139,6 +146,83 @@ describe("admin settings actions", () => {
       destination: "/admin/settings?saved=1",
     });
   });
+
+  it("returns updated email notification state after a successful save", async () => {
+    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
+    updateAdminEmailNotificationsMock.mockResolvedValue({
+      success: true,
+      scenarios: [
+        {
+          scenario: "comment_pending",
+          description: "Notify admins",
+          enabled: false,
+        },
+      ],
+    });
+
+    const { saveEmailNotificationsAction } = await import("./actions");
+    const result = await saveEmailNotificationsAction(
+      createEmailNotificationsFormState([
+        {
+          scenario: "comment_pending",
+          description: "Notify admins",
+          enabled: true,
+        },
+      ]),
+      createEmailFormData({ comment_pending: false }),
+    );
+
+    expect(result).toEqual({
+      scenarios: [
+        {
+          scenario: "comment_pending",
+          description: "Notify admins",
+          enabled: false,
+        },
+      ],
+      error: undefined,
+    });
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/admin/settings");
+  });
+
+  it("returns email notification error state when save fails", async () => {
+    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
+    updateAdminEmailNotificationsMock.mockResolvedValue({
+      success: false,
+      scenarios: [
+        {
+          scenario: "comment_pending",
+          description: "Notify admins",
+          enabled: true,
+        },
+      ],
+      error: "保存邮件通知设置失败，请稍后重试。",
+    });
+
+    const { saveEmailNotificationsAction } = await import("./actions");
+    const result = await saveEmailNotificationsAction(
+      createEmailNotificationsFormState([
+        {
+          scenario: "comment_pending",
+          description: "Notify admins",
+          enabled: true,
+        },
+      ]),
+      createEmailFormData(),
+    );
+
+    expect(result).toEqual({
+      scenarios: [
+        {
+          scenario: "comment_pending",
+          description: "Notify admins",
+          enabled: true,
+        },
+      ],
+      error: "保存邮件通知设置失败，请稍后重试。",
+    });
+  });
 });
 
 function createFormData(
@@ -168,5 +252,28 @@ function createFormData(
   formData.set("revision_ttl_days", values.revision_ttl_days);
   formData.set("excerpt_length", values.excerpt_length);
   formData.set("comment_moderation", values.comment_moderation);
+  return formData;
+}
+
+function createEmailFormData(
+  overrides: Partial<Record<"comment_pending" | "comment_approved" | "comment_reply" | "post_published", boolean>> = {},
+) {
+  const values = {
+    comment_pending: true,
+    comment_approved: true,
+    comment_reply: true,
+    post_published: false,
+    ...overrides,
+  };
+
+  const formData = new FormData();
+  formData.set("adminPath", "admin");
+
+  for (const [key, enabled] of Object.entries(values)) {
+    if (enabled) {
+      formData.set(key, "on");
+    }
+  }
+
   return formData;
 }

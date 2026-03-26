@@ -3,11 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { updateAdminSettings } from "@/lib/admin/settings";
 import {
+  getAdminEmailNotifications,
+  updateAdminEmailNotifications,
+  updateAdminSettings,
+} from "@/lib/admin/settings";
+import {
+  createEmailNotificationsFormState,
   createSettingsFormState,
+  type EmailNotificationsFormState,
   type SettingsFormState,
 } from "@/lib/admin/settings-form";
+import { DEFAULT_EMAIL_NOTIFICATION_SCENARIOS } from "@/lib/settings-config";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminPath } from "@/lib/settings";
 
@@ -65,4 +72,32 @@ export async function saveSettingsAction(
   redirect(
     `/${result.nextAdminPath}/settings?saved=1${result.adminPathChanged ? "&adminPathChanged=1" : ""}`,
   );
+}
+
+export async function saveEmailNotificationsAction(
+  _prevState: EmailNotificationsFormState,
+  formData: FormData,
+): Promise<EmailNotificationsFormState> {
+  const effectiveAdminPath = await requireAuthenticatedAdmin(
+    String(formData.get("adminPath") ?? ""),
+  );
+
+  const toggles = Object.fromEntries(
+    DEFAULT_EMAIL_NOTIFICATION_SCENARIOS.map((scenario) => [
+      scenario.scenario,
+      formData.get(scenario.scenario) === "on",
+    ]),
+  );
+  const result = await updateAdminEmailNotifications(toggles);
+
+  if (!result.success) {
+    return createEmailNotificationsFormState(result.scenarios, result.error);
+  }
+
+  revalidateSettingsPaths(effectiveAdminPath, effectiveAdminPath);
+  return createEmailNotificationsFormState(result.scenarios);
+}
+
+export async function getInitialEmailNotificationsFormState() {
+  return createEmailNotificationsFormState(await getAdminEmailNotifications());
 }

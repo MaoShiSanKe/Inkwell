@@ -1,14 +1,18 @@
 import "server-only";
 
 import { getAdminSession } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { emailNotifications } from "@/lib/db/schema";
+import {
+  DEFAULT_EMAIL_NOTIFICATION_SCENARIOS,
+  type EmailNotificationScenario,
+  parseSettingValue,
+  type SettingValues,
+} from "@/lib/settings-config";
 import {
   getSettings,
   updateSettings as persistSettings,
 } from "@/lib/settings";
-import {
-  parseSettingValue,
-  type SettingValues,
-} from "@/lib/settings-config";
 
 import {
   type SettingsFormErrors,
@@ -28,13 +32,29 @@ export type UpdateAdminSettingsResult =
       errors: SettingsFormErrors;
     };
 
+export type UpdateAdminEmailNotificationsResult =
+  | {
+      success: true;
+      scenarios: EmailNotificationScenario[];
+    }
+  | {
+      success: false;
+      scenarios: EmailNotificationScenario[];
+      error: string;
+    };
+
 function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValues {
   return {
     admin_path: input.admin_path?.trim() ?? "",
     revision_limit: input.revision_limit?.trim() ?? "",
     revision_ttl_days: input.revision_ttl_days?.trim() ?? "",
     excerpt_length: input.excerpt_length?.trim() ?? "",
-    comment_moderation: input.comment_moderation?.trim() === "approved" ? "approved" : input.comment_moderation?.trim() === "pending" ? "pending" : "",
+    comment_moderation:
+      input.comment_moderation?.trim() === "approved"
+        ? "approved"
+        : input.comment_moderation?.trim() === "pending"
+          ? "pending"
+          : "",
   };
 }
 
@@ -90,9 +110,94 @@ function validateSettingsInput(values: SettingsFormValues):
   };
 }
 
+function mergeEmailNotificationRows(rows: Array<{
+  scenario: string;
+  description: string | null;
+  enabled: boolean;
+}>): EmailNotificationScenario[] {
+  const overrides = new Map(
+    rows.map((row) => [
+      row.scenario,
+      {
+        description: row.description,
+        enabled: row.enabled,
+      },
+    ]),
+  );
+
+  return DEFAULT_EMAIL_NOTIFICATION_SCENARIOS.map((defaultScenario) => {
+    const override = overrides.get(defaultScenario.scenario);
+
+    return {
+      scenario: defaultScenario.scenario,
+      description: override?.description?.trim() || defaultScenario.description,
+      enabled: override?.enabled ?? defaultScenario.enabled,
+    };
+  });
+}
+
 export async function getAdminSettingsFormValues(): Promise<SettingsFormValues> {
   const values = await getSettings();
   return toFormValues(values);
+}
+
+export async function getAdminEmailNotifications(): Promise<EmailNotificationScenario[]> {
+  const rows = await db
+    .select({
+      scenario: emailNotifications.scenario,
+      description: emailNotifications.description,
+      enabled: emailNotifications.enabled,
+    })
+    .from(emailNotifications);
+
+  return mergeEmailNotificationRows(rows);
+}
+
+export async function updateAdminEmailNotifications(
+  input: Record<string, boolean>,
+): Promise<UpdateAdminEmailNotificationsResult> {
+  const session = await getAdminSession();
+  const currentScenarios = await getAdminEmailNotifications();
+
+  if (!session.isAuthenticated) {
+    return {
+      success: false,
+      scenarios: currentScenarios,
+      error: "当前会话无效，请重新登录。",
+    };
+  }
+
+  try {
+    for (const scenario of DEFAULT_EMAIL_NOTIFICATION_SCENARIOS) {
+      await db
+        .insert(emailNotifications)
+        .values({
+          scenario: scenario.scenario,
+          description: scenario.description,
+          enabled: input[scenario.scenario] ?? false,
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: emailNotifications.scenario,
+          set: {
+            description: scenario.description,
+            enabled: input[scenario.scenario] ?? false,
+            updatedAt: new Date(),
+          },
+        });
+    }
+
+    return {
+      success: true,
+      scenarios: await getAdminEmailNotifications(),
+    };
+  } catch {
+    return {
+      success: false,
+      scenarios: currentScenarios,
+      error: "保存邮件通知设置失败，请稍后重试。",
+    };
+  }
 }
 
 export async function updateAdminSettings(

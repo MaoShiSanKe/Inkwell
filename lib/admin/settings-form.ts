@@ -1,3 +1,5 @@
+import type { EmailNotificationScenario } from "@/lib/settings-config";
+
 export type SettingsFormValues = {
   admin_path: string;
   revision_limit: string;
@@ -13,6 +15,11 @@ export type SettingsFormErrors = Partial<
 export type SettingsFormState = {
   values: SettingsFormValues;
   errors: SettingsFormErrors;
+};
+
+export type EmailNotificationsFormState = {
+  scenarios: EmailNotificationScenario[];
+  error?: string;
 };
 
 export const initialSettingsFormValues: SettingsFormValues = {
@@ -38,5 +45,15 @@ export function createSettingsFormState(
       ...values,
     },
     errors,
+  };
+}
+
+export function createEmailNotificationsFormState(
+  scenarios: EmailNotificationScenario[] = [],
+  error?: string,
+): EmailNotificationsFormState {
+  return {
+    scenarios,
+    error,
   };
 }

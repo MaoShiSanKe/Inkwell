@@ -1,7 +1,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { settings } from "@/lib/db/schema";
+import { emailNotifications, settings } from "@/lib/db/schema";
 
 import { cleanupIntegrationTables } from "../setup";
 
@@ -12,6 +12,12 @@ const SETTINGS_KEYS = [
   "revision_ttl_days",
   "excerpt_length",
   "comment_moderation",
+] as const;
+const EMAIL_SCENARIOS = [
+  "comment_pending",
+  "comment_approved",
+  "comment_reply",
+  "post_published",
 ] as const;
 
 const { getAdminSessionMock } = vi.hoisted(() => ({
@@ -24,10 +30,12 @@ vi.mock("@/lib/auth", () => ({
 
 describe("admin settings write paths", () => {
   let originalSettings: Record<(typeof SETTINGS_KEYS)[number], string | null>;
+  let originalEmailNotifications: Record<(typeof EMAIL_SCENARIOS)[number], boolean | null>;
 
   beforeEach(async () => {
     await cleanupIntegrationTables();
     originalSettings = await snapshotSettings();
+    originalEmailNotifications = await snapshotEmailNotifications();
     getAdminSessionMock.mockReset();
     getAdminSessionMock.mockResolvedValue({
       isAuthenticated: true,
@@ -38,6 +46,7 @@ describe("admin settings write paths", () => {
 
   afterEach(async () => {
     await restoreSettings(originalSettings);
+    await restoreEmailNotifications(originalEmailNotifications);
     await cleanupIntegrationTables();
   });
 
@@ -52,6 +61,18 @@ describe("admin settings write paths", () => {
       excerpt_length: "150",
       comment_moderation: "pending",
     });
+  });
+
+  it("loads email notification defaults when no rows exist", async () => {
+    const { getAdminEmailNotifications } = await import("@/lib/admin/settings");
+    const scenarios = await getAdminEmailNotifications();
+
+    expect(scenarios).toEqual([
+      expect.objectContaining({ scenario: "comment_pending", enabled: true }),
+      expect.objectContaining({ scenario: "comment_approved", enabled: true }),
+      expect.objectContaining({ scenario: "comment_reply", enabled: true }),
+      expect.objectContaining({ scenario: "post_published", enabled: false }),
+    ]);
   });
 
   it("persists validated settings updates", async () => {
@@ -80,6 +101,36 @@ describe("admin settings write paths", () => {
         expect.objectContaining({ key: "revision_ttl_days", value: "45" }),
         expect.objectContaining({ key: "excerpt_length", value: "180" }),
         expect.objectContaining({ key: "comment_moderation", value: "approved" }),
+      ]),
+    );
+  });
+
+  it("persists email notification toggles", async () => {
+    const { updateAdminEmailNotifications } = await import("@/lib/admin/settings");
+    const result = await updateAdminEmailNotifications({
+      comment_pending: false,
+      comment_approved: true,
+      comment_reply: false,
+      post_published: true,
+    });
+
+    expect(result).toEqual({
+      success: true,
+      scenarios: [
+        expect.objectContaining({ scenario: "comment_pending", enabled: false }),
+        expect.objectContaining({ scenario: "comment_approved", enabled: true }),
+        expect.objectContaining({ scenario: "comment_reply", enabled: false }),
+        expect.objectContaining({ scenario: "post_published", enabled: true }),
+      ],
+    });
+
+    const rows = await getEmailNotificationRows([...EMAIL_SCENARIOS]);
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ scenario: "comment_pending", enabled: false }),
+        expect.objectContaining({ scenario: "comment_approved", enabled: true }),
+        expect.objectContaining({ scenario: "comment_reply", enabled: false }),
+        expect.objectContaining({ scenario: "post_published", enabled: true }),
       ]),
     );
   });
@@ -120,6 +171,14 @@ async function getSettingRows(keys: string[]) {
     .where(inArray(settings.key, keys));
 }
 
+async function getEmailNotificationRows(keys: string[]) {
+  const db = await getDb();
+  return db
+    .select({ scenario: emailNotifications.scenario, enabled: emailNotifications.enabled })
+    .from(emailNotifications)
+    .where(inArray(emailNotifications.scenario, keys));
+}
+
 async function snapshotSettings() {
   const rows = await getSettingRows([...SETTINGS_KEYS]);
   const byKey = new Map(rows.map((row) => [row.key, row.value]));
@@ -127,6 +186,15 @@ async function snapshotSettings() {
   return Object.fromEntries(
     SETTINGS_KEYS.map((key) => [key, byKey.get(key) ?? null]),
   ) as Record<(typeof SETTINGS_KEYS)[number], string | null>;
+}
+
+async function snapshotEmailNotifications() {
+  const rows = await getEmailNotificationRows([...EMAIL_SCENARIOS]);
+  const byKey = new Map(rows.map((row) => [row.scenario, row.enabled]));
+
+  return Object.fromEntries(
+    EMAIL_SCENARIOS.map((key) => [key, byKey.get(key) ?? null]),
+  ) as Record<(typeof EMAIL_SCENARIOS)[number], boolean | null>;
 }
 
 async function restoreSettings(values: Record<(typeof SETTINGS_KEYS)[number], string | null>) {
@@ -153,6 +221,38 @@ async function restoreSettings(values: Record<(typeof SETTINGS_KEYS)[number], st
         set: {
           value,
           isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
+  }
+}
+
+async function restoreEmailNotifications(
+  values: Record<(typeof EMAIL_SCENARIOS)[number], boolean | null>,
+) {
+  const db = await getDb();
+
+  for (const scenario of EMAIL_SCENARIOS) {
+    const enabled = values[scenario];
+
+    if (enabled === null) {
+      await db.delete(emailNotifications).where(eq(emailNotifications.scenario, scenario));
+      continue;
+    }
+
+    await db
+      .insert(emailNotifications)
+      .values({
+        scenario,
+        description: scenario,
+        enabled,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: emailNotifications.scenario,
+        set: {
+          description: scenario,
+          enabled,
           updatedAt: new Date(),
         },
       });

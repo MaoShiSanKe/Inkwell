@@ -1,7 +1,10 @@
 import Link from "next/link";
 
 import { SettingsForm } from "@/components/admin/settings-form";
-import { getAdminSettingsFormValues } from "@/lib/admin/settings";
+import {
+  getAdminEmailNotifications,
+  getAdminSettingsFormValues,
+} from "@/lib/admin/settings";
 
 type AdminSettingsPageProps = {
   params: Promise<{
@@ -21,7 +24,10 @@ export default async function AdminSettingsPage({
     params,
     searchParams,
   ]);
-  const initialValues = await getAdminSettingsFormValues();
+  const [initialValues, emailNotifications] = await Promise.all([
+    getAdminSettingsFormValues(),
+    getAdminEmailNotifications(),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-16">
@@ -32,7 +38,7 @@ export default async function AdminSettingsPage({
           </p>
           <h1 className="text-3xl font-semibold tracking-tight">后台设置</h1>
           <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
-            管理后台路径、修订保留策略、自动摘要长度以及评论默认审核模式。
+            管理后台路径、修订保留策略、自动摘要长度、评论默认审核模式以及邮件通知场景。
           </p>
         </div>
 
@@ -56,7 +62,11 @@ export default async function AdminSettingsPage({
         </p>
       ) : null}
 
-      <SettingsForm adminPath={adminPath} initialValues={initialValues} />
+      <SettingsForm
+        adminPath={adminPath}
+        initialValues={initialValues}
+        emailNotifications={emailNotifications}
+      />
     </main>
   );
 }
