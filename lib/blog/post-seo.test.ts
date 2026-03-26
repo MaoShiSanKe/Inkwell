@@ -4,8 +4,10 @@ import {
   DEFAULT_DESCRIPTION,
   buildArticleJsonLd,
   buildPostUrl,
+  buildRobotsTxt,
   buildRssXml,
   buildSiteUrl,
+  buildSitemapUrl,
   buildSitemapXml,
   escapeXml,
   resolveCanonicalUrl,
@@ -88,6 +90,24 @@ describe("buildPostUrl", () => {
 
   it("falls back to relative path when origin is missing", () => {
     expect(buildPostUrl("test-post", null)).toBe("/post/test-post");
+  });
+});
+
+describe("buildSitemapUrl", () => {
+  it("builds absolute sitemap URL when origin exists", () => {
+    expect(buildSitemapUrl("https://example.com")).toBe("https://example.com/sitemap.xml");
+  });
+
+  it("falls back to relative sitemap path when origin is missing", () => {
+    expect(buildSitemapUrl(null)).toBe("/sitemap.xml");
+  });
+});
+
+describe("buildRobotsTxt", () => {
+  it("builds robots.txt body with sitemap reference", () => {
+    expect(buildRobotsTxt("https://example.com")).toBe(
+      ["User-agent: *", "Allow: /", "Sitemap: https://example.com/sitemap.xml"].join("\n"),
+    );
   });
 });
 

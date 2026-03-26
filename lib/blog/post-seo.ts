@@ -69,6 +69,14 @@ export function buildPostUrl(slug: string, siteOrigin: string | null) {
   return buildSiteUrl(`/post/${slug}`, siteOrigin);
 }
 
+export function buildSitemapUrl(siteOrigin: string | null) {
+  return buildSiteUrl("/sitemap.xml", siteOrigin);
+}
+
+export function buildRobotsTxt(siteOrigin: string | null) {
+  return ["User-agent: *", "Allow: /", `Sitemap: ${buildSitemapUrl(siteOrigin)}`].join("\n");
+}
+
 export function resolveImageUrl(
   image: PostSeoImageInput | null,
   siteOrigin: string | null,
