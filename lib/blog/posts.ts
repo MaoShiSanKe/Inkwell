@@ -38,6 +38,12 @@ export type BlogPostOgImageData = {
   height: number | null;
 };
 
+export type BlogPostCategoryData = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
 export type BlogPostPageData = {
   id: number;
   title: string;
@@ -51,11 +57,8 @@ export type BlogPostPageData = {
   };
   seo: BlogPostSeoData;
   ogImage: BlogPostOgImageData | null;
-  category: {
-    id: number;
-    name: string;
-    slug: string;
-  } | null;
+  category: BlogPostCategoryData | null;
+  categoryPath: BlogPostCategoryData[];
   tags: Array<{
     id: number;
     name: string;
@@ -376,6 +379,7 @@ export async function resolvePublishedPostBySlug(
       categoryId: categories.id,
       categoryName: categories.name,
       categorySlug: categories.slug,
+      categoryParentId: categories.parentId,
       metaTitle: postMeta.metaTitle,
       metaDescription: postMeta.metaDescription,
       ogTitle: postMeta.ogTitle,
@@ -401,16 +405,42 @@ export async function resolvePublishedPostBySlug(
     .limit(1);
 
   if (post) {
-    const tagRows = await db
-      .select({
-        id: tags.id,
-        name: tags.name,
-        slug: tags.slug,
-      })
-      .from(postTags)
-      .innerJoin(tags, eq(postTags.tagId, tags.id))
-      .where(eq(postTags.postId, post.id))
-      .orderBy(tags.name);
+    const category =
+      post.categoryId && post.categoryName && post.categorySlug
+        ? {
+            id: post.categoryId,
+            name: post.categoryName,
+            slug: post.categorySlug,
+          }
+        : null;
+
+    const [tagRows, parentCategoryRows] = await Promise.all([
+      db
+        .select({
+          id: tags.id,
+          name: tags.name,
+          slug: tags.slug,
+        })
+        .from(postTags)
+        .innerJoin(tags, eq(postTags.tagId, tags.id))
+        .where(eq(postTags.postId, post.id))
+        .orderBy(tags.name),
+      post.categoryParentId
+        ? db
+            .select({
+              id: categories.id,
+              name: categories.name,
+              slug: categories.slug,
+            })
+            .from(categories)
+            .where(eq(categories.id, post.categoryParentId))
+            .limit(1)
+        : Promise.resolve([]),
+    ]);
+
+    const parentCategory = parentCategoryRows[0] ?? null;
+    const categoryPath =
+      category === null ? [] : parentCategory ? [parentCategory, category] : [category];
 
     return {
       kind: "post",
@@ -446,14 +476,8 @@ export async function resolvePublishedPostBySlug(
               height: post.ogImageHeight,
             }
           : null,
-        category:
-          post.categoryId && post.categoryName && post.categorySlug
-            ? {
-                id: post.categoryId,
-                name: post.categoryName,
-                slug: post.categorySlug,
-              }
-            : null,
+        category,
+        categoryPath,
         tags: tagRows,
       },
     };

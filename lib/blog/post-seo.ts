@@ -16,6 +16,11 @@ export type PostSeoImageInput = {
   height: number | null;
 };
 
+export type PostSeoBreadcrumbItemInput = {
+  name: string;
+  path: string;
+};
+
 export type PostSeoInput = {
   title: string;
   slug: string;
@@ -63,6 +68,10 @@ export function buildSiteUrl(path: string, siteOrigin: string | null) {
   }
 
   return new URL(path, siteOrigin).toString();
+}
+
+export function buildCategoryUrl(slug: string, siteOrigin: string | null) {
+  return buildSiteUrl(`/category/${slug}`, siteOrigin);
 }
 
 export function buildPostUrl(slug: string, siteOrigin: string | null) {
@@ -179,6 +188,22 @@ export function buildArticleJsonLd(
   }
 
   return articleJsonLd;
+}
+
+export function buildBreadcrumbListJsonLd(
+  items: PostSeoBreadcrumbItemInput[],
+  siteOrigin: string | null,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: buildSiteUrl(item.path, siteOrigin),
+    })),
+  };
 }
 
 export function buildSitemapXml(

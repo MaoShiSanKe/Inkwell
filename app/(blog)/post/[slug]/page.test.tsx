@@ -194,6 +194,109 @@ describe("blog post page", () => {
     expect(permanentRedirectMock).toHaveBeenCalledWith("/post/canonical-slug");
   });
 
+  it("renders flat breadcrumbs when breadcrumbEnabled is false", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData(),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain('aria-label="面包屑"');
+    expect(markup).toContain('href="/"');
+    expect(markup).toContain(">首页<");
+    expect(markup).not.toContain('href="/category/frontend"');
+    expect(markup).toContain('aria-current="page"');
+    expect(markup).toContain('>Canonical title<');
+    expect(markup).toContain('"@type":"BreadcrumbList"');
+    expect(markup).toContain('"item":"https://example.com/"');
+    expect(markup).toContain('"item":"https://example.com/post/canonical-slug"');
+  });
+
+  it("renders category path breadcrumbs when breadcrumbEnabled is true and categories exist", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        seo: {
+          metaTitle: "Metadata title",
+          metaDescription: "Metadata description",
+          ogTitle: "OG title",
+          ogDescription: "OG description",
+          canonicalUrl: null,
+          breadcrumbEnabled: true,
+          noindex: false,
+          nofollow: false,
+        },
+        category: {
+          id: 2,
+          name: "Guides",
+          slug: "guides",
+        },
+        categoryPath: [
+          {
+            id: 1,
+            name: "Frontend",
+            slug: "frontend",
+          },
+          {
+            id: 2,
+            name: "Guides",
+            slug: "guides",
+          },
+        ],
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain('href="/category/frontend"');
+    expect(markup).toContain('href="/category/guides"');
+    expect(markup).toContain('>Frontend<');
+    expect(markup).toContain('>Guides<');
+    expect(markup).toContain('"item":"https://example.com/category/frontend"');
+    expect(markup).toContain('"item":"https://example.com/category/guides"');
+    expect(markup).toContain('"position":4');
+  });
+
+  it("falls back to flat breadcrumbs when breadcrumbEnabled is true but no category exists", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        seo: {
+          metaTitle: "Metadata title",
+          metaDescription: "Metadata description",
+          ogTitle: "OG title",
+          ogDescription: "OG description",
+          canonicalUrl: null,
+          breadcrumbEnabled: true,
+          noindex: false,
+          nofollow: false,
+        },
+        category: null,
+        categoryPath: [],
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain('href="/"');
+    expect(markup).not.toContain('/category/frontend');
+    expect(markup).toContain('"position":2');
+    expect(markup).not.toContain('"position":3');
+  });
+
   it("renders the published post page with related posts, reading time, views, likes, and comments when the requested slug matches", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",
@@ -250,6 +353,7 @@ describe("blog post page", () => {
     expect(markup).toContain("Related title");
     expect(markup).toContain("/post/related-slug");
     expect(markup).toContain("application/ld+json");
+    expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).toContain("post-like-button count:3");
     expect(markup).toContain("当前共有 2 条已公开评论。");
     expect(markup).toContain("comment-list");
@@ -316,7 +420,58 @@ describe("blog post page", () => {
   });
 });
 
-function createPostPageData() {
+type CreatePostPageDataOverrides = {
+  id?: number;
+  title?: string;
+  slug?: string;
+  excerpt?: string;
+  content?: string;
+  publishedAt?: Date;
+  updatedAt?: Date;
+  author?: {
+    displayName?: string;
+  };
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+    ogTitle?: string | null;
+    ogDescription?: string | null;
+    canonicalUrl?: string | null;
+    breadcrumbEnabled?: boolean;
+    noindex?: boolean;
+    nofollow?: boolean;
+  };
+  ogImage?: null;
+  category?:
+    | {
+        id: number;
+        name: string;
+        slug: string;
+      }
+    | null;
+  categoryPath?: Array<{
+    id: number;
+    name: string;
+    slug: string;
+  }>;
+  tags?: Array<{
+    id: number;
+    name: string;
+    slug: string;
+  }>;
+};
+
+function createPostPageData(overrides: CreatePostPageDataOverrides = {}) {
+  const {
+    author: authorOverrides,
+    seo: seoOverrides,
+    ogImage: ogImageOverride,
+    category: categoryOverride,
+    categoryPath: categoryPathOverride,
+    tags: tagOverrides,
+    ...restOverrides
+  } = overrides;
+
   return {
     id: 1,
     title: "Canonical title",
@@ -327,6 +482,7 @@ function createPostPageData() {
     updatedAt: new Date("2026-03-26T13:00:00.000Z"),
     author: {
       displayName: "Author Name",
+      ...(authorOverrides ?? {}),
     },
     seo: {
       metaTitle: "Metadata title",
@@ -337,16 +493,27 @@ function createPostPageData() {
       breadcrumbEnabled: false,
       noindex: false,
       nofollow: false,
+      ...(seoOverrides ?? {}),
     },
-    ogImage: null,
-    category: {
-      id: 1,
-      name: "Frontend",
-      slug: "frontend",
-    },
-    tags: [
+    ogImage: ogImageOverride ?? null,
+    category: categoryOverride === undefined
+      ? {
+          id: 1,
+          name: "Frontend",
+          slug: "frontend",
+        }
+      : categoryOverride,
+    categoryPath: categoryPathOverride ?? [
+      {
+        id: 1,
+        name: "Frontend",
+        slug: "frontend",
+      },
+    ],
+    tags: tagOverrides ?? [
       { id: 1, name: "React", slug: "react" },
       { id: 2, name: "Next.js", slug: "nextjs" },
     ],
+    ...restOverrides,
   };
 }

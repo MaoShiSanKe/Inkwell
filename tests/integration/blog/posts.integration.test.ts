@@ -77,6 +77,13 @@ describe("resolvePublishedPostBySlug", () => {
         name: category.name,
         slug: category.slug,
       },
+      categoryPath: [
+        {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+        },
+      ],
       tags: expect.arrayContaining([
         expect.objectContaining({ id: reactTag.id, name: reactTag.name, slug: reactTag.slug }),
         expect.objectContaining({ id: nextTag.id, name: nextTag.name, slug: nextTag.slug }),
@@ -103,6 +110,91 @@ describe("resolvePublishedPostBySlug", () => {
     });
     expect(result.post.publishedAt?.toISOString()).toBe(publishedAt.toISOString());
     expect(result.post.updatedAt.toISOString()).toBe(updatedAt.toISOString());
+  });
+
+  it("returns categoryPath in root-to-leaf order for nested categories", async () => {
+    const seed = createSeed();
+    const author = await createUser(`${seed}-nested`);
+    const parentCategory = await createCategory(`${seed}-parent`);
+    const childCategory = await createCategory(`${seed}-child`, parentCategory.id);
+    const post = await createPost({
+      authorId: author.id,
+      categoryId: childCategory.id,
+      title: "Nested category post",
+      slug: buildSlug(`nested-category-post-${seed}`),
+      excerpt: null,
+      content: "<p>Nested category content</p>",
+      status: "published",
+      publishedAt: new Date("2026-03-26T15:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T15:05:00.000Z"),
+    });
+
+    await createPostMeta({
+      postId: post.id,
+      ogImageMediaId: null,
+      metaTitle: "Nested SEO title",
+      metaDescription: "Nested SEO description",
+      ogTitle: "Nested OG title",
+      ogDescription: "Nested OG description",
+      canonicalUrl: "https://example.com/nested-canonical",
+      breadcrumbEnabled: false,
+      noindex: false,
+      nofollow: false,
+    });
+
+    const result = await resolveSlug(post.slug);
+
+    expect(result.kind).toBe("post");
+
+    if (result.kind !== "post") {
+      throw new Error("Expected a nested category post result.");
+    }
+
+    expect(result.post.category).toEqual({
+      id: childCategory.id,
+      name: childCategory.name,
+      slug: childCategory.slug,
+    });
+    expect(result.post.categoryPath).toEqual([
+      {
+        id: parentCategory.id,
+        name: parentCategory.name,
+        slug: parentCategory.slug,
+      },
+      {
+        id: childCategory.id,
+        name: childCategory.name,
+        slug: childCategory.slug,
+      },
+    ]);
+    expect(result.post.seo.breadcrumbEnabled).toBe(false);
+  });
+
+  it("returns an empty categoryPath when the published post has no category", async () => {
+    const seed = createSeed();
+    const author = await createUser(`${seed}-uncategorized`);
+    const post = await createPost({
+      authorId: author.id,
+      categoryId: null,
+      title: "Uncategorized post",
+      slug: buildSlug(`uncategorized-post-${seed}`),
+      excerpt: null,
+      content: "<p>Uncategorized content</p>",
+      status: "published",
+      publishedAt: new Date("2026-03-26T16:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T16:05:00.000Z"),
+    });
+
+    const result = await resolveSlug(post.slug);
+
+    expect(result.kind).toBe("post");
+
+    if (result.kind !== "post") {
+      throw new Error("Expected an uncategorized post result.");
+    }
+
+    expect(result.post.category).toBeNull();
+    expect(result.post.categoryPath).toEqual([]);
   });
 
   it("returns a redirect when a published alias slug is requested", async () => {
@@ -504,7 +596,7 @@ async function createUser(seed: string) {
   return user;
 }
 
-async function createCategory(seed: string) {
+async function createCategory(seed: string, parentId: number | null = null) {
   const db = await getDb();
   const [category] = await db
     .insert(categories)
@@ -512,6 +604,7 @@ async function createCategory(seed: string) {
       name: `Category ${seed}`,
       slug: buildSlug(`category-${seed}`),
       description: `Category description ${seed}`,
+      parentId,
     })
     .returning({
       id: categories.id,
@@ -610,7 +703,7 @@ async function createLocalOgImage(seed: string, uploaderId: number) {
 
 async function createPostMeta(input: {
   postId: number;
-  ogImageMediaId: number;
+  ogImageMediaId: number | null;
   metaTitle: string;
   metaDescription: string;
   ogTitle: string;

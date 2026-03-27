@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_DESCRIPTION,
   buildArticleJsonLd,
+  buildBreadcrumbListJsonLd,
   buildPostUrl,
   buildRobotsTxt,
   buildRssXml,
@@ -310,6 +311,73 @@ describe("resolveCanonicalUrl", () => {
     expect(
       resolveCanonicalUrl(createPostSeoInput(), "https://example.com"),
     ).toBe("https://example.com/post/test-post");
+  });
+});
+
+describe("buildBreadcrumbListJsonLd", () => {
+  it("builds breadcrumb list JSON-LD with absolute URLs and sequential positions", () => {
+    const jsonLd = buildBreadcrumbListJsonLd(
+      [
+        { name: "首页", path: "/" },
+        { name: "前端", path: "/category/frontend" },
+        { name: "测试文章", path: "/post/test-post" },
+      ],
+      "https://example.com",
+    );
+
+    expect(jsonLd).toEqual({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "首页",
+          item: "https://example.com/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "前端",
+          item: "https://example.com/category/frontend",
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: "测试文章",
+          item: "https://example.com/post/test-post",
+        },
+      ],
+    });
+  });
+
+  it("falls back to relative breadcrumb paths when origin is missing", () => {
+    const jsonLd = buildBreadcrumbListJsonLd(
+      [
+        { name: "首页", path: "/" },
+        { name: "测试文章", path: "/post/test-post" },
+      ],
+      null,
+    );
+
+    expect(jsonLd).toEqual({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "首页",
+          item: "/",
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "测试文章",
+          item: "/post/test-post",
+        },
+      ],
+    });
   });
 });
 

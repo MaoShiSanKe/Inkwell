@@ -8,14 +8,22 @@ import { PostLikeButton } from "@/components/blog/post-like-button";
 import { PostTableOfContents } from "@/components/blog/post-table-of-contents";
 import { listApprovedCommentsForPost } from "@/lib/blog/comments";
 import { getPublishedPostLikeCount } from "@/lib/blog/likes";
-import { listRelatedPublishedPosts, resolvePublishedPostBySlug } from "@/lib/blog/posts";
+import {
+  listRelatedPublishedPosts,
+  resolvePublishedPostBySlug,
+  type BlogPostPageData,
+} from "@/lib/blog/posts";
 import {
   SITE_NAME,
   buildArticleJsonLd,
+  buildBreadcrumbListJsonLd,
+  buildCategoryUrl,
+  buildPostUrl,
   estimateReadingTimeMinutes,
   resolveCanonicalUrl,
   resolveImageUrl,
   resolvePostDescription,
+  type PostSeoBreadcrumbItemInput,
 } from "@/lib/blog/post-seo";
 import { parsePostContentForToc } from "@/lib/blog/post-toc";
 import { getPublishedPostViewCount, recordPublishedPostView } from "@/lib/blog/views";
@@ -92,6 +100,28 @@ function countApprovedComments(comments: Awaited<ReturnType<typeof listApprovedC
   return comments.reduce((total, comment) => total + 1 + comment.replies.length, 0);
 }
 
+function buildBreadcrumbItems(post: BlogPostPageData): PostSeoBreadcrumbItemInput[] {
+  const categoryItems =
+    post.seo.breadcrumbEnabled && post.categoryPath.length > 0
+      ? post.categoryPath.map((category) => ({
+          name: category.name,
+          path: buildCategoryUrl(category.slug, null),
+        }))
+      : [];
+
+  return [
+    {
+      name: "首页",
+      path: "/",
+    },
+    ...categoryItems,
+    {
+      name: post.title,
+      path: buildPostUrl(post.slug, null),
+    },
+  ];
+}
+
 export default async function PostPage({ params, searchParams }: PostPageProps) {
   const [{ slug }, { replyTo }] = await Promise.all([
     params,
@@ -135,12 +165,14 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   const canonicalUrl = resolveCanonicalUrl(post, siteOrigin);
   const description = resolvePostDescription(post);
   const imageUrl = resolveImageUrl(post.ogImage, siteOrigin);
+  const breadcrumbItems = buildBreadcrumbItems(post);
   const articleJsonLd = buildArticleJsonLd(
     post,
     canonicalUrl,
     description,
     imageUrl,
   );
+  const breadcrumbJsonLd = buildBreadcrumbListJsonLd(breadcrumbItems, siteOrigin);
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
@@ -150,6 +182,44 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           __html: JSON.stringify(articleJsonLd),
         }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd),
+        }}
+      />
+      <nav
+        aria-label="面包屑"
+        className="rounded-2xl border border-slate-200 px-6 py-4 dark:border-slate-800"
+      >
+        <ol className="flex flex-wrap items-center gap-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
+          {breadcrumbItems.map((item, index) => {
+            const isCurrentPage = index === breadcrumbItems.length - 1;
+
+            return (
+              <li key={`${item.path}-${item.name}`} className="flex items-center gap-2">
+                {index > 0 ? (
+                  <span aria-hidden="true" className="text-slate-400 dark:text-slate-500">
+                    /
+                  </span>
+                ) : null}
+                {isCurrentPage ? (
+                  <span aria-current="page" className="font-medium text-slate-900 dark:text-slate-100">
+                    {item.name}
+                  </span>
+                ) : (
+                  <Link
+                    className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400"
+                    href={item.path}
+                  >
+                    {item.name}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
       <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
         Post
       </p>
