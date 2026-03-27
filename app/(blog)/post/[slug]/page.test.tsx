@@ -368,6 +368,47 @@ describe("blog post page", () => {
     });
   });
 
+  it("renders clickable tag links when the published post has tags", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        tags: [
+          { id: 1, name: "React", slug: "react" },
+          { id: 2, name: "Next.js", slug: "nextjs" },
+        ],
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain('aria-label="文章标签"');
+    expect(markup).toContain('href="/tag/react"');
+    expect(markup).toContain('href="/tag/nextjs"');
+    expect(markup).toContain(">React<");
+    expect(markup).toContain(">Next.js<");
+  });
+
+  it("does not render the tag section when the published post has no tags", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({ tags: [] }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).not.toContain('aria-label="文章标签"');
+    expect(markup).not.toContain('href="/tag/react"');
+    expect(markup).not.toContain('href="/tag/nextjs"');
+  });
+
   it("renders a table of contents and heading anchors when the content includes plain-text headings", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",

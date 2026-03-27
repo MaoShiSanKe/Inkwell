@@ -242,6 +242,20 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
       ) : null}
       <p className="text-sm text-slate-500 dark:text-slate-400">预计阅读 {readingTimeMinutes} 分钟。</p>
       <p className="text-sm text-slate-500 dark:text-slate-400">当前累计 {viewCount} 次浏览。</p>
+      {post.tags.length > 0 ? (
+        <section aria-label="文章标签" className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-slate-500 dark:text-slate-400">标签：</span>
+          {post.tags.map((tag) => (
+            <Link
+              key={tag.id}
+              className="inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-600 transition hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100"
+              href={`/tag/${tag.slug}`}
+            >
+              {tag.name}
+            </Link>
+          ))}
+        </section>
+      ) : null}
       {hasTableOfContents ? <PostTableOfContents items={parsedContent.tocItems} /> : null}
       {hasTableOfContents ? (
         <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 dark:border-slate-800">
