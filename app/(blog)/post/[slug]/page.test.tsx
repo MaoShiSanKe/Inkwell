@@ -399,6 +399,28 @@ describe("blog post page", () => {
     expect(markup).toContain("分类：Guides");
   });
 
+  it("renders a clickable series link when the published post has a series", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        series: {
+          id: 2,
+          name: "Getting Started",
+          slug: "getting-started",
+        },
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain('href="/series/getting-started"');
+    expect(markup).toContain("系列：Getting Started");
+  });
+
   it("does not render the category link when the published post has no category", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",
@@ -413,6 +435,22 @@ describe("blog post page", () => {
 
     expect(markup).not.toContain('href="/category/frontend"');
     expect(markup).not.toContain("分类：Frontend");
+  });
+
+  it("does not render the series link when the published post has no series", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({ series: null }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).not.toContain('href="/series/getting-started"');
+    expect(markup).not.toContain("系列：Getting Started");
   });
 
   it("renders the last updated timestamp from the published post data", async () => {
@@ -555,6 +593,13 @@ type CreatePostPageDataOverrides = {
         slug: string;
       }
     | null;
+  series?:
+    | {
+        id: number;
+        name: string;
+        slug: string;
+      }
+    | null;
   categoryPath?: Array<{
     id: number;
     name: string;
@@ -573,6 +618,7 @@ function createPostPageData(overrides: CreatePostPageDataOverrides = {}) {
     seo: seoOverrides,
     ogImage: ogImageOverride,
     category: categoryOverride,
+    series: seriesOverride,
     categoryPath: categoryPathOverride,
     tags: tagOverrides,
     ...restOverrides
@@ -609,6 +655,7 @@ function createPostPageData(overrides: CreatePostPageDataOverrides = {}) {
           slug: "frontend",
         }
       : categoryOverride,
+    series: seriesOverride === undefined ? null : seriesOverride,
     categoryPath: categoryPathOverride ?? [
       {
         id: 1,

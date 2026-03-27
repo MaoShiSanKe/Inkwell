@@ -240,6 +240,14 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           分类：{post.category.name}
         </Link>
       ) : null}
+      {post.series ? (
+        <Link
+          className="text-sm text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
+          href={`/series/${post.series.slug}`}
+        >
+          系列：{post.series.name}
+        </Link>
+      ) : null}
       {post.publishedAt ? (
         <p className="text-sm text-slate-500 dark:text-slate-400">
           发布时间：

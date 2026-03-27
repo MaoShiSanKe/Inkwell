@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { categories, media, postMeta, postTags, posts, settings, tags, users } from "@/lib/db/schema";
+import { categories, media, postMeta, postSeries, postTags, posts, series, settings, tags, users } from "@/lib/db/schema";
 
 import { cleanupIntegrationTables } from "../setup";
 
@@ -195,6 +195,102 @@ describe("resolvePublishedPostBySlug", () => {
 
     expect(result.post.category).toBeNull();
     expect(result.post.categoryPath).toEqual([]);
+  });
+
+  it("returns the first linked series for a published post", async () => {
+    const seed = createSeed();
+    const author = await createUser(`${seed}-series`);
+    const post = await createPost({
+      authorId: author.id,
+      categoryId: null,
+      title: "Series-linked post",
+      slug: buildSlug(`series-linked-post-${seed}`),
+      excerpt: null,
+      content: "<p>Series-linked content</p>",
+      status: "published",
+      publishedAt: new Date("2026-03-26T17:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T17:05:00.000Z"),
+    });
+    const seriesItem = await createSeries(seed);
+
+    await createPostSeries(post.id, seriesItem.id, 0);
+
+    const result = await resolveSlug(post.slug);
+
+    expect(result.kind).toBe("post");
+
+    if (result.kind !== "post") {
+      throw new Error("Expected a series-linked post result.");
+    }
+
+    expect(result.post.series).toEqual({
+      id: seriesItem.id,
+      name: seriesItem.name,
+      slug: seriesItem.slug,
+    });
+  });
+
+  it("returns null when the published post has no linked series", async () => {
+    const seed = createSeed();
+    const author = await createUser(`${seed}-no-series`);
+    const post = await createPost({
+      authorId: author.id,
+      categoryId: null,
+      title: "Post without series",
+      slug: buildSlug(`no-series-post-${seed}`),
+      excerpt: null,
+      content: "<p>No series content</p>",
+      status: "published",
+      publishedAt: new Date("2026-03-26T18:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T18:05:00.000Z"),
+    });
+
+    const result = await resolveSlug(post.slug);
+
+    expect(result.kind).toBe("post");
+
+    if (result.kind !== "post") {
+      throw new Error("Expected a post result without series.");
+    }
+
+    expect(result.post.series).toBeNull();
+  });
+
+  it("selects the linked series with the lowest order index and lowest series id tie-breaker", async () => {
+    const seed = createSeed();
+    const author = await createUser(`${seed}-multiple-series`);
+    const post = await createPost({
+      authorId: author.id,
+      categoryId: null,
+      title: "Multi-series post",
+      slug: buildSlug(`multi-series-post-${seed}`),
+      excerpt: null,
+      content: "<p>Multi-series content</p>",
+      status: "published",
+      publishedAt: new Date("2026-03-26T19:00:00.000Z"),
+      updatedAt: new Date("2026-03-26T19:05:00.000Z"),
+    });
+    const higherOrderSeries = await createSeries(`${seed}-higher-order`);
+    const lowerIdTieWinner = await createSeries(`${seed}-tie-winner`);
+    const higherIdTieLoser = await createSeries(`${seed}-tie-loser`);
+
+    await createPostSeries(post.id, higherOrderSeries.id, 2);
+    await createPostSeries(post.id, higherIdTieLoser.id, 0);
+    await createPostSeries(post.id, lowerIdTieWinner.id, 0);
+
+    const result = await resolveSlug(post.slug);
+
+    expect(result.kind).toBe("post");
+
+    if (result.kind !== "post") {
+      throw new Error("Expected a multi-series post result.");
+    }
+
+    expect(result.post.series).toEqual({
+      id: lowerIdTieWinner.id,
+      name: lowerIdTieWinner.name,
+      slug: lowerIdTieWinner.slug,
+    });
   });
 
   it("returns a redirect when a published alias slug is requested", async () => {
@@ -631,6 +727,34 @@ async function createTag(seed: string, suffix: string) {
     });
 
   return tag;
+}
+
+async function createSeries(seed: string) {
+  const db = await getDb();
+  const [seriesItem] = await db
+    .insert(series)
+    .values({
+      name: `Series ${seed}`,
+      slug: buildSlug(`series-${seed}`),
+      description: `Series description ${seed}`,
+    })
+    .returning({
+      id: series.id,
+      name: series.name,
+      slug: series.slug,
+    });
+
+  return seriesItem;
+}
+
+async function createPostSeries(postId: number, seriesId: number, orderIndex: number) {
+  const db = await getDb();
+
+  await db.insert(postSeries).values({
+    postId,
+    seriesId,
+    orderIndex,
+  });
 }
 
 async function createPost(input: {

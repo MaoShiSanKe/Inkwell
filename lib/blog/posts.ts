@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -44,6 +44,12 @@ export type BlogPostCategoryData = {
   slug: string;
 };
 
+export type BlogPostSeriesData = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
 export type BlogPostPageData = {
   id: number;
   title: string;
@@ -59,6 +65,7 @@ export type BlogPostPageData = {
   ogImage: BlogPostOgImageData | null;
   category: BlogPostCategoryData | null;
   categoryPath: BlogPostCategoryData[];
+  series: BlogPostSeriesData | null;
   tags: Array<{
     id: number;
     name: string;
@@ -414,7 +421,7 @@ export async function resolvePublishedPostBySlug(
           }
         : null;
 
-    const [tagRows, parentCategoryRows] = await Promise.all([
+    const [tagRows, parentCategoryRows, seriesRows] = await Promise.all([
       db
         .select({
           id: tags.id,
@@ -436,9 +443,21 @@ export async function resolvePublishedPostBySlug(
             .where(eq(categories.id, post.categoryParentId))
             .limit(1)
         : Promise.resolve([]),
+      db
+        .select({
+          id: series.id,
+          name: series.name,
+          slug: series.slug,
+        })
+        .from(postSeries)
+        .innerJoin(series, eq(postSeries.seriesId, series.id))
+        .where(eq(postSeries.postId, post.id))
+        .orderBy(asc(postSeries.orderIndex), asc(series.id))
+        .limit(1),
     ]);
 
     const parentCategory = parentCategoryRows[0] ?? null;
+    const selectedSeries = seriesRows[0] ?? null;
     const categoryPath =
       category === null ? [] : parentCategory ? [parentCategory, category] : [category];
 
@@ -478,6 +497,7 @@ export async function resolvePublishedPostBySlug(
           : null,
         category,
         categoryPath,
+        series: selectedSeries,
         tags: tagRows,
       },
     };
