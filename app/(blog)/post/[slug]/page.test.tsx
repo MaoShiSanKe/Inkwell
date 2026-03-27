@@ -205,11 +205,17 @@ describe("blog post page", () => {
       params: Promise.resolve({ slug: "canonical-slug" }),
     });
     const markup = renderToStaticMarkup(element);
+    const breadcrumbStart = markup.indexOf('aria-label="面包屑"');
+    const postLabelStart = markup.indexOf(">Post<");
+    const breadcrumbMarkup =
+      breadcrumbStart >= 0 && postLabelStart > breadcrumbStart
+        ? markup.slice(breadcrumbStart, postLabelStart)
+        : markup;
 
     expect(markup).toContain('aria-label="面包屑"');
-    expect(markup).toContain('href="/"');
-    expect(markup).toContain(">首页<");
-    expect(markup).not.toContain('href="/category/frontend"');
+    expect(breadcrumbMarkup).toContain('href="/"');
+    expect(breadcrumbMarkup).toContain(">首页<");
+    expect(breadcrumbMarkup).not.toContain('href="/category/frontend"');
     expect(markup).toContain('aria-current="page"');
     expect(markup).toContain('>Canonical title<');
     expect(markup).toContain('"@type":"BreadcrumbList"');
@@ -344,6 +350,8 @@ describe("blog post page", () => {
     expect(markup).toContain("Canonical title");
     expect(markup).toContain("Canonical excerpt");
     expect(markup).toContain("作者：Author Name");
+    expect(markup).toContain('href="/category/frontend"');
+    expect(markup).toContain("分类：Frontend");
     expect(markup).toContain("Canonical content body");
     expect(markup).not.toContain("文章目录");
     expect(markup).toContain("发布时间：");
@@ -366,6 +374,44 @@ describe("blog post page", () => {
       categoryId: 1,
       tagIds: [1, 2],
     });
+  });
+
+  it("renders a clickable category link when the published post has a category", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        category: {
+          id: 2,
+          name: "Guides",
+          slug: "guides",
+        },
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain('href="/category/guides"');
+    expect(markup).toContain("分类：Guides");
+  });
+
+  it("does not render the category link when the published post has no category", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({ category: null, categoryPath: [] }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).not.toContain('href="/category/frontend"');
+    expect(markup).not.toContain("分类：Frontend");
   });
 
   it("renders clickable tag links when the published post has tags", async () => {

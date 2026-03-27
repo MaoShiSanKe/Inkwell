@@ -1,0 +1,153 @@
+import { randomUUID } from "node:crypto";
+
+import { expect, test } from "@playwright/test";
+import { config as loadEnv } from "dotenv";
+import { and, inArray, like } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+
+import { categories, posts, users } from "../../lib/db/schema";
+
+loadEnv({ path: ".env.local" });
+
+const BROWSER_PREFIX = "integration-browser-post-category-link-";
+const databaseUrl = getDatabaseUrl();
+
+test.describe("post category link browser regression", () => {
+  test("shows the category link on the public post page and navigates to the category archive", async ({ page }) => {
+    const fixture = await seedPostCategoryLinkFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+
+    try {
+      await page.goto(`/post/${fixture.postSlug}`);
+
+      await expect(page.getByRole("heading", { name: fixture.postTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: `分类：${fixture.categoryName}` })).toBeVisible();
+
+      await page.getByRole("link", { name: `分类：${fixture.categoryName}` }).click();
+
+      await expect(page).toHaveURL(new RegExp(`/category/${fixture.categorySlug}$`));
+      await expect(page.getByRole("heading", { name: fixture.categoryName })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.postTitle })).toBeVisible();
+    } finally {
+      await cleanupPostCategoryLinkFixture();
+    }
+  });
+});
+
+type PostCategoryLinkFixture = {
+  postSlug: string;
+  postTitle: string;
+  categoryName: string;
+  categorySlug: string;
+};
+
+async function seedPostCategoryLinkFixture(seed: string): Promise<PostCategoryLinkFixture> {
+  const postTitle = `Category Link Post ${seed}`;
+  const postSlug = `${BROWSER_PREFIX}post-${seed}`;
+  const categoryName = `Category Link ${seed}`;
+  const categorySlug = `${BROWSER_PREFIX}category-${seed}`;
+
+  await cleanupPostCategoryLinkFixture();
+
+  await withDb(async (db) => {
+    const [author] = await db
+      .insert(users)
+      .values({
+        email: `${BROWSER_PREFIX}${seed}@example.com`,
+        username: `${BROWSER_PREFIX}${seed}`,
+        displayName: "Category Link Author",
+        passwordHash: "hashed-password",
+        role: "author",
+      })
+      .returning({ id: users.id });
+
+    const [category] = await db
+      .insert(categories)
+      .values({
+        name: categoryName,
+        slug: categorySlug,
+        description: `Category link category ${seed}`,
+      })
+      .returning({ id: categories.id });
+
+    await db.insert(posts).values({
+      authorId: author.id,
+      categoryId: category.id,
+      title: postTitle,
+      slug: postSlug,
+      excerpt: "Category link excerpt",
+      content: "Category link content",
+      status: "published",
+      publishedAt: new Date("2026-03-28T11:00:00.000Z"),
+      updatedAt: new Date("2026-03-28T11:05:00.000Z"),
+    });
+  });
+
+  return {
+    postSlug,
+    postTitle,
+    categoryName,
+    categorySlug,
+  };
+}
+
+async function cleanupPostCategoryLinkFixture() {
+  await withDb(async (db) => {
+    const browserPosts = await db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(like(posts.slug, `${BROWSER_PREFIX}%`));
+
+    if (browserPosts.length > 0) {
+      await db.delete(posts).where(
+        inArray(
+          posts.id,
+          browserPosts.map((post) => post.id),
+        ),
+      );
+    }
+
+    await db.delete(categories).where(like(categories.slug, `${BROWSER_PREFIX}%`));
+
+    const browserUsers = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(like(users.username, `${BROWSER_PREFIX}%`));
+
+    if (browserUsers.length > 0) {
+      await db.delete(users).where(
+        and(
+          inArray(
+            users.id,
+            browserUsers.map((user) => user.id),
+          ),
+          like(users.username, `${BROWSER_PREFIX}%`),
+        ),
+      );
+    }
+  });
+}
+
+async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {
+  const client = postgres(databaseUrl, { max: 1 });
+  const db = drizzle(client, {
+    schema: { categories, posts, users },
+    casing: "snake_case",
+  });
+
+  try {
+    return await callback(db);
+  } finally {
+    await client.end({ timeout: 0 });
+  }
+}
+
+function getDatabaseUrl() {
+  const value = process.env.DATABASE_URL;
+
+  if (!value) {
+    throw new Error("DATABASE_URL is not configured.");
+  }
+
+  return value;
+}
