@@ -10,10 +10,20 @@ npm run build
 npm run start
 npm run lint
 npm run type-check
+npm run test
+npm run test:integration
+npm run test:browser
 npm run db:generate
 npm run db:migrate
 npm run db:studio
 ```
+
+## 测试说明
+
+- `npm run test`：运行默认 Vitest 测试集，覆盖纯逻辑与 SSR 测试，并排除 `tests/integration/` 与 `tests/browser/`。
+- `npm run test:integration`：使用 `vitest.integration.config.ts` 运行数据库相关集成测试。
+- `npm run test:browser`：使用 Playwright 运行 `tests/browser/` 下的浏览器回归测试，默认访问 `http://localhost:3000`，必要时按 `playwright.config.ts` 自动启动 `npm run dev`。
+- 当前浏览器回归覆盖公开归档、文章目录（TOC）、相关文章、浏览量、点赞、主题切换，以及公开文章页面包屑与分类跳转链路（`tests/browser/post-breadcrumbs.spec.ts`）。
 
 ## 环境变量
 
