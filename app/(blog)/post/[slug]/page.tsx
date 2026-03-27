@@ -248,6 +248,10 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           </time>
         </p>
       ) : null}
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        最后更新：
+        <time dateTime={post.updatedAt.toISOString()}>{post.updatedAt.toLocaleString()}</time>
+      </p>
       <p className="text-sm text-slate-500 dark:text-slate-400">预计阅读 {readingTimeMinutes} 分钟。</p>
       <p className="text-sm text-slate-500 dark:text-slate-400">当前累计 {viewCount} 次浏览。</p>
       {post.tags.length > 0 ? (

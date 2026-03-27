@@ -355,6 +355,7 @@ describe("blog post page", () => {
     expect(markup).toContain("Canonical content body");
     expect(markup).not.toContain("文章目录");
     expect(markup).toContain("发布时间：");
+    expect(markup).toContain("最后更新：");
     expect(markup).toContain("预计阅读 1 分钟。");
     expect(markup).toContain("当前累计 7 次浏览。");
     expect(markup).toContain("相关文章");
@@ -412,6 +413,24 @@ describe("blog post page", () => {
 
     expect(markup).not.toContain('href="/category/frontend"');
     expect(markup).not.toContain("分类：Frontend");
+  });
+
+  it("renders the last updated timestamp from the published post data", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        updatedAt: new Date("2026-03-27T09:45:00.000Z"),
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("最后更新：");
+    expect(markup).toContain('dateTime="2026-03-27T09:45:00.000Z"');
   });
 
   it("renders clickable tag links when the published post has tags", async () => {
