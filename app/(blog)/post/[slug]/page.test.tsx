@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   getSiteOriginMock,
   resolvePublishedPostBySlugMock,
+  listRelatedPublishedPostsMock,
   listApprovedCommentsForPostMock,
   getPublishedPostLikeCountMock,
   getPublishedPostViewCountMock,
@@ -11,6 +12,7 @@ const {
 } = vi.hoisted(() => ({
   getSiteOriginMock: vi.fn(),
   resolvePublishedPostBySlugMock: vi.fn(),
+  listRelatedPublishedPostsMock: vi.fn(),
   listApprovedCommentsForPostMock: vi.fn(),
   getPublishedPostLikeCountMock: vi.fn(),
   getPublishedPostViewCountMock: vi.fn(),
@@ -38,6 +40,12 @@ const { notFoundMock, permanentRedirectMock } = vi.hoisted(() => ({
   }),
 }));
 
+vi.mock("next/link", () => ({
+  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
 vi.mock("next/navigation", () => ({
   notFound: notFoundMock,
   permanentRedirect: permanentRedirectMock,
@@ -48,6 +56,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/blog/posts", () => ({
   resolvePublishedPostBySlug: resolvePublishedPostBySlugMock,
+  listRelatedPublishedPosts: listRelatedPublishedPostsMock,
 }));
 
 vi.mock("@/lib/blog/comments", () => ({
@@ -103,6 +112,8 @@ describe("blog post page", () => {
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     resolvePublishedPostBySlugMock.mockReset();
+    listRelatedPublishedPostsMock.mockReset();
+    listRelatedPublishedPostsMock.mockResolvedValue([]);
     listApprovedCommentsForPostMock.mockReset();
     listApprovedCommentsForPostMock.mockResolvedValue([]);
     getPublishedPostLikeCountMock.mockReset();
@@ -183,11 +194,22 @@ describe("blog post page", () => {
     expect(permanentRedirectMock).toHaveBeenCalledWith("/post/canonical-slug");
   });
 
-  it("renders the published post page with reading time, views, likes, and comments when the requested slug matches", async () => {
+  it("renders the published post page with related posts, reading time, views, likes, and comments when the requested slug matches", async () => {
     resolvePublishedPostBySlugMock.mockResolvedValue({
       kind: "post",
       post: createPostPageData(),
     });
+    listRelatedPublishedPostsMock.mockResolvedValue([
+      {
+        id: 2,
+        title: "Related title",
+        slug: "related-slug",
+        excerpt: "Related excerpt",
+        publishedAt: new Date("2026-03-26T16:00:00.000Z"),
+        author: { displayName: "Author Name" },
+        category: { name: "Frontend", slug: "frontend" },
+      },
+    ]);
     listApprovedCommentsForPostMock.mockResolvedValue([
       {
         id: 10,
@@ -223,6 +245,9 @@ describe("blog post page", () => {
     expect(markup).toContain("发布时间：");
     expect(markup).toContain("预计阅读 1 分钟。");
     expect(markup).toContain("当前累计 7 次浏览。");
+    expect(markup).toContain("相关文章");
+    expect(markup).toContain("Related title");
+    expect(markup).toContain("/post/related-slug");
     expect(markup).toContain("application/ld+json");
     expect(markup).toContain("post-like-button count:3");
     expect(markup).toContain("当前共有 2 条已公开评论。");
@@ -231,6 +256,27 @@ describe("blog post page", () => {
     expect(markup).toContain("Reply User");
     expect(markup).toContain("comment-form replying:Top Level");
     expect(recordPublishedPostViewMock).toHaveBeenCalledWith({ postId: 1 });
+    expect(listRelatedPublishedPostsMock).toHaveBeenCalledWith({
+      postId: 1,
+      categoryId: 1,
+      tagIds: [1, 2],
+    });
+  });
+
+  it("renders the empty related posts state when no matches are available", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData(),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("相关文章");
+    expect(markup).toContain("当前还没有可推荐的相关文章。");
   });
 });
 
@@ -257,5 +303,14 @@ function createPostPageData() {
       nofollow: false,
     },
     ogImage: null,
+    category: {
+      id: 1,
+      name: "Frontend",
+      slug: "frontend",
+    },
+    tags: [
+      { id: 1, name: "React", slug: "react" },
+      { id: 2, name: "Next.js", slug: "nextjs" },
+    ],
   };
 }

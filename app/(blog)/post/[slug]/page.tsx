@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { CommentForm } from "@/components/blog/comment-form";
@@ -6,7 +7,7 @@ import { CommentList } from "@/components/blog/comment-list";
 import { PostLikeButton } from "@/components/blog/post-like-button";
 import { listApprovedCommentsForPost } from "@/lib/blog/comments";
 import { getPublishedPostLikeCount } from "@/lib/blog/likes";
-import { resolvePublishedPostBySlug } from "@/lib/blog/posts";
+import { listRelatedPublishedPosts, resolvePublishedPostBySlug } from "@/lib/blog/posts";
 import {
   SITE_NAME,
   buildArticleJsonLd,
@@ -116,6 +117,11 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   const likeCount = await getPublishedPostLikeCount(post.id);
   const viewCount = await getPublishedPostViewCount(post.id);
   const readingTimeMinutes = estimateReadingTimeMinutes(post.content);
+  const relatedPosts = await listRelatedPublishedPosts({
+    postId: post.id,
+    categoryId: post.category?.id ?? null,
+    tagIds: post.tags.map((tag) => tag.id),
+  });
   const replyToId = Number.parseInt(replyTo ?? "", 10);
   const replyTarget = Number.isInteger(replyToId)
     ? approvedComments.find((comment) => comment.id === replyToId) ?? null
@@ -167,6 +173,36 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
       </article>
 
       <PostLikeButton postId={post.id} postSlug={post.slug} initialLikeCount={likeCount} />
+
+      <section className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 dark:border-slate-800">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-semibold tracking-tight">相关文章</h2>
+          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            {relatedPosts.length > 0
+              ? "基于当前文章的分类与标签，为你推荐以下已发布内容。"
+              : "当前还没有可推荐的相关文章。"}
+          </p>
+        </div>
+
+        {relatedPosts.length > 0 ? (
+          <div className="flex flex-col gap-3">
+            {relatedPosts.map((relatedPost) => (
+              <article key={relatedPost.id} className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold tracking-tight">
+                  <Link className="hover:underline" href={`/post/${relatedPost.slug}`}>
+                    {relatedPost.title}
+                  </Link>
+                </h3>
+                {relatedPost.excerpt ? (
+                  <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                    {relatedPost.excerpt}
+                  </p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </section>
 
       <section className="mt-6 flex flex-col gap-6">
         <div className="flex flex-col gap-2">

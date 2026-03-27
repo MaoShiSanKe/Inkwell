@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
@@ -51,6 +51,16 @@ export type BlogPostPageData = {
   };
   seo: BlogPostSeoData;
   ogImage: BlogPostOgImageData | null;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
+  tags: Array<{
+    id: number;
+    name: string;
+    slug: string;
+  }>;
 };
 
 export type PublishedPostListItem = {
@@ -291,6 +301,59 @@ export async function resolvePublishedSeriesArchiveBySlug(
   };
 }
 
+export async function listRelatedPublishedPosts(input: {
+  postId: number;
+  categoryId: number | null;
+  tagIds: number[];
+}): Promise<PublishedPostListItem[]> {
+  const categoryConditions = [eq(posts.status, "published"), sql`${posts.id} <> ${input.postId}`];
+
+  if (input.categoryId !== null) {
+    categoryConditions.push(eq(posts.categoryId, input.categoryId));
+  }
+
+  const relatedByCategory =
+    input.categoryId === null
+      ? []
+      : await buildPublishedPostListQuery()
+          .where(and(...categoryConditions))
+          .orderBy(desc(posts.publishedAt), desc(posts.updatedAt), desc(posts.id))
+          .limit(4);
+
+  if (relatedByCategory.length >= 4 || input.tagIds.length === 0) {
+    return relatedByCategory.map(mapPublishedPostListItem);
+  }
+
+  const existingIds = new Set(relatedByCategory.map((row) => row.id));
+  const relatedByTags = await buildPublishedPostListQuery()
+    .innerJoin(postTags, eq(postTags.postId, posts.id))
+    .where(
+      and(
+        eq(posts.status, "published"),
+        sql`${posts.id} <> ${input.postId}`,
+        inArray(postTags.tagId, input.tagIds),
+      ),
+    )
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt), desc(posts.id));
+
+  const combined = [...relatedByCategory];
+
+  for (const row of relatedByTags) {
+    if (combined.length >= 4) {
+      break;
+    }
+
+    if (existingIds.has(row.id)) {
+      continue;
+    }
+
+    existingIds.add(row.id);
+    combined.push(row);
+  }
+
+  return combined.map(mapPublishedPostListItem);
+}
+
 export async function resolvePublishedPostBySlug(
   slug: string,
 ): Promise<ResolvedPublishedPost> {
@@ -310,6 +373,9 @@ export async function resolvePublishedPostBySlug(
       publishedAt: posts.publishedAt,
       updatedAt: posts.updatedAt,
       authorDisplayName: users.displayName,
+      categoryId: categories.id,
+      categoryName: categories.name,
+      categorySlug: categories.slug,
       metaTitle: postMeta.metaTitle,
       metaDescription: postMeta.metaDescription,
       ogTitle: postMeta.ogTitle,
@@ -328,12 +394,24 @@ export async function resolvePublishedPostBySlug(
     })
     .from(posts)
     .innerJoin(users, eq(posts.authorId, users.id))
+    .leftJoin(categories, eq(posts.categoryId, categories.id))
     .leftJoin(postMeta, eq(postMeta.postId, posts.id))
     .leftJoin(media, eq(postMeta.ogImageMediaId, media.id))
     .where(and(eq(posts.slug, normalizedSlug), eq(posts.status, "published")))
     .limit(1);
 
   if (post) {
+    const tagRows = await db
+      .select({
+        id: tags.id,
+        name: tags.name,
+        slug: tags.slug,
+      })
+      .from(postTags)
+      .innerJoin(tags, eq(postTags.tagId, tags.id))
+      .where(eq(postTags.postId, post.id))
+      .orderBy(tags.name);
+
     return {
       kind: "post",
       post: {
@@ -368,6 +446,15 @@ export async function resolvePublishedPostBySlug(
               height: post.ogImageHeight,
             }
           : null,
+        category:
+          post.categoryId && post.categoryName && post.categorySlug
+            ? {
+                id: post.categoryId,
+                name: post.categoryName,
+                slug: post.categorySlug,
+              }
+            : null,
+        tags: tagRows,
       },
     };
   }
