@@ -5,6 +5,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { CommentForm } from "@/components/blog/comment-form";
 import { CommentList } from "@/components/blog/comment-list";
 import { PostLikeButton } from "@/components/blog/post-like-button";
+import { PostTableOfContents } from "@/components/blog/post-table-of-contents";
 import { listApprovedCommentsForPost } from "@/lib/blog/comments";
 import { getPublishedPostLikeCount } from "@/lib/blog/likes";
 import { listRelatedPublishedPosts, resolvePublishedPostBySlug } from "@/lib/blog/posts";
@@ -16,6 +17,7 @@ import {
   resolveImageUrl,
   resolvePostDescription,
 } from "@/lib/blog/post-seo";
+import { parsePostContentForToc } from "@/lib/blog/post-toc";
 import { getPublishedPostViewCount, recordPublishedPostView } from "@/lib/blog/views";
 import { getSiteOrigin } from "@/lib/settings";
 
@@ -122,6 +124,8 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
     categoryId: post.category?.id ?? null,
     tagIds: post.tags.map((tag) => tag.id),
   });
+  const parsedContent = parsePostContentForToc(post.content);
+  const hasTableOfContents = parsedContent.tocItems.length > 0;
   const replyToId = Number.parseInt(replyTo ?? "", 10);
   const replyTarget = Number.isInteger(replyToId)
     ? approvedComments.find((comment) => comment.id === replyToId) ?? null
@@ -168,9 +172,38 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
       ) : null}
       <p className="text-sm text-slate-500 dark:text-slate-400">预计阅读 {readingTimeMinutes} 分钟。</p>
       <p className="text-sm text-slate-500 dark:text-slate-400">当前累计 {viewCount} 次浏览。</p>
-      <article className="rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 whitespace-pre-wrap dark:border-slate-800">
-        {post.content}
-      </article>
+      {hasTableOfContents ? <PostTableOfContents items={parsedContent.tocItems} /> : null}
+      {hasTableOfContents ? (
+        <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 dark:border-slate-800">
+          {parsedContent.blocks.map((block, index) => {
+            if (block.type === "heading") {
+              if (block.level === 2) {
+                return (
+                  <h2 id={block.id} key={block.id} className="text-2xl font-semibold tracking-tight">
+                    {block.title}
+                  </h2>
+                );
+              }
+
+              return (
+                <h3 id={block.id} key={block.id} className="text-xl font-semibold tracking-tight">
+                  {block.title}
+                </h3>
+              );
+            }
+
+            return (
+              <p key={`${index}-${block.content}`} className="whitespace-pre-wrap">
+                {block.content}
+              </p>
+            );
+          })}
+        </article>
+      ) : (
+        <article className="rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 whitespace-pre-wrap dark:border-slate-800">
+          {post.content}
+        </article>
+      )}
 
       <PostLikeButton postId={post.id} postSlug={post.slug} initialLikeCount={likeCount} />
 

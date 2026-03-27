@@ -242,6 +242,7 @@ describe("blog post page", () => {
     expect(markup).toContain("Canonical excerpt");
     expect(markup).toContain("作者：Author Name");
     expect(markup).toContain("Canonical content body");
+    expect(markup).not.toContain("文章目录");
     expect(markup).toContain("发布时间：");
     expect(markup).toContain("预计阅读 1 分钟。");
     expect(markup).toContain("当前累计 7 次浏览。");
@@ -261,6 +262,41 @@ describe("blog post page", () => {
       categoryId: 1,
       tagIds: [1, 2],
     });
+  });
+
+  it("renders a table of contents and heading anchors when the content includes plain-text headings", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: {
+        ...createPostPageData(),
+        content: [
+          "Lead paragraph",
+          "",
+          "## Overview",
+          "Overview body",
+          "",
+          "### Details",
+          "Details body",
+        ].join("\n"),
+      },
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("文章目录");
+    expect(markup).toContain('aria-label="文章目录"');
+    expect(markup).toContain('href="#overview"');
+    expect(markup).toContain('href="#details"');
+    expect(markup).toContain('id="overview"');
+    expect(markup).toContain('id="details"');
+    expect(markup).toContain(">Overview<");
+    expect(markup).toContain(">Details<");
+    expect(markup).toContain("Overview body");
+    expect(markup).toContain("Details body");
   });
 
   it("renders the empty related posts state when no matches are available", async () => {
