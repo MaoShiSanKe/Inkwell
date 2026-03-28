@@ -11,7 +11,10 @@ import {
   type CreateAdminPostResult,
   type UpdateAdminPostResult,
 } from "@/lib/admin/posts";
-import { createPostFormState } from "@/lib/admin/post-form";
+import {
+  createPostFormState,
+  toScheduledAtIso,
+} from "@/lib/admin/post-form";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminPath } from "@/lib/settings";
 
@@ -44,6 +47,10 @@ export async function createPostAction(
     );
   }
 
+  const scheduledAt = String(formData.get("scheduledAt") ?? "");
+  const scheduledAtIso =
+    String(formData.get("scheduledAtIso") ?? "") || toScheduledAtIso(scheduledAt);
+
   const result = (await createAdminPost({
     title: String(formData.get("title") ?? ""),
     slug: String(formData.get("slug") ?? ""),
@@ -52,7 +59,10 @@ export async function createPostAction(
     content: String(formData.get("content") ?? ""),
     status: String(formData.get("status") ?? "draft") as
       | "draft"
-      | "published",
+      | "published"
+      | "scheduled",
+    scheduledAt,
+    scheduledAtIso,
     tagIds: formData.getAll("tagIds").map(String),
     seriesIds: formData.getAll("seriesIds").map(String),
     metaTitle: String(formData.get("metaTitle") ?? ""),
@@ -93,6 +103,9 @@ export async function updatePostAction(
   }
 
   const postId = Number.parseInt(String(formData.get("postId") ?? ""), 10);
+  const scheduledAt = String(formData.get("scheduledAt") ?? "");
+  const scheduledAtIso =
+    String(formData.get("scheduledAtIso") ?? "") || toScheduledAtIso(scheduledAt);
 
   const result = (await updateAdminPost(postId, {
     title: String(formData.get("title") ?? ""),
@@ -102,7 +115,10 @@ export async function updatePostAction(
     content: String(formData.get("content") ?? ""),
     status: String(formData.get("status") ?? "draft") as
       | "draft"
-      | "published",
+      | "published"
+      | "scheduled",
+    scheduledAt,
+    scheduledAtIso,
     tagIds: formData.getAll("tagIds").map(String),
     seriesIds: formData.getAll("seriesIds").map(String),
     metaTitle: String(formData.get("metaTitle") ?? ""),

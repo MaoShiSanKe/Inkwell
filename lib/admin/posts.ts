@@ -18,10 +18,15 @@ import {
   tags,
   users,
 } from "@/lib/db/schema";
-import { getExcerptLength } from "@/lib/settings";
+import {
+  getExcerptLength,
+  getRevisionLimit,
+  getRevisionTtlDays,
+} from "@/lib/settings";
 
 import {
   createPostFormState,
+  formatScheduledAtInputFromIso,
   type PostFormErrors,
   type PostFormValues,
 } from "./post-form";
@@ -62,7 +67,9 @@ export type CreateAdminPostInput = {
   categoryId?: string;
   excerpt?: string;
   content: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "scheduled";
+  scheduledAt?: string;
+  scheduledAtIso?: string;
   tagIds?: string[];
   seriesIds?: string[];
   metaTitle?: string;
@@ -112,6 +119,22 @@ export type AdminPostEditorData = {
   values: PostFormValues;
 };
 
+type RevisionDbLike = {
+  select: typeof db.select;
+  delete: typeof db.delete;
+};
+
+type RevisionRetentionSettings = {
+  revisionLimit: number;
+  revisionTtlDays: number;
+};
+
+type DatabaseConstraintError = {
+  code?: string;
+  constraint?: string;
+  constraint_name?: string;
+};
+
 function normalizeSlug(value: string) {
   return value
     .trim()
@@ -148,43 +171,13 @@ function normalizeCanonicalUrl(value: string | undefined) {
   return value?.trim() ?? "";
 }
 
-function getInitialValues(input: CreateAdminPostInput): PostFormValues {
-  return {
-    title: input.title.trim(),
-    slug: normalizeSlug(input.slug),
-    categoryId: input.categoryId?.trim() ?? "",
-    excerpt: input.excerpt?.trim() ?? "",
-    content: input.content.trim(),
-    status: input.status,
-    tagIds: normalizeSelectedIds(input.tagIds),
-    seriesIds: normalizeSelectedIds(input.seriesIds),
-    metaTitle: normalizeOptionalText(input.metaTitle),
-    metaDescription: normalizeOptionalText(input.metaDescription),
-    ogTitle: normalizeOptionalText(input.ogTitle),
-    ogDescription: normalizeOptionalText(input.ogDescription),
-    ogImageMediaId: input.ogImageMediaId?.trim() ?? "",
-    canonicalUrl: normalizeCanonicalUrl(input.canonicalUrl),
-    breadcrumbEnabled: input.breadcrumbEnabled ?? false,
-    noindex: input.noindex ?? false,
-    nofollow: input.nofollow ?? false,
-  };
-}
-
 function buildPostPath(slug: string) {
   return `/post/${slug}`;
 }
 
 function collectAffectedSlugs(...slugs: Array<string | null | undefined>) {
-  return Array.from(
-    new Set(slugs.filter((value): value is string => Boolean(value))),
-  );
+  return Array.from(new Set(slugs.filter((value): value is string => Boolean(value))));
 }
-
-type DatabaseConstraintError = {
-  code?: string;
-  constraint?: string;
-  constraint_name?: string;
-};
 
 function getUniqueConstraintName(error: unknown) {
   if (!error || typeof error !== "object") {
@@ -221,6 +214,44 @@ function getPostMutationErrors(
   };
 }
 
+function parseSelectedIds(values: string[]) {
+  const parsed = values.map((value) => Number.parseInt(value, 10));
+
+  if (parsed.some((value) => !Number.isInteger(value) || value <= 0)) {
+    return null;
+  }
+
+  return Array.from(new Set(parsed));
+}
+
+function getInitialValues(input: CreateAdminPostInput): PostFormValues {
+  const scheduledAtIso = input.scheduledAtIso?.trim() ?? "";
+  const scheduledAt =
+    input.scheduledAt?.trim() ?? formatScheduledAtInputFromIso(scheduledAtIso);
+
+  return {
+    title: input.title.trim(),
+    slug: normalizeSlug(input.slug),
+    categoryId: input.categoryId?.trim() ?? "",
+    excerpt: input.excerpt?.trim() ?? "",
+    content: input.content.trim(),
+    status: input.status,
+    scheduledAt,
+    scheduledAtIso,
+    tagIds: normalizeSelectedIds(input.tagIds),
+    seriesIds: normalizeSelectedIds(input.seriesIds),
+    metaTitle: normalizeOptionalText(input.metaTitle),
+    metaDescription: normalizeOptionalText(input.metaDescription),
+    ogTitle: normalizeOptionalText(input.ogTitle),
+    ogDescription: normalizeOptionalText(input.ogDescription),
+    ogImageMediaId: input.ogImageMediaId?.trim() ?? "",
+    canonicalUrl: normalizeCanonicalUrl(input.canonicalUrl),
+    breadcrumbEnabled: input.breadcrumbEnabled ?? false,
+    noindex: input.noindex ?? false,
+    nofollow: input.nofollow ?? false,
+  };
+}
+
 async function requireAdminSession() {
   const session = await getAdminSession();
 
@@ -233,6 +264,76 @@ async function requireAdminSession() {
     userId: number;
     role: AdminRole;
   };
+}
+
+async function getRevisionRetentionSettings(): Promise<RevisionRetentionSettings> {
+  const [revisionLimit, revisionTtlDays] = await Promise.all([
+    getRevisionLimit(),
+    getRevisionTtlDays(),
+  ]);
+
+  return {
+    revisionLimit,
+    revisionTtlDays,
+  };
+}
+
+async function prunePostRevisions(
+  tx: RevisionDbLike,
+  postId: number,
+  retention: RevisionRetentionSettings,
+) {
+  const { revisionLimit, revisionTtlDays } = retention;
+  const [post] = await tx
+    .select({ status: posts.status })
+    .from(posts)
+    .where(eq(posts.id, postId))
+    .limit(1);
+
+  if (!post) {
+    return;
+  }
+
+  if (revisionTtlDays > 0 && post.status === "published") {
+    const cutoff = new Date(Date.now() - revisionTtlDays * 24 * 60 * 60 * 1000);
+    const draftRevisionRows = await tx
+      .select({ id: postRevisions.id, createdAt: postRevisions.createdAt })
+      .from(postRevisions)
+      .where(
+        and(
+          eq(postRevisions.postId, postId),
+          eq(postRevisions.status, "draft"),
+          ne(postRevisions.reason, "restored from trash"),
+        ),
+      )
+      .orderBy(desc(postRevisions.createdAt), desc(postRevisions.id));
+
+    const staleDraftIds = draftRevisionRows
+      .filter((row) => row.createdAt.getTime() < cutoff.getTime())
+      .map((row) => row.id);
+
+    if (staleDraftIds.length > 0) {
+      await tx.delete(postRevisions).where(inArray(postRevisions.id, staleDraftIds));
+    }
+  }
+
+  if (revisionLimit <= 0) {
+    return;
+  }
+
+  const revisionRows = await tx
+    .select({ id: postRevisions.id })
+    .from(postRevisions)
+    .where(eq(postRevisions.postId, postId))
+    .orderBy(desc(postRevisions.createdAt), desc(postRevisions.id));
+
+  const staleRevisionIds = revisionRows.slice(revisionLimit).map((row) => row.id);
+
+  if (staleRevisionIds.length === 0) {
+    return;
+  }
+
+  await tx.delete(postRevisions).where(inArray(postRevisions.id, staleRevisionIds));
 }
 
 export async function listAdminPosts(): Promise<AdminPostListItem[]> {
@@ -301,6 +402,7 @@ export async function getAdminPostEditorData(
         excerpt: posts.excerpt,
         content: posts.content,
         status: posts.status,
+        publishedAt: posts.publishedAt,
       })
       .from(posts)
       .where(eq(posts.id, postId))
@@ -344,7 +446,20 @@ export async function getAdminPostEditorData(
       categoryId: post.categoryId ? String(post.categoryId) : "",
       excerpt: post.excerpt ?? "",
       content: post.content,
-      status: post.status === "published" ? "published" : "draft",
+      status:
+        post.status === "published"
+          ? "published"
+          : post.status === "scheduled"
+            ? "scheduled"
+            : "draft",
+      scheduledAt:
+        post.status === "scheduled" && post.publishedAt
+          ? formatScheduledAtInputFromIso(post.publishedAt.toISOString())
+          : "",
+      scheduledAtIso:
+        post.status === "scheduled" && post.publishedAt
+          ? post.publishedAt.toISOString()
+          : "",
       tagIds: tagRows.map((row) => String(row.tagId)),
       seriesIds: seriesRows.map((row) => String(row.seriesId)),
       metaTitle: meta?.metaTitle ?? "",
@@ -386,15 +501,10 @@ export async function createAdminPost(
     };
   }
 
-  const {
-    parsedCategoryId,
-    parsedTagIds,
-    parsedSeriesIds,
-    resolvedExcerpt,
-    publishedAt,
-    seo,
-  } = validation;
+  const { parsedCategoryId, parsedTagIds, parsedSeriesIds, resolvedExcerpt, publishedAt, seo } =
+    validation;
   const now = new Date();
+  const retention = await getRevisionRetentionSettings();
 
   try {
     const insertedPost = await db.transaction(async (tx) => {
@@ -473,6 +583,8 @@ export async function createAdminPost(
           });
       }
 
+      await prunePostRevisions(tx, post.id, retention);
+
       return post;
     });
 
@@ -517,10 +629,7 @@ export async function updateAdminPost(
   }
 
   const [existingPost] = await db
-    .select({
-      id: posts.id,
-      slug: posts.slug,
-    })
+    .select({ id: posts.id, slug: posts.slug })
     .from(posts)
     .where(eq(posts.id, postId))
     .limit(1);
@@ -557,16 +666,11 @@ export async function updateAdminPost(
     ...existingAliasRows.map((row) => row.slug),
   );
 
-  const {
-    parsedCategoryId,
-    parsedTagIds,
-    parsedSeriesIds,
-    resolvedExcerpt,
-    publishedAt,
-    seo,
-  } = validation;
+  const { parsedCategoryId, parsedTagIds, parsedSeriesIds, resolvedExcerpt, publishedAt, seo } =
+    validation;
   const now = new Date();
   const slugChanged = values.slug !== existingPost.slug;
+  const retention = await getRevisionRetentionSettings();
 
   try {
     await db.transaction(async (tx) => {
@@ -583,9 +687,7 @@ export async function updateAdminPost(
           .limit(1);
 
         if (restoredAlias) {
-          await tx
-            .delete(postSlugAliases)
-            .where(eq(postSlugAliases.id, restoredAlias.id));
+          await tx.delete(postSlugAliases).where(eq(postSlugAliases.id, restoredAlias.id));
         }
 
         await tx.insert(postSlugAliases).values({
@@ -689,6 +791,8 @@ export async function updateAdminPost(
       } else {
         await tx.delete(sitemapEntries).where(eq(sitemapEntries.postId, postId));
       }
+
+      await prunePostRevisions(tx, postId, retention);
     });
 
     return {
@@ -762,6 +866,8 @@ export async function moveAdminPostToTrash(
     };
   }
 
+  const retention = await getRevisionRetentionSettings();
+
   try {
     await db.transaction(async (tx) => {
       await tx
@@ -783,6 +889,8 @@ export async function moveAdminPostToTrash(
         status: "trash",
         reason: "moved to trash",
       });
+
+      await prunePostRevisions(tx, postId, retention);
     });
 
     return {
@@ -855,6 +963,8 @@ export async function restoreAdminPostFromTrash(
     };
   }
 
+  const retention = await getRevisionRetentionSettings();
+
   try {
     await db.transaction(async (tx) => {
       await tx
@@ -877,6 +987,8 @@ export async function restoreAdminPostFromTrash(
         status: "draft",
         reason: "restored from trash",
       });
+
+      await prunePostRevisions(tx, postId, retention);
     });
 
     return {
@@ -891,7 +1003,6 @@ export async function restoreAdminPostFromTrash(
     };
   }
 }
-
 
 async function validatePostInput(values: PostFormValues, currentPostId?: number) {
   const errors: PostFormErrors = {};
@@ -912,8 +1023,32 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
     errors.content = "正文不能为空。";
   }
 
-  if (values.status !== "draft" && values.status !== "published") {
-    errors.status = "仅支持保存草稿或直接发布。";
+  if (
+    values.status !== "draft" &&
+    values.status !== "published" &&
+    values.status !== "scheduled"
+  ) {
+    errors.status = "仅支持保存草稿、直接发布或定时发布。";
+  }
+
+  let scheduledAtDate: Date | null = null;
+
+  if (values.status === "scheduled") {
+    const scheduledAtSource = values.scheduledAtIso || values.scheduledAt;
+
+    if (!scheduledAtSource) {
+      errors.scheduledAt = "请选择未来的发布时间。";
+    } else {
+      scheduledAtDate = new Date(scheduledAtSource);
+
+      if (Number.isNaN(scheduledAtDate.getTime())) {
+        errors.scheduledAt = "计划发布时间格式无效。";
+        scheduledAtDate = null;
+      } else if (scheduledAtDate.getTime() <= Date.now()) {
+        errors.scheduledAt = "计划发布时间必须晚于当前时间。";
+        scheduledAtDate = null;
+      }
+    }
   }
 
   if (values.metaTitle.length > 255) {
@@ -1066,14 +1201,21 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
     return {
       success: false as const,
       errors: {
-        slug: existingPost ? "该 slug 已被其他文章使用。" : "该 slug 已存在于历史记录中，请更换。",
+        slug: existingPost
+          ? "该 slug 已被其他文章使用。"
+          : "该 slug 已存在于历史记录中，请更换。",
       },
     };
   }
 
   const excerptLength = await getExcerptLength();
   const resolvedExcerpt = values.excerpt || buildExcerpt(values.content, excerptLength);
-  const publishedAt = values.status === "published" ? new Date() : null;
+  const publishedAt =
+    values.status === "published"
+      ? new Date()
+      : values.status === "scheduled"
+        ? scheduledAtDate
+        : null;
 
   return {
     success: true as const,
@@ -1094,14 +1236,4 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
       nofollow: values.nofollow,
     },
   };
-}
-
-function parseSelectedIds(values: string[]) {
-  const parsed = values.map((value) => Number.parseInt(value, 10));
-
-  if (parsed.some((value) => !Number.isInteger(value) || value <= 0)) {
-    return null;
-  }
-
-  return Array.from(new Set(parsed));
 }

@@ -160,6 +160,71 @@ describe("admin post actions", () => {
     );
   });
 
+  it("passes scheduled publishing fields through create and update payloads", async () => {
+    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
+    createAdminPostMock.mockResolvedValue({
+      success: false,
+      values: {
+        ...initialPostFormState.values,
+        status: "scheduled",
+        scheduledAt: "2026-04-01T09:30",
+        scheduledAtIso: "2026-04-01T01:30:00.000Z",
+      },
+      errors: {
+        scheduledAt: "请选择未来的发布时间。",
+      },
+    });
+    updateAdminPostMock.mockResolvedValue({
+      success: false,
+      values: {
+        ...initialPostFormState.values,
+        status: "scheduled",
+        scheduledAt: "2026-04-01T09:30",
+        scheduledAtIso: "2026-04-01T01:30:00.000Z",
+      },
+      errors: {
+        scheduledAt: "请选择未来的发布时间。",
+      },
+    });
+
+    const { createPostAction, updatePostAction } = await import("./actions");
+
+    await createPostAction(
+      initialPostFormState,
+      createFormData({
+        postId: "",
+        status: "scheduled",
+        scheduledAt: "2026-04-01T09:30",
+        scheduledAtIso: "2026-04-01T01:30:00.000Z",
+      }),
+    );
+    await updatePostAction(
+      initialPostFormState,
+      createFormData({
+        postId: "42",
+        status: "scheduled",
+        scheduledAt: "2026-04-01T09:30",
+        scheduledAtIso: "2026-04-01T01:30:00.000Z",
+      }),
+    );
+
+    expect(createAdminPostMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "scheduled",
+        scheduledAt: "2026-04-01T09:30",
+        scheduledAtIso: "2026-04-01T01:30:00.000Z",
+      }),
+    );
+    expect(updateAdminPostMock).toHaveBeenCalledWith(
+      42,
+      expect.objectContaining({
+        status: "scheduled",
+        scheduledAt: "2026-04-01T09:30",
+        scheduledAtIso: "2026-04-01T01:30:00.000Z",
+      }),
+    );
+  });
+
   it("revalidates admin and public paths then redirects after a successful update", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminPostMock.mockResolvedValue({
@@ -269,7 +334,9 @@ function createFormData(
     categoryId: string;
     excerpt: string;
     content: string;
-    status: "draft" | "published";
+    status: "draft" | "published" | "scheduled";
+    scheduledAt: string;
+    scheduledAtIso: string;
     metaTitle: string;
     metaDescription: string;
     ogTitle: string;
@@ -290,6 +357,8 @@ function createFormData(
     excerpt: "",
     content: "content",
     status: "draft" as const,
+    scheduledAt: "",
+    scheduledAtIso: "",
     metaTitle: "",
     metaDescription: "",
     ogTitle: "",
@@ -311,6 +380,8 @@ function createFormData(
   formData.set("excerpt", values.excerpt);
   formData.set("content", values.content);
   formData.set("status", values.status);
+  formData.set("scheduledAt", values.scheduledAt);
+  formData.set("scheduledAtIso", values.scheduledAtIso);
   formData.set("metaTitle", values.metaTitle);
   formData.set("metaDescription", values.metaDescription);
   formData.set("ogTitle", values.ogTitle);

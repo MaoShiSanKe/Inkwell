@@ -3,7 +3,14 @@ import { randomUUID } from "node:crypto";
 import { desc, eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { postRevisions, postSlugAliases, posts, sitemapEntries, users } from "@/lib/db/schema";
+import {
+  postRevisions,
+  postSlugAliases,
+  posts,
+  settings,
+  sitemapEntries,
+  users,
+} from "@/lib/db/schema";
 
 import { cleanupIntegrationTables } from "../setup";
 
@@ -67,9 +74,7 @@ describe("admin slug-history write paths", () => {
     expect(persistedPost?.publishedAt).not.toBeNull();
 
     await expect(listAliases(post.id)).resolves.toEqual([originalSlug]);
-    await expect(resolveSlug(nextSlug)).resolves.toMatchObject({
-      kind: "post",
-    });
+    await expect(resolveSlug(nextSlug)).resolves.toMatchObject({ kind: "post" });
     await expect(resolveSlug(originalSlug)).resolves.toEqual({
       kind: "redirect",
       currentSlug: nextSlug,
@@ -123,9 +128,7 @@ describe("admin slug-history write paths", () => {
     const persistedPost = await getPost(post.id);
     expect(persistedPost?.slug).toBe(legacySlug);
     await expect(listAliases(post.id)).resolves.toEqual([currentSlug]);
-    await expect(resolveSlug(legacySlug)).resolves.toMatchObject({
-      kind: "post",
-    });
+    await expect(resolveSlug(legacySlug)).resolves.toMatchObject({ kind: "post" });
     await expect(resolveSlug(currentSlug)).resolves.toEqual({
       kind: "redirect",
       currentSlug: legacySlug,
@@ -197,6 +200,108 @@ describe("admin slug-history write paths", () => {
     const persistedTargetPost = await getPost(targetPost.id);
     expect(persistedTargetPost?.slug).toBe(targetSlug);
     await expect(listAliases(targetPost.id)).resolves.toEqual([]);
+  });
+
+  it("preserves scheduled status and publishedAt when updating a scheduled post", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-scheduled`);
+    const scheduledAt = new Date("2026-04-05T08:30:00.000Z");
+    const post = await createPost({
+      authorId: editor.id,
+      title: "Scheduled title",
+      slug: buildSlug(`scheduled-${seed}`),
+      excerpt: "Scheduled excerpt",
+      content: "Scheduled content",
+      status: "scheduled",
+      publishedAt: scheduledAt,
+      updatedAt: new Date("2026-03-26T16:10:00.000Z"),
+    });
+
+    const { getAdminPostEditorData, updateAdminPost } = await import("@/lib/admin/posts");
+    const editorData = await getAdminPostEditorData(post.id);
+
+    expect(editorData?.currentStatus).toBe("scheduled");
+    expect(editorData?.values.status).toBe("scheduled");
+    expect(editorData?.values.scheduledAt).toBeTruthy();
+    expect(editorData?.values.scheduledAtIso).toBe(scheduledAt.toISOString());
+
+    const result = await updateAdminPost(post.id, {
+      title: "Scheduled title updated",
+      slug: post.slug,
+      categoryId: "",
+      excerpt: "Scheduled excerpt updated",
+      content: "Scheduled content updated",
+      status: "scheduled",
+      scheduledAt: editorData?.values.scheduledAt ?? "",
+      scheduledAtIso: editorData?.values.scheduledAtIso ?? "",
+      tagIds: [],
+      seriesIds: [],
+      metaTitle: "",
+      metaDescription: "",
+      ogTitle: "",
+      ogDescription: "",
+      canonicalUrl: "",
+      breadcrumbEnabled: false,
+      noindex: false,
+      nofollow: false,
+    });
+
+    expect(result).toMatchObject({
+      success: true,
+      postId: post.id,
+    });
+
+    const persistedPost = await getPost(post.id);
+    expect(persistedPost?.status).toBe("scheduled");
+    expect(persistedPost?.publishedAt?.toISOString()).toBe(scheduledAt.toISOString());
+  });
+
+  it("prunes revisions by revision_limit after post updates", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-prune`);
+    const db = await getDb();
+    await upsertSetting("revision_limit", "2");
+    await upsertSetting("revision_ttl_days", "0");
+
+    const post = await createPost({
+      authorId: editor.id,
+      title: "Revision prune title",
+      slug: buildSlug(`revision-prune-${seed}`),
+      excerpt: "Revision prune excerpt",
+      content: "Revision prune content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T16:10:00.000Z"),
+    });
+
+    await updatePost(post.id, {
+      title: "Revision prune title 1",
+      slug: post.slug,
+      excerpt: "",
+      content: "Revision prune content 1",
+      status: "draft",
+    });
+    await updatePost(post.id, {
+      title: "Revision prune title 2",
+      slug: post.slug,
+      excerpt: "",
+      content: "Revision prune content 2",
+      status: "draft",
+    });
+    await updatePost(post.id, {
+      title: "Revision prune title 3",
+      slug: post.slug,
+      excerpt: "",
+      content: "Revision prune content 3",
+      status: "draft",
+    });
+
+    const revisionRows = await db
+      .select({ id: postRevisions.id })
+      .from(postRevisions)
+      .where(eq(postRevisions.postId, post.id));
+
+    expect(revisionRows).toHaveLength(2);
   });
 
   it("hides trashed posts from public resolution and restores them as draft", async () => {
@@ -294,6 +399,26 @@ async function getDb() {
   return db;
 }
 
+async function upsertSetting(key: string, value: string) {
+  const db = await getDb();
+  await db
+    .insert(settings)
+    .values({
+      key,
+      value,
+      isSecret: false,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: {
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      },
+    });
+}
+
 async function resolveSlug(slug: string) {
   const { resolvePublishedPostBySlug } = await import("@/lib/blog/posts");
   return resolvePublishedPostBySlug(slug);
@@ -387,7 +512,7 @@ async function createPost(input: {
   slug: string;
   excerpt: string | null;
   content: string;
-  status: "draft" | "published" | "trash";
+  status: "draft" | "published" | "scheduled" | "trash";
   publishedAt: Date | null;
   updatedAt: Date;
 }) {

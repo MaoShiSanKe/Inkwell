@@ -7,7 +7,7 @@ import { categories, media, postMeta, postSeries, postTags, posts, series, setti
 import { cleanupIntegrationTables } from "../setup";
 
 const INTEGRATION_PREFIX = "integration-test-";
-const unpublishedStatuses = ["draft", "trash"] as const;
+const unpublishedStatuses = ["draft", "scheduled", "trash"] as const;
 
 describe("resolvePublishedPostBySlug", () => {
   beforeEach(async () => {
@@ -330,7 +330,10 @@ describe("resolvePublishedPostBySlug", () => {
         excerpt: null,
         content: `<p>${status} content</p>`,
         status,
-        publishedAt: null,
+        publishedAt:
+          status === "scheduled"
+            ? new Date("2026-03-27T11:00:00.000Z")
+            : null,
         updatedAt: new Date("2026-03-26T11:00:00.000Z"),
       });
       const aliasSlug = buildSlug(`${status}-alias-${seed}`);
@@ -353,7 +356,10 @@ describe("resolvePublishedPostBySlug", () => {
         excerpt: null,
         content: `<p>${status} current content</p>`,
         status,
-        publishedAt: null,
+        publishedAt:
+          status === "scheduled"
+            ? new Date("2026-03-27T12:00:00.000Z")
+            : null,
         updatedAt: new Date("2026-03-26T12:00:00.000Z"),
       });
 
@@ -774,7 +780,7 @@ async function createPost(input: {
   slug: string;
   excerpt: string | null;
   content: string;
-  status: "draft" | "published" | "trash";
+  status: "draft" | "published" | "scheduled" | "trash";
   publishedAt: Date | null;
   updatedAt: Date;
 }) {

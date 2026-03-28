@@ -4,7 +4,9 @@ export type PostFormValues = {
   categoryId: string;
   excerpt: string;
   content: string;
-  status: "draft" | "published";
+  status: "draft" | "published" | "scheduled";
+  scheduledAt: string;
+  scheduledAtIso: string;
   tagIds: string[];
   seriesIds: string[];
   metaTitle: string;
@@ -32,6 +34,8 @@ export const initialPostFormValues: PostFormValues = {
   excerpt: "",
   content: "",
   status: "draft",
+  scheduledAt: "",
+  scheduledAtIso: "",
   tagIds: [],
   seriesIds: [],
   metaTitle: "",
@@ -49,6 +53,40 @@ export const initialPostFormState: PostFormState = {
   values: initialPostFormValues,
   errors: {},
 };
+
+export function formatScheduledAtInputFromIso(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+export function toScheduledAtIso(value: string) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toISOString();
+}
 
 export function createPostFormState(
   values: Partial<PostFormValues> = {},

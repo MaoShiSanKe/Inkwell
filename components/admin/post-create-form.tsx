@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 import { createPostAction } from "@/app/(admin)/[adminPath]/(protected)/posts/actions";
 import { initialCreatePostState } from "@/app/(admin)/[adminPath]/(protected)/posts/form-state";
 import { PostContentEditor } from "@/components/admin/post-content-editor";
 import { MediaPicker, type MediaPickerOption } from "@/components/admin/media-picker";
+import { toScheduledAtIso } from "@/lib/admin/post-form";
 
 type PostCategoryOption = {
   id: number;
@@ -44,6 +45,17 @@ export function PostCreateForm({
     createPostAction,
     initialCreatePostState,
   );
+  const [statusDraft, setStatusDraft] = useState<
+    "draft" | "published" | "scheduled" | null
+  >(null);
+  const [scheduledAtDraft, setScheduledAtDraft] = useState<string | null>(null);
+  const statusValue = statusDraft ?? state.values.status;
+  const scheduledAtValue = scheduledAtDraft ?? state.values.scheduledAt;
+  const scheduledAtIso = useMemo(
+    () => toScheduledAtIso(scheduledAtValue),
+    [scheduledAtValue],
+  );
+  const showScheduledAt = statusValue === "scheduled";
 
   return (
     <form
@@ -51,6 +63,7 @@ export function PostCreateForm({
       className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800"
     >
       <input type="hidden" name="adminPath" value={adminPath} />
+      <input type="hidden" name="scheduledAtIso" value={scheduledAtIso} />
 
       {state.errors.form ? (
         <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
@@ -112,7 +125,10 @@ export function PostCreateForm({
             <p className="text-sm font-normal text-slate-500 dark:text-slate-400">当前还没有标签可选。</p>
           ) : (
             tags.map((tag) => (
-              <label key={tag.id} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
+              <label
+                key={tag.id}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800"
+              >
                 <input
                   type="checkbox"
                   name="tagIds"
@@ -136,7 +152,10 @@ export function PostCreateForm({
             <p className="text-sm font-normal text-slate-500 dark:text-slate-400">当前还没有系列可选。</p>
           ) : (
             series.map((item) => (
-              <label key={item.id} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800">
+              <label
+                key={item.id}
+                className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 dark:border-slate-800"
+              >
                 <input
                   type="checkbox"
                   name="seriesIds"
@@ -229,7 +248,11 @@ export function PostCreateForm({
 
           <div className="grid gap-3 sm:grid-cols-3">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-              <input type="checkbox" name="breadcrumbEnabled" defaultChecked={state.values.breadcrumbEnabled} />
+              <input
+                type="checkbox"
+                name="breadcrumbEnabled"
+                defaultChecked={state.values.breadcrumbEnabled}
+              />
               启用面包屑
             </label>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -265,13 +288,35 @@ export function PostCreateForm({
         <select
           className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
           name="status"
-          defaultValue={state.values.status}
+          value={statusValue}
+          onChange={(event) =>
+            setStatusDraft(event.target.value as "draft" | "published" | "scheduled")
+          }
         >
           <option value="draft">草稿</option>
           <option value="published">立即发布</option>
+          <option value="scheduled">定时发布</option>
         </select>
         {state.errors.status ? (
           <span className="text-sm text-red-600 dark:text-red-300">{state.errors.status}</span>
+        ) : null}
+      </label>
+
+      <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+        计划发布时间
+        <input
+          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          type="datetime-local"
+          name="scheduledAt"
+          value={scheduledAtValue}
+          onChange={(event) => setScheduledAtDraft(event.target.value)}
+          disabled={!showScheduledAt}
+        />
+        <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+          仅在选择“定时发布”时生效，按你当前浏览器时区输入。
+        </span>
+        {state.errors.scheduledAt ? (
+          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.scheduledAt}</span>
         ) : null}
       </label>
 
