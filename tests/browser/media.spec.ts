@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { rm } from "node:fs/promises";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
@@ -12,12 +12,16 @@ import postgres from "postgres";
 import { media, postMeta, posts, settings, users } from "../../lib/db/schema";
 import { hashPasswordValue } from "../../lib/password-utils";
 
-loadEnv({ path: ".env.local" });
+const testEnvPath = resolveTestEnvPath();
+
+loadEnv({ path: testEnvPath, override: true });
 
 const BROWSER_PREFIX = "integration-browser-media-";
 const TEST_IMAGE_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO5np8sAAAAASUVORK5CYII=";
 const databaseUrl = getDatabaseUrl();
+
+assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("media library browser regression", () => {
   test("covers external creation, local upload, and OG image selection", async ({ page }) => {
@@ -266,12 +270,78 @@ async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T
   }
 }
 
+function resolveTestEnvPath() {
+  const envCandidates = [".env.test.local", ".env.local"];
+
+  for (const candidate of envCandidates) {
+    const candidatePath = resolve(process.cwd(), candidate);
+
+    if (existsSync(candidatePath)) {
+      return candidatePath;
+    }
+  }
+
+  throw new Error(
+    `Missing test env file. Expected one of: ${envCandidates.join(", ")}. Create one before running browser tests.`,
+  );
+}
+
 function getDatabaseUrl() {
   const value = process.env.DATABASE_URL;
 
   if (!value) {
-    throw new Error("DATABASE_URL is not configured.");
+    throw new Error(`DATABASE_URL is not configured in ${testEnvPath}.`);
   }
 
   return value;
+}
+
+function assertSafeTestConnection(
+  envPath: string,
+  connectionInfo: { databaseName: string; hostname: string },
+) {
+  if (basename(envPath) === ".env.test.local") {
+    if (!connectionInfo.databaseName.toLowerCase().includes("_test")) {
+      throw new Error(
+        [
+          `Refusing to run browser tests against non-test database "${connectionInfo.databaseName}".`,
+          'DATABASE_URL must point to a database name containing "_test".',
+        ].join(" "),
+      );
+    }
+
+    return;
+  }
+
+  if (!isLocalHostname(connectionInfo.hostname)) {
+    throw new Error(
+      [
+        ".env.local is only allowed for browser tests when DATABASE_URL points to a local database host.",
+        `Received host "${connectionInfo.hostname}".`,
+      ].join(" "),
+    );
+  }
+}
+
+function getConnectionInfo(connectionUrl: string) {
+  try {
+    const { hostname, pathname } = new URL(connectionUrl);
+    const name = pathname.replace(/^\/+/, "").split("/")[0];
+
+    if (!name) {
+      throw new Error("DATABASE_URL is missing a database name.");
+    }
+
+    return {
+      databaseName: name,
+      hostname,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Invalid DATABASE_URL for browser tests. ${reason}`);
+  }
+}
+
+function isLocalHostname(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
