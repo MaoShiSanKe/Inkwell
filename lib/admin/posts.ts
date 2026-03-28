@@ -119,6 +119,12 @@ export type AdminPostEditorData = {
   values: PostFormValues;
 };
 
+export type PublishScheduledPostsResult = {
+  publishedCount: number;
+  publishedPostIds: number[];
+  affectedSlugs: string[];
+};
+
 type RevisionDbLike = {
   select: typeof db.select;
   delete: typeof db.delete;
@@ -472,6 +478,72 @@ export async function getAdminPostEditorData(
       noindex: meta?.noindex ?? false,
       nofollow: meta?.nofollow ?? false,
     }).values,
+  };
+}
+
+export async function publishScheduledPosts(
+  now = new Date(),
+): Promise<PublishScheduledPostsResult> {
+  const scheduledRows = await db
+    .select({
+      id: posts.id,
+      slug: posts.slug,
+      publishedAt: posts.publishedAt,
+    })
+    .from(posts)
+    .where(eq(posts.status, "scheduled"));
+
+  const dueRows = scheduledRows.filter(
+    (row) => row.publishedAt && row.publishedAt.getTime() <= now.getTime(),
+  );
+
+  if (dueRows.length === 0) {
+    return {
+      publishedCount: 0,
+      publishedPostIds: [],
+      affectedSlugs: [],
+    };
+  }
+
+  const retention = await getRevisionRetentionSettings();
+  const affectedSlugs = dueRows.map((row) => row.slug);
+  const publishedPostIds: number[] = [];
+
+  for (const row of dueRows) {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(posts)
+        .set({
+          status: "published",
+          updatedAt: now,
+        })
+        .where(eq(posts.id, row.id));
+
+      await tx
+        .insert(sitemapEntries)
+        .values({
+          postId: row.id,
+          loc: buildPostPath(row.slug),
+          lastModifiedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: sitemapEntries.postId,
+          set: {
+            loc: buildPostPath(row.slug),
+            lastModifiedAt: now,
+          },
+        });
+
+      await prunePostRevisions(tx, row.id, retention);
+    });
+
+    publishedPostIds.push(row.id);
+  }
+
+  return {
+    publishedCount: publishedPostIds.length,
+    publishedPostIds,
+    affectedSlugs,
   };
 }
 

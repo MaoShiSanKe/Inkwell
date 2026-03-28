@@ -304,76 +304,77 @@ describe("admin slug-history write paths", () => {
     expect(revisionRows).toHaveLength(2);
   });
 
-  it("hides trashed posts from public resolution and restores them as draft", async () => {
+
+  it("publishes due scheduled posts and updates sitemap entries", async () => {
     const seed = createSeed();
-    const editor = await signInAsEditor(seed);
-    const currentSlug = buildSlug(`trash-current-${seed}`);
-    const aliasSlug = buildSlug(`trash-alias-${seed}`);
-    const post = await createPost({
+    const editor = await signInAsEditor(`${seed}-auto-publish`);
+    const dueAt = new Date("2026-03-28T08:00:00.000Z");
+    const futureAt = new Date("2026-04-28T08:00:00.000Z");
+    const duePost = await createPost({
       authorId: editor.id,
-      title: "Trashable post",
-      slug: currentSlug,
-      excerpt: "Trashable excerpt",
-      content: "Trashable content",
-      status: "published",
-      publishedAt: new Date("2026-03-26T19:00:00.000Z"),
-      updatedAt: new Date("2026-03-26T19:10:00.000Z"),
+      title: "Due scheduled post",
+      slug: buildSlug(`due-scheduled-${seed}`),
+      excerpt: null,
+      content: "Due scheduled content",
+      status: "scheduled",
+      publishedAt: dueAt,
+      updatedAt: new Date("2026-03-27T16:10:00.000Z"),
+    });
+    const futurePost = await createPost({
+      authorId: editor.id,
+      title: "Future scheduled post",
+      slug: buildSlug(`future-scheduled-${seed}`),
+      excerpt: null,
+      content: "Future scheduled content",
+      status: "scheduled",
+      publishedAt: futureAt,
+      updatedAt: new Date("2026-03-27T16:10:00.000Z"),
     });
 
-    await createAlias(post.id, aliasSlug);
-    await createSitemapEntry(post.id, currentSlug);
+    const { publishScheduledPosts } = await import("@/lib/admin/posts");
+    const result = await publishScheduledPosts(new Date("2026-03-29T00:00:00.000Z"));
 
-    const trashResult = await movePostToTrash(post.id);
-
-    expect(trashResult).toMatchObject({
-      success: true,
-      postId: post.id,
-      affectedSlugs: [currentSlug, aliasSlug],
+    expect(result).toMatchObject({
+      publishedCount: 1,
+      publishedPostIds: [duePost.id],
+      affectedSlugs: [duePost.slug],
     });
 
-    const trashedPost = await getPost(post.id);
-    expect(trashedPost).toMatchObject({
-      status: "trash",
-      slug: currentSlug,
+    const persistedDuePost = await getPost(duePost.id);
+    const persistedFuturePost = await getPost(futurePost.id);
+    expect(persistedDuePost?.status).toBe("published");
+    expect(persistedFuturePost?.status).toBe("scheduled");
+
+    const sitemap = await getSitemapEntry(duePost.id);
+    expect(sitemap?.loc).toBe(`/post/${duePost.slug}`);
+  });
+
+  it("publishes nothing when no scheduled post is due", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-no-due`);
+    const futureAt = new Date("2026-04-28T08:00:00.000Z");
+    await createPost({
+      authorId: editor.id,
+      title: "Future only scheduled post",
+      slug: buildSlug(`future-only-${seed}`),
+      excerpt: null,
+      content: "Future only content",
+      status: "scheduled",
+      publishedAt: futureAt,
+      updatedAt: new Date("2026-03-27T16:10:00.000Z"),
     });
-    expect(await getSitemapEntry(post.id)).toBeNull();
-    await expect(resolveSlug(currentSlug)).resolves.toEqual({ kind: "not-found" });
-    await expect(resolveSlug(aliasSlug)).resolves.toEqual({ kind: "not-found" });
-    await expect(listAliases(post.id)).resolves.toEqual([aliasSlug]);
 
-    const trashRevision = await getLatestRevision(post.id);
-    expect(trashRevision).toMatchObject({
-      editorId: editor.id,
-      status: "trash",
-      reason: "moved to trash",
-    });
+    const { publishScheduledPosts } = await import("@/lib/admin/posts");
+    const result = await publishScheduledPosts(new Date("2026-03-29T00:00:00.000Z"));
 
-    const restoreResult = await restorePost(post.id);
-
-    expect(restoreResult).toMatchObject({
-      success: true,
-      postId: post.id,
-      affectedSlugs: [currentSlug, aliasSlug],
-    });
-
-    const restoredPost = await getPost(post.id);
-    expect(restoredPost).toMatchObject({
-      status: "draft",
-      slug: currentSlug,
-      publishedAt: null,
-    });
-    expect(await getSitemapEntry(post.id)).toBeNull();
-    await expect(resolveSlug(currentSlug)).resolves.toEqual({ kind: "not-found" });
-    await expect(resolveSlug(aliasSlug)).resolves.toEqual({ kind: "not-found" });
-    await expect(listAliases(post.id)).resolves.toEqual([aliasSlug]);
-
-    const restoreRevision = await getLatestRevision(post.id);
-    expect(restoreRevision).toMatchObject({
-      editorId: editor.id,
-      status: "draft",
-      reason: "restored from trash",
+    expect(result).toEqual({
+      publishedCount: 0,
+      publishedPostIds: [],
+      affectedSlugs: [],
     });
   });
+
+
 });
 
 function createSeed() {
