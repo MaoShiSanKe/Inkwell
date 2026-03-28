@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { basename, resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
@@ -8,13 +10,17 @@ import postgres from "postgres";
 
 import { categories, postTags, posts, tags, users } from "../../lib/db/schema";
 
-loadEnv({ path: ".env.local" });
+const testEnvPath = resolveTestEnvPath();
+
+loadEnv({ path: testEnvPath, override: true });
 
 const BROWSER_PREFIX = "integration-browser-related-posts-";
 const databaseUrl = getDatabaseUrl();
 
+assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
+
 test.describe("related posts browser regression", () => {
-  test("shows related published posts on the public post page", async ({ page }) => {
+  test("shows related published posts on the public post page and navigates to the related post", async ({ page }) => {
     const fixture = await seedRelatedPostsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
@@ -22,6 +28,14 @@ test.describe("related posts browser regression", () => {
       await expect(page.getByRole("heading", { name: fixture.primaryTitle })).toBeVisible();
       await expect(page.getByRole("heading", { name: "相关文章" })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.relatedTitle })).toBeVisible();
+      await expect(page.getByText(fixture.unrelatedTitle)).toHaveCount(0);
+
+      await page.getByRole("link", { name: fixture.relatedTitle }).click();
+
+      await expect(page).toHaveURL(new RegExp(`/post/${fixture.relatedSlug}$`));
+      await expect(page.getByRole("heading", { name: fixture.relatedTitle })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "相关文章" })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.primaryTitle })).toBeVisible();
       await expect(page.getByText(fixture.unrelatedTitle)).toHaveCount(0);
     } finally {
       await cleanupRelatedPostsFixture();
@@ -32,6 +46,7 @@ test.describe("related posts browser regression", () => {
 type RelatedPostsFixture = {
   primarySlug: string;
   primaryTitle: string;
+  relatedSlug: string;
   relatedTitle: string;
   unrelatedTitle: string;
 };
@@ -40,6 +55,7 @@ async function seedRelatedPostsFixture(seed: string): Promise<RelatedPostsFixtur
   const primaryTitle = `Primary Post ${seed}`;
   const primarySlug = `${BROWSER_PREFIX}primary-${seed}`;
   const relatedTitle = `Related Post ${seed}`;
+  const relatedSlug = `${BROWSER_PREFIX}related-${seed}`;
   const unrelatedTitle = `Unrelated Post ${seed}`;
 
   await cleanupRelatedPostsFixture();
@@ -104,7 +120,7 @@ async function seedRelatedPostsFixture(seed: string): Promise<RelatedPostsFixtur
         authorId: author.id,
         categoryId: category.id,
         title: relatedTitle,
-        slug: `${BROWSER_PREFIX}related-${seed}`,
+        slug: relatedSlug,
         excerpt: "Related excerpt",
         content: "Related content",
         status: "published",
@@ -138,6 +154,7 @@ async function seedRelatedPostsFixture(seed: string): Promise<RelatedPostsFixtur
   return {
     primarySlug,
     primaryTitle,
+    relatedSlug,
     relatedTitle,
     unrelatedTitle,
   };
@@ -181,6 +198,7 @@ async function cleanupRelatedPostsFixture() {
   });
 }
 
+
 async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {
   const client = postgres(databaseUrl, { max: 1 });
   const db = drizzle(client, {
@@ -195,12 +213,78 @@ async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T
   }
 }
 
+function resolveTestEnvPath() {
+  const envCandidates = [".env.test.local", ".env.local"];
+
+  for (const candidate of envCandidates) {
+    const candidatePath = resolve(process.cwd(), candidate);
+
+    if (existsSync(candidatePath)) {
+      return candidatePath;
+    }
+  }
+
+  throw new Error(
+    `Missing test env file. Expected one of: ${envCandidates.join(", ")}. Create one before running browser tests.`,
+  );
+}
+
 function getDatabaseUrl() {
   const value = process.env.DATABASE_URL;
 
   if (!value) {
-    throw new Error("DATABASE_URL is not configured.");
+    throw new Error(`DATABASE_URL is not configured in ${testEnvPath}.`);
   }
 
   return value;
+}
+
+function assertSafeTestConnection(
+  envPath: string,
+  connectionInfo: { databaseName: string; hostname: string },
+) {
+  if (basename(envPath) === ".env.test.local") {
+    if (!connectionInfo.databaseName.toLowerCase().includes("_test")) {
+      throw new Error(
+        [
+          `Refusing to run browser tests against non-test database "${connectionInfo.databaseName}".`,
+          'DATABASE_URL must point to a database name containing "_test".',
+        ].join(" "),
+      );
+    }
+
+    return;
+  }
+
+  if (!isLocalHostname(connectionInfo.hostname)) {
+    throw new Error(
+      [
+        ".env.local is only allowed for browser tests when DATABASE_URL points to a local database host.",
+        `Received host "${connectionInfo.hostname}".`,
+      ].join(" "),
+    );
+  }
+}
+
+function getConnectionInfo(connectionUrl: string) {
+  try {
+    const { hostname, pathname } = new URL(connectionUrl);
+    const name = pathname.replace(/^\/+/, "").split("/")[0];
+
+    if (!name) {
+      throw new Error("DATABASE_URL is missing a database name.");
+    }
+
+    return {
+      databaseName: name,
+      hostname,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Invalid DATABASE_URL for browser tests. ${reason}`);
+  }
+}
+
+function isLocalHostname(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
