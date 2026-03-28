@@ -74,6 +74,7 @@ describe("blog category page", () => {
     expect(markup).toContain("Frontend posts");
     expect(markup).toContain("Published title");
     expect(markup).toContain("作者：Author Name");
+    expect(markup).toContain('href="/author/author-name"');
     expect(markup).toContain("/post/published-slug");
   });
 
@@ -125,6 +126,7 @@ function createPostListItem() {
     publishedAt: new Date("2026-03-26T12:00:00.000Z"),
     author: {
       displayName: "Author Name",
+      slug: "author-name",
     },
     category: {
       name: "Frontend",

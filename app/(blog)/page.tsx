@@ -64,7 +64,12 @@ export default async function BlogHomePage() {
             >
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
-                  <span>作者：{post.author.displayName}</span>
+                  <Link
+                    className="hover:text-slate-900 hover:underline dark:hover:text-slate-100"
+                    href={`/author/${post.author.slug}`}
+                  >
+                    作者：{post.author.displayName}
+                  </Link>
                   {post.publishedAt ? (
                     <time dateTime={post.publishedAt.toISOString()}>
                       {post.publishedAt.toLocaleDateString("zh-CN")}
