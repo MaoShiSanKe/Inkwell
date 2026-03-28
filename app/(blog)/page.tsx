@@ -6,6 +6,8 @@ import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-se
 import { listPublishedPosts } from "@/lib/blog/posts";
 import { getSiteOrigin } from "@/lib/settings";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl("/", siteOrigin);

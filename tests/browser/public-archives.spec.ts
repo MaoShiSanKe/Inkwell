@@ -1,4 +1,6 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { basename, resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
@@ -8,33 +10,65 @@ import postgres from "postgres";
 
 import { categories, postSeries, postTags, posts, series, tags, users } from "../../lib/db/schema";
 
-loadEnv({ path: ".env.local" });
+const testEnvPath = resolveTestEnvPath();
+
+loadEnv({ path: testEnvPath, override: true });
 
 const BROWSER_PREFIX = "integration-browser-archives-";
 const databaseUrl = getDatabaseUrl();
 
+assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
+
 test.describe("public archive pages", () => {
-  test("show published posts and hide drafts across homepage, category, tag, and series routes", async ({ page }) => {
+  test("show published posts, author links, and hide drafts across homepage, category, tag, and series routes", async ({ page }) => {
     const fixture = await seedArchiveFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "最新文章" })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
+      await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
+
+      await page.getByRole("link", { name: `作者：${fixture.authorName}` }).click();
+      await expect(page).toHaveURL(new RegExp(`/author/${fixture.authorSlug}$`));
+      await expect(page.getByRole("heading", { name: fixture.authorName })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
 
       await page.goto(`/category/${fixture.categorySlug}`);
       await expect(page.getByRole("heading", { name: fixture.categoryName })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
+      await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
+
+      await page.getByRole("link", { name: `作者：${fixture.authorName}` }).click();
+      await expect(page).toHaveURL(new RegExp(`/author/${fixture.authorSlug}$`));
+      await expect(page.getByRole("heading", { name: fixture.authorName })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
 
       await page.goto(`/tag/${fixture.tagSlug}`);
       await expect(page.getByRole("heading", { name: fixture.tagName })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
+      await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
+
+      await page.getByRole("link", { name: `作者：${fixture.authorName}` }).click();
+      await expect(page).toHaveURL(new RegExp(`/author/${fixture.authorSlug}$`));
+      await expect(page.getByRole("heading", { name: fixture.authorName })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
 
       await page.goto(`/series/${fixture.seriesSlug}`);
       await expect(page.getByRole("heading", { name: fixture.seriesName })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
+      await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
+
+      await page.getByRole("link", { name: `作者：${fixture.authorName}` }).click();
+      await expect(page).toHaveURL(new RegExp(`/author/${fixture.authorSlug}$`));
+      await expect(page.getByRole("heading", { name: fixture.authorName })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
 
@@ -53,6 +87,8 @@ test.describe("public archive pages", () => {
 });
 
 type ArchiveFixture = {
+  authorName: string;
+  authorSlug: string;
   categoryName: string;
   categorySlug: string;
   tagName: string;
@@ -67,6 +103,8 @@ type ArchiveFixture = {
 };
 
 async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
+  const authorName = `Archive Author ${seed}`;
+  const authorSlug = `${BROWSER_PREFIX}${seed}`;
   const categoryName = `Archive Category ${seed}`;
   const categorySlug = `${BROWSER_PREFIX}category-${seed}`;
   const tagName = `Archive Tag ${seed}`;
@@ -86,8 +124,8 @@ async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
       .insert(users)
       .values({
         email: `${BROWSER_PREFIX}${seed}@example.com`,
-        username: `${BROWSER_PREFIX}${seed}`,
-        displayName: `Archive Author ${seed}`,
+        username: authorSlug,
+        displayName: authorName,
         passwordHash: "hashed-password",
         role: "author",
       })
@@ -176,6 +214,8 @@ async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
   });
 
   return {
+    authorName,
+    authorSlug,
     categoryName,
     categorySlug,
     tagName,
@@ -243,12 +283,78 @@ async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T
   }
 }
 
+function resolveTestEnvPath() {
+  const envCandidates = [".env.test.local", ".env.local"];
+
+  for (const candidate of envCandidates) {
+    const candidatePath = resolve(process.cwd(), candidate);
+
+    if (existsSync(candidatePath)) {
+      return candidatePath;
+    }
+  }
+
+  throw new Error(
+    `Missing test env file. Expected one of: ${envCandidates.join(", ")}. Create one before running browser tests.`,
+  );
+}
+
 function getDatabaseUrl() {
   const value = process.env.DATABASE_URL;
 
   if (!value) {
-    throw new Error("DATABASE_URL is not configured.");
+    throw new Error(`DATABASE_URL is not configured in ${testEnvPath}.`);
   }
 
   return value;
+}
+
+function assertSafeTestConnection(
+  envPath: string,
+  connectionInfo: { databaseName: string; hostname: string },
+) {
+  if (basename(envPath) === ".env.test.local") {
+    if (!connectionInfo.databaseName.toLowerCase().includes("_test")) {
+      throw new Error(
+        [
+          `Refusing to run browser tests against non-test database "${connectionInfo.databaseName}".`,
+          'DATABASE_URL must point to a database name containing "_test".',
+        ].join(" "),
+      );
+    }
+
+    return;
+  }
+
+  if (!isLocalHostname(connectionInfo.hostname)) {
+    throw new Error(
+      [
+        ".env.local is only allowed for browser tests when DATABASE_URL points to a local database host.",
+        `Received host "${connectionInfo.hostname}".`,
+      ].join(" "),
+    );
+  }
+}
+
+function getConnectionInfo(connectionUrl: string) {
+  try {
+    const { hostname, pathname } = new URL(connectionUrl);
+    const name = pathname.replace(/^\/+/, "").split("/")[0];
+
+    if (!name) {
+      throw new Error("DATABASE_URL is missing a database name.");
+    }
+
+    return {
+      databaseName: name,
+      hostname,
+    };
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Invalid DATABASE_URL for browser tests. ${reason}`);
+  }
+}
+
+function isLocalHostname(hostname: string) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
