@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 
 import { updatePostAction } from "@/app/(admin)/[adminPath]/(protected)/posts/actions";
+import { PostContentEditor } from "@/components/admin/post-content-editor";
 import { MediaPicker, type MediaPickerOption } from "@/components/admin/media-picker";
 import { createPostFormState, type PostFormValues } from "@/lib/admin/post-form";
 
@@ -297,18 +298,12 @@ export function PostEditForm({
         />
       </label>
 
-      <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-        正文
-        <textarea
-          className="min-h-64 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-          name="content"
-          defaultValue={state.values.content}
-          required
-        />
-        {state.errors.content ? (
-          <span className="text-sm text-red-600 dark:text-red-300">{state.errors.content}</span>
-        ) : null}
-      </label>
+      <PostContentEditor
+        adminPath={adminPath}
+        mediaOptions={mediaOptions}
+        value={state.values.content}
+        error={state.errors.content}
+      />
 
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
         状态

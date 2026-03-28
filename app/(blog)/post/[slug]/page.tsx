@@ -156,6 +156,8 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   });
   const parsedContent = parsePostContentForToc(post.content);
   const hasTableOfContents = parsedContent.tocItems.length > 0;
+  const hasParsedImages = parsedContent.blocks.some((block) => block.type === "image");
+  const shouldRenderParsedContent = hasTableOfContents || hasParsedImages;
   const replyToId = Number.parseInt(replyTo ?? "", 10);
   const replyTarget = Number.isInteger(replyToId)
     ? approvedComments.find((comment) => comment.id === replyToId) ?? null
@@ -280,9 +282,9 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         </section>
       ) : null}
       {hasTableOfContents ? <PostTableOfContents items={parsedContent.tocItems} /> : null}
-      {hasTableOfContents ? (
-        <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 dark:border-slate-800">
-          {parsedContent.blocks.map((block, index) => {
+      <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 dark:border-slate-800">
+        {shouldRenderParsedContent ? (
+          parsedContent.blocks.map((block, index) => {
             if (block.type === "heading") {
               if (block.level === 2) {
                 return (
@@ -299,18 +301,25 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
               );
             }
 
+            if (block.type === "image") {
+              return (
+                <figure key={`${index}-${block.url}`} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img className="h-auto w-full" src={block.url} alt={block.altText} />
+                </figure>
+              );
+            }
+
             return (
               <p key={`${index}-${block.content}`} className="whitespace-pre-wrap">
                 {block.content}
               </p>
             );
-          })}
-        </article>
-      ) : (
-        <article className="rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 whitespace-pre-wrap dark:border-slate-800">
-          {post.content}
-        </article>
-      )}
+          })
+        ) : (
+          <p className="whitespace-pre-wrap">{post.content}</p>
+        )}
+      </article>
 
       <PostLikeButton postId={post.id} postSlug={post.slug} initialLikeCount={likeCount} />
 

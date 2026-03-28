@@ -33,6 +33,16 @@ describe("parsePostContentForToc", () => {
     ]);
   });
 
+  it("returns paragraph blocks and an empty toc when the content has no headings", () => {
+    const parsed = parsePostContentForToc("只有正文\n\n第二段");
+
+    expect(parsed.tocItems).toEqual([]);
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", content: "只有正文" },
+      { type: "paragraph", content: "第二段" },
+    ]);
+  });
+
   it("deduplicates repeated headings with stable numeric suffixes", () => {
     const parsed = parsePostContentForToc(["## Repeat", "## Repeat", "### Repeat"].join("\n"));
 
@@ -80,13 +90,48 @@ describe("parsePostContentForToc", () => {
     ]);
   });
 
-  it("returns an empty toc when the content has no headings", () => {
-    const parsed = parsePostContentForToc("Plain body\n\nAnother paragraph");
+  it("parses standalone markdown images as image blocks without affecting the toc", () => {
+    const parsed = parsePostContentForToc([
+      "开场段落",
+      "",
+      "![封面图](/uploads/images/2026/03/cover.webp)",
+      "",
+      "## Overview",
+      "Overview body",
+    ].join("\n"));
+
+    expect(parsed.tocItems).toEqual([{ id: "overview", title: "Overview", level: 2 }]);
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", content: "开场段落" },
+      { type: "image", altText: "封面图", url: "/uploads/images/2026/03/cover.webp" },
+      { type: "heading", id: "overview", title: "Overview", level: 2 },
+      { type: "paragraph", content: "Overview body" },
+    ]);
+  });
+
+  it("parses standalone markdown images with https urls as image blocks", () => {
+    const parsed = parsePostContentForToc("![远程封面](https://cdn.example.com/cover.webp)");
 
     expect(parsed.tocItems).toEqual([]);
     expect(parsed.blocks).toEqual([
-      { type: "paragraph", content: "Plain body" },
-      { type: "paragraph", content: "Another paragraph" },
+      { type: "image", altText: "远程封面", url: "https://cdn.example.com/cover.webp" },
+    ]);
+  });
+
+  it("treats standalone markdown images with unsafe urls as paragraph content", () => {
+    const parsed = parsePostContentForToc([
+      "![脚本](javascript:alert(1))",
+      "",
+      "![内联数据](data:image/png;base64,aaaa)",
+      "",
+      "![协议相对](//cdn.example.com/cover.webp)",
+    ].join("\n"));
+
+    expect(parsed.tocItems).toEqual([]);
+    expect(parsed.blocks).toEqual([
+      { type: "paragraph", content: "![脚本](javascript:alert(1))" },
+      { type: "paragraph", content: "![内联数据](data:image/png;base64,aaaa)" },
+      { type: "paragraph", content: "![协议相对](//cdn.example.com/cover.webp)" },
     ]);
   });
 });

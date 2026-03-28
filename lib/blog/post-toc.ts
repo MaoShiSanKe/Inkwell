@@ -16,6 +16,11 @@ export type PostContentBlock =
   | {
       type: "paragraph";
       content: string;
+    }
+  | {
+      type: "image";
+      altText: string;
+      url: string;
     };
 
 export type ParsedPostContent = {
@@ -24,6 +29,23 @@ export type ParsedPostContent = {
 };
 
 const HEADING_PATTERN = /^\s*(###|##)\s+(.+?)\s*$/u;
+const IMAGE_PATTERN = /^\s*!\[(.*?)\]\((\S+?)\)\s*$/u;
+const URL_SCHEME_PATTERN = /^[a-z][a-z\d+\-.]*:/iu;
+const SAFE_IMAGE_URL_PATTERN = /^https?:/iu;
+
+function isSafePostContentImageUrl(value: string) {
+  const normalized = value.trim();
+
+  if (!normalized || normalized.startsWith("//")) {
+    return false;
+  }
+
+  if (!URL_SCHEME_PATTERN.test(normalized)) {
+    return true;
+  }
+
+  return SAFE_IMAGE_URL_PATTERN.test(normalized);
+}
 
 export function buildPostHeadingAnchorId(value: string) {
   const normalized = value
@@ -83,6 +105,18 @@ export function parsePostContentForToc(content: string): ParsedPostContent {
         });
         continue;
       }
+    }
+
+    const imageMatch = line.match(IMAGE_PATTERN);
+
+    if (imageMatch && isSafePostContentImageUrl(imageMatch[2])) {
+      flushParagraph();
+      blocks.push({
+        type: "image",
+        altText: imageMatch[1].trim() || "图片",
+        url: imageMatch[2],
+      });
+      continue;
     }
 
     if (!line.trim()) {

@@ -553,6 +553,7 @@ describe("blog post page", () => {
       kind: "post",
       post: createPostPageData(),
     });
+    listRelatedPublishedPostsMock.mockResolvedValue([]);
 
     const { default: PostPage } = await import("./page");
     const element = await PostPage({
@@ -562,7 +563,56 @@ describe("blog post page", () => {
 
     expect(markup).toContain("相关文章");
     expect(markup).toContain("当前还没有可推荐的相关文章。");
+    expect(markup).not.toContain("Related title");
   });
+
+  it("preserves raw post content formatting when the content has no headings", async () => {
+    const rawContent = ["Lead paragraph", "", "Second paragraph", "", "Third paragraph"].join("\n");
+
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        content: rawContent,
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).not.toContain("文章目录");
+    expect(markup).toContain(`<p class="whitespace-pre-wrap">${rawContent}</p>`);
+  });
+
+  it("renders standalone markdown images from the parsed post content", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData({
+        content: [
+          "Lead paragraph",
+          "",
+          "![封面图](/uploads/images/2026/03/cover.webp)",
+          "",
+          "## Overview",
+          "Overview body",
+        ].join("\n"),
+      }),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("Lead paragraph");
+    expect(markup).toContain('<img class="h-auto w-full" src="/uploads/images/2026/03/cover.webp" alt="封面图"/>');
+    expect(markup).toContain('href="#overview"');
+    expect(markup).toContain("Overview body");
+  });
+
 });
 
 type CreatePostPageDataOverrides = {

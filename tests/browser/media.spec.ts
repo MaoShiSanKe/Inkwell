@@ -24,7 +24,7 @@ const databaseUrl = getDatabaseUrl();
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("media library browser regression", () => {
-  test("covers external creation, local upload, and OG image selection", async ({ page }) => {
+  test("covers external creation, local upload, body insertion, and OG image selection", async ({ page }) => {
     const fixture = await seedMediaFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
@@ -77,10 +77,19 @@ test.describe("media library browser regression", () => {
       expect(existsSync(resolve(process.cwd(), "public", uploadedMedia.storagePath))).toBe(true);
       expect(existsSync(resolve(process.cwd(), "public", uploadedMedia.thumbnailPath))).toBe(true);
 
+      const expectedBodyContent = [
+        "Browser media post content",
+        `![${fixture.localAltText}](/${uploadedMedia.storagePath})`,
+      ].join("\n\n");
+
       await page.goto(`/${fixture.adminPath}/posts/new`);
-      await page.getByLabel("标题").fill(fixture.title);
+      await page.getByRole("textbox", { name: "标题", exact: true }).fill(fixture.title);
       await page.getByLabel("Slug").fill(fixture.slug);
       await page.getByLabel("正文").fill("Browser media post content");
+      await page.getByLabel("插入媒体").selectOption(String(uploadedMedia.id));
+      await page.getByRole("button", { name: "插入到正文" }).click();
+      await expect(page.getByText("已将所选图片插入正文。公开文章页会按图片块渲染。")).toBeVisible();
+      await expect(page.getByLabel("正文")).toHaveValue(expectedBodyContent);
       await page.getByLabel("状态").selectOption("published");
       await page.locator("summary").filter({ hasText: "SEO 设置" }).click();
       await page.getByLabel("OG 图").selectOption(String(uploadedMedia.id));
@@ -90,6 +99,14 @@ test.describe("media library browser regression", () => {
 
       const persistedOgImageId = await findOgImageMediaIdBySlug(fixture.slug);
       expect(persistedOgImageId).toBe(uploadedMedia.id);
+
+      await page.goto(`/post/${fixture.slug}`);
+      await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
+      await expect(page.getByText("Browser media post content", { exact: true })).toBeVisible();
+      await expect(page.locator(`article img[alt="${fixture.localAltText}"]`)).toHaveAttribute(
+        "src",
+        `/${uploadedMedia.storagePath}`,
+      );
     } finally {
       await cleanupMediaFixture();
     }
