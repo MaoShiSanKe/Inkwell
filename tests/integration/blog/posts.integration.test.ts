@@ -71,6 +71,7 @@ describe("resolvePublishedPostBySlug", () => {
       content: "<p>Published content</p>",
       author: {
         displayName: author.displayName,
+        slug: author.username,
       },
       category: {
         id: category.id,
@@ -636,6 +637,13 @@ function buildSlug(value: string) {
   return `${INTEGRATION_PREFIX}${value}`;
 }
 
+function buildIntegrationUsername(seed: string) {
+  const normalizedSeed = seed.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  const maxSeedLength = 64 - INTEGRATION_PREFIX.length;
+
+  return `${INTEGRATION_PREFIX}${normalizedSeed}`.slice(0, INTEGRATION_PREFIX.length + maxSeedLength);
+}
+
 async function getDb() {
   const { db } = await import("@/lib/db");
   return db;
@@ -674,12 +682,13 @@ async function ensureIntegrationAdminPath() {
 async function createUser(seed: string) {
   const db = await getDb();
   const normalizedSeed = `${INTEGRATION_PREFIX}${seed}`;
+  const username = buildIntegrationUsername(seed);
   const displayName = `Author ${seed}`;
   const [user] = await db
     .insert(users)
     .values({
       email: `${normalizedSeed}@example.com`,
-      username: normalizedSeed,
+      username,
       displayName,
       passwordHash: "hashed-password",
       role: "author",
@@ -687,6 +696,7 @@ async function createUser(seed: string) {
     .returning({
       id: users.id,
       displayName: users.displayName,
+      username: users.username,
     });
 
   return user;

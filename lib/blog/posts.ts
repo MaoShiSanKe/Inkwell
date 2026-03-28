@@ -44,6 +44,17 @@ export type BlogPostCategoryData = {
   slug: string;
 };
 
+export type BlogPostAuthorData = {
+  displayName: string;
+  slug: string;
+};
+
+type BlogArchiveAuthorData = {
+  id: number;
+  displayName: string;
+  slug: string;
+};
+
 export type BlogPostSeriesData = {
   id: number;
   name: string;
@@ -58,9 +69,7 @@ export type BlogPostPageData = {
   content: string;
   publishedAt: Date | null;
   updatedAt: Date;
-  author: {
-    displayName: string;
-  };
+  author: BlogPostAuthorData;
   seo: BlogPostSeoData;
   ogImage: BlogPostOgImageData | null;
   category: BlogPostCategoryData | null;
@@ -79,9 +88,7 @@ export type PublishedPostListItem = {
   slug: string;
   excerpt: string | null;
   publishedAt: Date | null;
-  author: {
-    displayName: string;
-  };
+  author: BlogPostAuthorData;
   category: {
     name: string;
     slug: string;
@@ -126,6 +133,16 @@ export type ResolvedPublishedTagArchive =
   | {
       kind: "archive";
       tag: BlogArchiveTerm;
+      posts: PublishedPostListItem[];
+    }
+  | {
+      kind: "not-found";
+    };
+
+export type ResolvedPublishedAuthorArchive =
+  | {
+      kind: "archive";
+      author: BlogArchiveAuthorData;
       posts: PublishedPostListItem[];
     }
   | {
@@ -275,6 +292,40 @@ export async function resolvePublishedTagArchiveBySlug(
   };
 }
 
+export async function resolvePublishedAuthorArchiveBySlug(
+  slug: string,
+): Promise<ResolvedPublishedAuthorArchive> {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return { kind: "not-found" };
+  }
+
+  const [author] = await db
+    .select({
+      id: users.id,
+      displayName: users.displayName,
+      slug: users.username,
+    })
+    .from(users)
+    .where(eq(users.username, normalizedSlug))
+    .limit(1);
+
+  if (!author) {
+    return { kind: "not-found" };
+  }
+
+  const archivePosts = await buildPublishedPostListQuery()
+    .where(and(eq(posts.status, "published"), eq(posts.authorId, author.id)))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return {
+    kind: "archive",
+    author,
+    posts: archivePosts.map(mapPublishedPostListItem),
+  };
+}
+
 export async function resolvePublishedSeriesArchiveBySlug(
   slug: string,
 ): Promise<ResolvedPublishedSeriesArchive> {
@@ -383,6 +434,7 @@ export async function resolvePublishedPostBySlug(
       publishedAt: posts.publishedAt,
       updatedAt: posts.updatedAt,
       authorDisplayName: users.displayName,
+      authorSlug: users.username,
       categoryId: categories.id,
       categoryName: categories.name,
       categorySlug: categories.slug,
@@ -473,6 +525,7 @@ export async function resolvePublishedPostBySlug(
         updatedAt: post.updatedAt,
         author: {
           displayName: post.authorDisplayName,
+          slug: post.authorSlug,
         },
         seo: {
           metaTitle: post.metaTitle,
@@ -534,6 +587,7 @@ function buildPublishedPostListQuery() {
       excerpt: posts.excerpt,
       publishedAt: posts.publishedAt,
       authorDisplayName: users.displayName,
+      authorSlug: users.username,
       categoryName: categories.name,
       categorySlug: categories.slug,
     })
@@ -549,6 +603,7 @@ function mapPublishedPostListItem(row: {
   excerpt: string | null;
   publishedAt: Date | null;
   authorDisplayName: string;
+  authorSlug: string;
   categoryName: string | null;
   categorySlug: string | null;
 }): PublishedPostListItem {
@@ -560,6 +615,7 @@ function mapPublishedPostListItem(row: {
     publishedAt: row.publishedAt,
     author: {
       displayName: row.authorDisplayName,
+      slug: row.authorSlug,
     },
     category:
       row.categoryName && row.categorySlug

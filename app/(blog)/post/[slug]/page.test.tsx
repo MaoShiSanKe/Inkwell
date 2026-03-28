@@ -350,6 +350,7 @@ describe("blog post page", () => {
     expect(markup).toContain("Canonical title");
     expect(markup).toContain("Canonical excerpt");
     expect(markup).toContain("作者：Author Name");
+    expect(markup).toContain('href="/author/author-name"');
     expect(markup).toContain('href="/category/frontend"');
     expect(markup).toContain("分类：Frontend");
     expect(markup).toContain("Canonical content body");
@@ -574,6 +575,7 @@ type CreatePostPageDataOverrides = {
   updatedAt?: Date;
   author?: {
     displayName?: string;
+    slug?: string;
   };
   seo?: {
     metaTitle?: string | null;
@@ -634,6 +636,7 @@ function createPostPageData(overrides: CreatePostPageDataOverrides = {}) {
     updatedAt: new Date("2026-03-26T13:00:00.000Z"),
     author: {
       displayName: "Author Name",
+      slug: "author-name",
       ...(authorOverrides ?? {}),
     },
     seo: {

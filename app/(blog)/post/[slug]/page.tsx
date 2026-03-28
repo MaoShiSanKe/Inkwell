@@ -229,9 +229,12 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           {post.excerpt}
         </p>
       ) : null}
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <Link
+        className="text-sm text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
+        href={`/author/${post.author.slug}`}
+      >
         作者：{post.author.displayName}
-      </p>
+      </Link>
       {post.category ? (
         <Link
           className="text-sm text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"

@@ -16,7 +16,6 @@ import {
 import { cleanupIntegrationTables } from "../setup";
 
 const INTEGRATION_PREFIX = "integration-test-";
-const unpublishedStatuses = ["draft", "trash"] as const;
 
 describe("published blog archives", () => {
   beforeEach(async () => {
@@ -32,12 +31,15 @@ describe("published blog archives", () => {
     const seed = createSeed();
     const author = await createUser(seed);
     const category = await createCategory(seed);
+    const publishedSlug = buildSlug(`published-home-${seed}`);
+    const draftSlug = buildSlug(`draft-home-${seed}`);
+    const trashSlug = buildSlug(`trash-home-${seed}`);
 
     await createPost({
       authorId: author.id,
       categoryId: category.id,
       title: "Published homepage post",
-      slug: buildSlug(`published-home-${seed}`),
+      slug: publishedSlug,
       excerpt: "Published homepage excerpt",
       content: "Published homepage content",
       status: "published",
@@ -45,36 +47,49 @@ describe("published blog archives", () => {
       updatedAt: new Date("2026-03-26T08:30:00.000Z"),
     });
 
-    for (const status of unpublishedStatuses) {
-      await createPost({
-        authorId: author.id,
-        categoryId: category.id,
-        title: `${status} homepage post`,
-        slug: buildSlug(`${status}-home-${seed}`),
-        excerpt: `${status} excerpt`,
-        content: `${status} content`,
-        status,
-        publishedAt: null,
-        updatedAt: new Date("2026-03-26T08:45:00.000Z"),
-      });
-    }
+    await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "draft homepage post",
+      slug: draftSlug,
+      excerpt: "draft excerpt",
+      content: "draft content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T08:45:00.000Z"),
+    });
+
+    await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "trash homepage post",
+      slug: trashSlug,
+      excerpt: "trash excerpt",
+      content: "trash content",
+      status: "trash",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T08:45:00.000Z"),
+    });
 
     const { listPublishedPosts } = await import("@/lib/blog/posts");
     const result = await listPublishedPosts();
+    const matchingPost = result.find((post) => post.slug === publishedSlug);
 
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({
+    expect(matchingPost).toMatchObject({
       title: "Published homepage post",
-      slug: buildSlug(`published-home-${seed}`),
+      slug: publishedSlug,
       excerpt: "Published homepage excerpt",
       author: {
         displayName: author.displayName,
+        slug: author.username,
       },
       category: {
         name: category.name,
         slug: category.slug,
       },
     });
+    expect(result.some((post) => post.slug === draftSlug)).toBe(false);
+    expect(result.some((post) => post.slug === trashSlug)).toBe(false);
   });
 
   it("returns the category archive when the slug exists and excludes unpublished posts", async () => {
@@ -163,6 +178,117 @@ describe("published blog archives", () => {
         name: category.name,
         slug: category.slug,
         description: category.description,
+      },
+      posts: [],
+    });
+  });
+
+  it("returns the author archive when the slug exists and excludes unpublished posts", async () => {
+    const seed = createSeed();
+    const author = await createUser(seed);
+    const category = await createCategory(seed);
+
+    await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Published author post",
+      slug: buildSlug(`published-author-${seed}`),
+      excerpt: "Published author excerpt",
+      content: "Published author content",
+      status: "published",
+      publishedAt: new Date("2026-03-26T10:30:00.000Z"),
+      updatedAt: new Date("2026-03-26T10:45:00.000Z"),
+    });
+
+    await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Draft author post",
+      slug: buildSlug(`draft-author-${seed}`),
+      excerpt: "Draft author excerpt",
+      content: "Draft author content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T10:50:00.000Z"),
+    });
+
+    const otherAuthor = await createUser(`${seed}-other`);
+
+    await createPost({
+      authorId: otherAuthor.id,
+      categoryId: category.id,
+      title: "Other author published post",
+      slug: buildSlug(`other-author-${seed}`),
+      excerpt: "Other author excerpt",
+      content: "Other author content",
+      status: "published",
+      publishedAt: new Date("2026-03-26T10:55:00.000Z"),
+      updatedAt: new Date("2026-03-26T11:00:00.000Z"),
+    });
+
+    const { resolvePublishedAuthorArchiveBySlug } = await import("@/lib/blog/posts");
+    const result = await resolvePublishedAuthorArchiveBySlug(`  ${author.username.toUpperCase()}  `);
+
+    expect(result.kind).toBe("archive");
+
+    if (result.kind !== "archive") {
+      throw new Error("Expected author archive result.");
+    }
+
+    expect(result.author).toMatchObject({
+      id: author.id,
+      displayName: author.displayName,
+      slug: author.username,
+    });
+    expect(result.posts).toHaveLength(1);
+    expect(result.posts[0]).toMatchObject({
+      title: "Published author post",
+      slug: buildSlug(`published-author-${seed}`),
+      author: {
+        displayName: author.displayName,
+        slug: author.username,
+      },
+      category: {
+        name: category.name,
+        slug: category.slug,
+      },
+    });
+  });
+
+  it("returns not-found when the author slug does not exist", async () => {
+    const { resolvePublishedAuthorArchiveBySlug } = await import("@/lib/blog/posts");
+
+    await expect(resolvePublishedAuthorArchiveBySlug(buildSlug("missing-author"))).resolves.toEqual({
+      kind: "not-found",
+    });
+  });
+
+  it("returns an empty author archive when the author exists without published posts", async () => {
+    const seed = createSeed();
+    const author = await createUser(seed);
+    const category = await createCategory(seed);
+
+    await createPost({
+      authorId: author.id,
+      categoryId: category.id,
+      title: "Draft author post",
+      slug: buildSlug(`draft-only-author-${seed}`),
+      excerpt: "Draft author excerpt",
+      content: "Draft author content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T10:20:00.000Z"),
+    });
+
+    const { resolvePublishedAuthorArchiveBySlug } = await import("@/lib/blog/posts");
+    const result = await resolvePublishedAuthorArchiveBySlug(author.username);
+
+    expect(result).toEqual({
+      kind: "archive",
+      author: {
+        id: author.id,
+        displayName: author.displayName,
+        slug: author.username,
       },
       posts: [],
     });
@@ -423,6 +549,13 @@ function buildSlug(value: string) {
   return `${INTEGRATION_PREFIX}${value}`;
 }
 
+function buildIntegrationUsername(seed: string) {
+  const normalizedSeed = seed.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  const maxSeedLength = 64 - INTEGRATION_PREFIX.length;
+
+  return `${INTEGRATION_PREFIX}${normalizedSeed}`.slice(0, INTEGRATION_PREFIX.length + maxSeedLength);
+}
+
 async function getDb() {
   const { db } = await import("@/lib/db");
   return db;
@@ -451,12 +584,13 @@ async function ensureIntegrationAdminPath() {
 async function createUser(seed: string) {
   const db = await getDb();
   const normalizedSeed = `${INTEGRATION_PREFIX}${seed}`;
+  const username = buildIntegrationUsername(seed);
   const displayName = `Author ${seed}`;
   const [user] = await db
     .insert(users)
     .values({
       email: `${normalizedSeed}@example.com`,
-      username: normalizedSeed,
+      username,
       displayName,
       passwordHash: "hashed-password",
       role: "author",
@@ -464,6 +598,7 @@ async function createUser(seed: string) {
     .returning({
       id: users.id,
       displayName: users.displayName,
+      username: users.username,
     });
 
   return user;
