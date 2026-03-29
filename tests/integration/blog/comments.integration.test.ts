@@ -9,18 +9,34 @@ import { cleanupIntegrationTables } from "../setup";
 
 const INTEGRATION_PREFIX = "integration-test-";
 let originalCommentModeration: string | null = null;
-const { getAdminSessionMock } = vi.hoisted(() => ({
-  getAdminSessionMock: vi.fn(),
-}));
+const { getAdminSessionMock, notifyCommentApprovedMock, notifyCommentPendingMock, notifyCommentReplyMock } =
+  vi.hoisted(() => ({
+    getAdminSessionMock: vi.fn(),
+    notifyCommentApprovedMock: vi.fn(),
+    notifyCommentPendingMock: vi.fn(),
+    notifyCommentReplyMock: vi.fn(),
+  }));
 
 vi.mock("@/lib/auth", () => ({
   getAdminSession: getAdminSessionMock,
+}));
+
+vi.mock("@/lib/email-notifications", () => ({
+  notifyCommentApproved: notifyCommentApprovedMock,
+  notifyCommentPending: notifyCommentPendingMock,
+  notifyCommentReply: notifyCommentReplyMock,
 }));
 
 describe("blog comments integration", () => {
   beforeEach(async () => {
     await cleanupIntegrationTables();
     getAdminSessionMock.mockReset();
+    notifyCommentApprovedMock.mockReset();
+    notifyCommentPendingMock.mockReset();
+    notifyCommentReplyMock.mockReset();
+    notifyCommentApprovedMock.mockResolvedValue({ attempted: false, deliveries: [], scenario: "comment_approved" });
+    notifyCommentPendingMock.mockResolvedValue({ attempted: false, deliveries: [], scenario: "comment_pending" });
+    notifyCommentReplyMock.mockResolvedValue({ attempted: false, deliveries: [], scenario: "comment_reply" });
     originalCommentModeration = await getCurrentCommentModeration();
     await setCommentModeration("pending");
   });
@@ -149,7 +165,7 @@ describe("blog comments integration", () => {
     });
   });
 
-  it("respects pending moderation for non-whitelisted emails", async () => {
+  it("respects pending moderation for non-whitelisted emails and notifies admins", async () => {
     const seed = createSeed();
     const author = await createAuthor(seed);
     const post = await createPublishedPost(seed, author.id);
@@ -168,6 +184,10 @@ describe("blog comments integration", () => {
       success: true,
       status: "pending",
     });
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      throw new Error("Expected pending comment submission to succeed.");
+    }
 
     const latestComment = await getLatestComment(post.id);
     expect(latestComment).toMatchObject({
@@ -175,9 +195,55 @@ describe("blog comments integration", () => {
       authorEmail: `${INTEGRATION_PREFIX}pending-${seed}@example.com`,
     });
     expect(latestComment?.approvedAt).toBeNull();
+    expect(notifyCommentPendingMock).toHaveBeenCalledTimes(1);
+    expect(notifyCommentPendingMock).toHaveBeenCalledWith(result.commentId);
   });
 
-  it("hides approved replies after the parent becomes non-public", async () => {
+  it("notifies parent authors when a reply is auto-approved", async () => {
+    const seed = createSeed();
+    const author = await createAuthor(seed);
+    const post = await createPublishedPost(seed, author.id);
+    const topLevelComment = await insertComment({
+      postId: post.id,
+      authorName: "Visible parent",
+      authorEmail: `${INTEGRATION_PREFIX}visible-parent-${seed}@example.com`,
+      content: "Visible parent content",
+      status: "approved",
+      parentId: null,
+      ipAddress: "127.0.0.1",
+    });
+    await insertComment({
+      postId: post.id,
+      authorName: "Existing approved top-level",
+      authorEmail: `reply-whitelist-${seed}@example.com`,
+      content: "Approved history",
+      status: "approved",
+      parentId: null,
+      ipAddress: "127.0.0.1",
+    });
+
+    const { submitPublicComment } = await import("@/lib/blog/comments");
+    const result = await submitPublicComment({
+      postId: String(post.id),
+      parentId: String(topLevelComment.id),
+      authorName: "Whitelisted replier",
+      authorEmail: `reply-whitelist-${seed}@example.com`,
+      content: "Auto approved reply",
+      ipAddress: "127.0.0.1",
+      userAgent: "integration-test",
+    });
+
+    expect(result).toMatchObject({ success: true, status: "approved" });
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      throw new Error("Expected approved reply submission to succeed.");
+    }
+    expect(notifyCommentReplyMock).toHaveBeenCalledTimes(1);
+    expect(notifyCommentReplyMock).toHaveBeenCalledWith(result.commentId);
+    expect(notifyCommentPendingMock).not.toHaveBeenCalled();
+  });
+
+  it("hides approved replies after the parent becomes non-public and notifies on later approval", async () => {
     const seed = createSeed();
     const author = await createAuthor(seed);
     const post = await createPublishedPost(seed, author.id);
@@ -231,6 +297,45 @@ describe("blog comments integration", () => {
     expect(replyAfterParentApprove).toMatchObject({
       status: "pending",
     });
+    expect(notifyCommentApprovedMock).toHaveBeenCalledWith(topLevelComment.id);
+    expect(notifyCommentReplyMock).not.toHaveBeenCalledWith(replyComment.id);
+  });
+
+  it("notifies authors and parent commenters when an admin approves a reply", async () => {
+    const seed = createSeed();
+    const author = await createAuthor(seed);
+    const post = await createPublishedPost(seed, author.id);
+    const topLevelComment = await insertComment({
+      postId: post.id,
+      authorName: "Visible parent",
+      authorEmail: `${INTEGRATION_PREFIX}visible-parent-${seed}@example.com`,
+      content: "Visible parent content",
+      status: "approved",
+      parentId: null,
+      ipAddress: "127.0.0.1",
+    });
+    const replyComment = await insertComment({
+      postId: post.id,
+      parentId: topLevelComment.id,
+      authorName: "Pending reply",
+      authorEmail: `${INTEGRATION_PREFIX}pending-reply-${seed}@example.com`,
+      content: "Pending reply content",
+      status: "pending",
+      ipAddress: "127.0.0.1",
+    });
+
+    getAdminSessionMock.mockResolvedValue({
+      isAuthenticated: true,
+      userId: author.id,
+      role: "editor",
+    });
+
+    const { approveAdminComment } = await import("@/lib/admin/comments");
+    const approveResult = await approveAdminComment(replyComment.id);
+
+    expect(approveResult).toMatchObject({ success: true, status: "approved" });
+    expect(notifyCommentApprovedMock).toHaveBeenCalledWith(replyComment.id);
+    expect(notifyCommentReplyMock).toHaveBeenCalledWith(replyComment.id);
   });
 });
 

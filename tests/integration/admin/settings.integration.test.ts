@@ -12,6 +12,13 @@ const SETTINGS_KEYS = [
   "revision_ttl_days",
   "excerpt_length",
   "comment_moderation",
+  "smtp_host",
+  "smtp_port",
+  "smtp_secure",
+  "smtp_username",
+  "smtp_password",
+  "smtp_from_email",
+  "smtp_from_name",
 ] as const;
 const EMAIL_SCENARIOS = [
   "comment_pending",
@@ -55,11 +62,18 @@ describe("admin settings write paths", () => {
     const values = await getAdminSettingsFormValues();
 
     expect(values).toEqual({
-      admin_path: "admin",
-      revision_limit: "20",
-      revision_ttl_days: "30",
-      excerpt_length: "150",
-      comment_moderation: "pending",
+      admin_path: originalSettings.admin_path ?? "admin",
+      revision_limit: originalSettings.revision_limit ?? "20",
+      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
+      excerpt_length: originalSettings.excerpt_length ?? "150",
+      comment_moderation: (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      smtp_host: originalSettings.smtp_host ?? "",
+      smtp_port: originalSettings.smtp_port ?? "587",
+      smtp_secure: originalSettings.smtp_secure ?? "false",
+      smtp_username: originalSettings.smtp_username ?? "",
+      smtp_password: "",
+      smtp_from_email: originalSettings.smtp_from_email ?? "",
+      smtp_from_name: originalSettings.smtp_from_name ?? "",
     });
   });
 
@@ -75,7 +89,7 @@ describe("admin settings write paths", () => {
     ]);
   });
 
-  it("persists validated settings updates", async () => {
+  it("persists validated settings updates including smtp values", async () => {
     const { updateAdminSettings } = await import("@/lib/admin/settings");
     const result = await updateAdminSettings({
       admin_path: `${INTEGRATION_PREFIX}panel`,
@@ -83,6 +97,13 @@ describe("admin settings write paths", () => {
       revision_ttl_days: "45",
       excerpt_length: "180",
       comment_moderation: "approved",
+      smtp_host: "smtp.example.com",
+      smtp_port: "465",
+      smtp_secure: "true",
+      smtp_username: "mailer@example.com",
+      smtp_password: "super-secret",
+      smtp_from_email: "noreply@example.com",
+      smtp_from_name: "Inkwell Mailer",
     });
 
     expect(result).toEqual({
@@ -101,8 +122,38 @@ describe("admin settings write paths", () => {
         expect.objectContaining({ key: "revision_ttl_days", value: "45" }),
         expect.objectContaining({ key: "excerpt_length", value: "180" }),
         expect.objectContaining({ key: "comment_moderation", value: "approved" }),
+        expect.objectContaining({ key: "smtp_host", value: "smtp.example.com" }),
+        expect.objectContaining({ key: "smtp_port", value: "465" }),
+        expect.objectContaining({ key: "smtp_secure", value: "true" }),
+        expect.objectContaining({ key: "smtp_username", value: "mailer@example.com" }),
+        expect.objectContaining({ key: "smtp_password", value: "super-secret", isSecret: true }),
+        expect.objectContaining({ key: "smtp_from_email", value: "noreply@example.com" }),
+        expect.objectContaining({ key: "smtp_from_name", value: "Inkwell Mailer" }),
       ]),
     );
+  });
+
+  it("preserves existing smtp password when the form submits an empty password", async () => {
+    await setSettingRow("smtp_password", "persisted-secret", true);
+
+    const { updateAdminSettings } = await import("@/lib/admin/settings");
+    const result = await updateAdminSettings({
+      admin_path: originalSettings.admin_path ?? "admin",
+      revision_limit: originalSettings.revision_limit ?? "20",
+      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
+      excerpt_length: originalSettings.excerpt_length ?? "150",
+      comment_moderation: (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      smtp_host: "smtp.example.com",
+      smtp_port: "587",
+      smtp_secure: "false",
+      smtp_username: "mailer@example.com",
+      smtp_password: "",
+      smtp_from_email: "noreply@example.com",
+      smtp_from_name: "Inkwell Mailer",
+    });
+
+    expect(result).toMatchObject({ success: true });
+    await expect(getSettingValue("smtp_password")).resolves.toBe("persisted-secret");
   });
 
   it("persists email notification toggles", async () => {
@@ -143,6 +194,9 @@ describe("admin settings write paths", () => {
       revision_ttl_days: "-1",
       excerpt_length: "NaN",
       comment_moderation: "manual" as never,
+      smtp_port: "0",
+      smtp_secure: "false",
+      smtp_from_email: "invalid-email",
     });
 
     expect(result).toMatchObject({
@@ -153,6 +207,8 @@ describe("admin settings write paths", () => {
         revision_ttl_days: "修订保留天数必须是非负整数。",
         excerpt_length: "自动摘要长度必须是正整数。",
         comment_moderation: "评论审核模式无效。",
+        smtp_port: "SMTP 端口必须是正整数。",
+        smtp_from_email: "发件邮箱格式无效。",
       },
     });
   });
@@ -166,7 +222,7 @@ async function getDb() {
 async function getSettingRows(keys: string[]) {
   const db = await getDb();
   return db
-    .select({ key: settings.key, value: settings.value })
+    .select({ key: settings.key, value: settings.value, isSecret: settings.isSecret })
     .from(settings)
     .where(inArray(settings.key, keys));
 }
@@ -177,6 +233,37 @@ async function getEmailNotificationRows(keys: string[]) {
     .select({ scenario: emailNotifications.scenario, enabled: emailNotifications.enabled })
     .from(emailNotifications)
     .where(inArray(emailNotifications.scenario, keys));
+}
+
+async function getSettingValue(key: string) {
+  const db = await getDb();
+  const [row] = await db
+    .select({ value: settings.value })
+    .from(settings)
+    .where(eq(settings.key, key))
+    .limit(1);
+
+  return row?.value ?? null;
+}
+
+async function setSettingRow(key: string, value: string, isSecret = false) {
+  const db = await getDb();
+  await db
+    .insert(settings)
+    .values({
+      key,
+      value,
+      isSecret,
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: {
+        value,
+        isSecret,
+        updatedAt: new Date(),
+      },
+    });
 }
 
 async function snapshotSettings() {
@@ -213,14 +300,14 @@ async function restoreSettings(values: Record<(typeof SETTINGS_KEYS)[number], st
       .values({
         key,
         value,
-        isSecret: false,
+        isSecret: key === "smtp_password",
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
         target: settings.key,
         set: {
           value,
-          isSecret: false,
+          isSecret: key === "smtp_password",
           updatedAt: new Date(),
         },
       });

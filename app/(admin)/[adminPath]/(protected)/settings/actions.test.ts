@@ -106,6 +106,30 @@ describe("admin settings actions", () => {
     expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 
+  it("passes SMTP fields through settings save payload", async () => {
+    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
+    updateAdminSettingsMock.mockResolvedValue({
+      success: false,
+      values: initialSettingsFormState.values,
+      errors: {},
+    });
+
+    const { saveSettingsAction } = await import("./actions");
+    await saveSettingsAction(initialSettingsFormState, createFormData());
+
+    expect(updateAdminSettingsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        smtp_host: "smtp.example.com",
+        smtp_port: "587",
+        smtp_secure: "false",
+        smtp_username: "mailer@example.com",
+        smtp_password: "smtp-password",
+        smtp_from_email: "noreply@example.com",
+        smtp_from_name: "Inkwell Robot",
+      }),
+    );
+  });
+
   it("revalidates current and next admin settings routes after a successful save", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminSettingsMock.mockResolvedValue({
@@ -233,6 +257,13 @@ function createFormData(
     revision_ttl_days: string;
     excerpt_length: string;
     comment_moderation: string;
+    smtp_host: string;
+    smtp_port: string;
+    smtp_secure: string;
+    smtp_username: string;
+    smtp_password: string;
+    smtp_from_email: string;
+    smtp_from_name: string;
   }> = {},
 ) {
   const values = {
@@ -242,6 +273,13 @@ function createFormData(
     revision_ttl_days: "45",
     excerpt_length: "180",
     comment_moderation: "approved",
+    smtp_host: "smtp.example.com",
+    smtp_port: "587",
+    smtp_secure: "false",
+    smtp_username: "mailer@example.com",
+    smtp_password: "smtp-password",
+    smtp_from_email: "noreply@example.com",
+    smtp_from_name: "Inkwell Robot",
     ...overrides,
   };
 
@@ -252,6 +290,13 @@ function createFormData(
   formData.set("revision_ttl_days", values.revision_ttl_days);
   formData.set("excerpt_length", values.excerpt_length);
   formData.set("comment_moderation", values.comment_moderation);
+  formData.set("smtp_host", values.smtp_host);
+  formData.set("smtp_port", values.smtp_port);
+  formData.set("smtp_secure", values.smtp_secure);
+  formData.set("smtp_username", values.smtp_username);
+  formData.set("smtp_password", values.smtp_password);
+  formData.set("smtp_from_email", values.smtp_from_email);
+  formData.set("smtp_from_name", values.smtp_from_name);
   return formData;
 }
 

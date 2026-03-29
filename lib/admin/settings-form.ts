@@ -6,6 +6,13 @@ export type SettingsFormValues = {
   revision_ttl_days: string;
   excerpt_length: string;
   comment_moderation: "pending" | "approved" | "";
+  smtp_host: string;
+  smtp_port: string;
+  smtp_secure: "true" | "false";
+  smtp_username: string;
+  smtp_password: string;
+  smtp_from_email: string;
+  smtp_from_name: string;
 };
 
 export type SettingsFormErrors = Partial<
@@ -28,6 +35,13 @@ export const initialSettingsFormValues: SettingsFormValues = {
   revision_ttl_days: "30",
   excerpt_length: "150",
   comment_moderation: "pending",
+  smtp_host: "",
+  smtp_port: "587",
+  smtp_secure: "false",
+  smtp_username: "",
+  smtp_password: "",
+  smtp_from_email: "",
+  smtp_from_name: "",
 };
 
 export const initialSettingsFormState: SettingsFormState = {

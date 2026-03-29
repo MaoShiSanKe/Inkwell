@@ -21,7 +21,7 @@ const databaseUrl = getDatabaseUrl();
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("settings browser regression", () => {
-  test("updates comment moderation, excerpt length, and email notification scenarios from admin settings", async ({ page }) => {
+  test("updates comment moderation, excerpt length, smtp settings, and email notification scenarios from admin settings", async ({ page }) => {
     const fixture = await seedSettingsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
@@ -37,6 +37,13 @@ test.describe("settings browser regression", () => {
 
       await page.getByLabel("评论审核模式").selectOption("approved");
       await page.getByLabel("自动摘要长度").fill("210");
+      await page.getByLabel("SMTP Host").fill("smtp.example.com");
+      await page.getByLabel("SMTP 端口").fill("465");
+      await page.getByLabel("SMTP 加密").selectOption("true");
+      await page.getByLabel("SMTP 用户名").fill("mailer@example.com");
+      await page.getByLabel("SMTP 密码").fill("browser-secret");
+      await page.getByLabel("发件邮箱").fill("noreply@example.com");
+      await page.getByLabel("发件人名称").fill("Inkwell Browser Mailer");
       await page.getByRole("button", { name: "保存设置" }).click();
 
       await expect(page).toHaveURL(new RegExp(`/${fixture.adminPath}/settings\\?saved=1$`));
@@ -48,11 +55,25 @@ test.describe("settings browser regression", () => {
 
       const commentModeration = await getSettingValue("comment_moderation");
       const excerptLength = await getSettingValue("excerpt_length");
+      const smtpHost = await getSettingValue("smtp_host");
+      const smtpPort = await getSettingValue("smtp_port");
+      const smtpSecure = await getSettingValue("smtp_secure");
+      const smtpUsername = await getSettingValue("smtp_username");
+      const smtpPassword = await getSettingValue("smtp_password");
+      const smtpFromEmail = await getSettingValue("smtp_from_email");
+      const smtpFromName = await getSettingValue("smtp_from_name");
       const commentPending = await getEmailNotificationEnabled("comment_pending");
       const postPublished = await getEmailNotificationEnabled("post_published");
 
       expect(commentModeration).toBe("approved");
       expect(excerptLength).toBe("210");
+      expect(smtpHost).toBe("smtp.example.com");
+      expect(smtpPort).toBe("465");
+      expect(smtpSecure).toBe("true");
+      expect(smtpUsername).toBe("mailer@example.com");
+      expect(smtpPassword).toBe("browser-secret");
+      expect(smtpFromEmail).toBe("noreply@example.com");
+      expect(smtpFromName).toBe("Inkwell Browser Mailer");
       expect(commentPending).toBe(false);
       expect(postPublished).toBe(true);
     } finally {

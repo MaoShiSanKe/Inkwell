@@ -17,18 +17,29 @@ import {
 import { cleanupIntegrationTables } from "../setup";
 
 const INTEGRATION_PREFIX = "integration-test-";
-const { getAdminSessionMock } = vi.hoisted(() => ({
+const { getAdminSessionMock, notifyPostPublishedMock } = vi.hoisted(() => ({
   getAdminSessionMock: vi.fn(),
+  notifyPostPublishedMock: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
   getAdminSession: getAdminSessionMock,
 }));
 
+vi.mock("@/lib/email-notifications", () => ({
+  notifyPostPublished: notifyPostPublishedMock,
+}));
+
 describe("admin slug-history write paths", () => {
   beforeEach(async () => {
     await cleanupIntegrationTables();
     getAdminSessionMock.mockReset();
+    notifyPostPublishedMock.mockReset();
+    notifyPostPublishedMock.mockResolvedValue({
+      scenario: "post_published",
+      attempted: false,
+      deliveries: [],
+    });
   });
 
   afterEach(async () => {
@@ -92,6 +103,7 @@ describe("admin slug-history write paths", () => {
       reason: "manual update",
       title: "Updated title",
     });
+    expect(notifyPostPublishedMock).not.toHaveBeenCalled();
   });
 
   it("lists revisions and restores a revision as the current draft", async () => {
@@ -239,6 +251,7 @@ describe("admin slug-history write paths", () => {
     const persistedPost = await getPost(post.id);
     expect(persistedPost?.status).toBe("scheduled");
     expect(persistedPost?.publishedAt?.toISOString()).toBe(scheduledAt.toISOString());
+    expect(notifyPostPublishedMock).not.toHaveBeenCalled();
   });
 
   it("prunes revisions by revision_limit after post updates", async () => {
@@ -346,6 +359,88 @@ describe("admin slug-history write paths", () => {
     });
   });
 
+  it("notifies subscribers when a draft is published for the first time", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-publish-now`);
+    const post = await createPost({
+      authorId: editor.id,
+      title: "Draft to publish",
+      slug: buildSlug(`draft-to-publish-${seed}`),
+      excerpt: "Draft excerpt",
+      content: "Draft content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-27T12:00:00.000Z"),
+    });
+
+    const { updateAdminPost } = await import("@/lib/admin/posts");
+    const result = await updateAdminPost(post.id, {
+      title: "Draft to publish",
+      slug: post.slug,
+      categoryId: "",
+      excerpt: "Draft excerpt",
+      content: "Draft content",
+      status: "published",
+      tagIds: [],
+      seriesIds: [],
+      metaTitle: "",
+      metaDescription: "",
+      ogTitle: "",
+      ogDescription: "",
+      canonicalUrl: "",
+      breadcrumbEnabled: false,
+      noindex: false,
+      nofollow: false,
+    });
+
+    expect(result).toMatchObject({ success: true, postId: post.id });
+    expect(notifyPostPublishedMock).toHaveBeenCalledTimes(1);
+    expect(notifyPostPublishedMock).toHaveBeenCalledWith({
+      postId: post.id,
+      postSlug: post.slug,
+      postTitle: "Draft to publish",
+      excerpt: "Draft excerpt",
+    });
+  });
+
+  it("does not re-notify subscribers when updating an already published post", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-republish`);
+    const post = await createPost({
+      authorId: editor.id,
+      title: "Already published",
+      slug: buildSlug(`already-published-${seed}`),
+      excerpt: "Published excerpt",
+      content: "Published content",
+      status: "published",
+      publishedAt: new Date("2026-03-27T10:00:00.000Z"),
+      updatedAt: new Date("2026-03-27T12:00:00.000Z"),
+    });
+
+    const { updateAdminPost } = await import("@/lib/admin/posts");
+    const result = await updateAdminPost(post.id, {
+      title: "Already published updated",
+      slug: post.slug,
+      categoryId: "",
+      excerpt: "Published excerpt",
+      content: "Published content updated",
+      status: "published",
+      tagIds: [],
+      seriesIds: [],
+      metaTitle: "",
+      metaDescription: "",
+      ogTitle: "",
+      ogDescription: "",
+      canonicalUrl: "",
+      breadcrumbEnabled: false,
+      noindex: false,
+      nofollow: false,
+    });
+
+    expect(result).toMatchObject({ success: true, postId: post.id });
+    expect(notifyPostPublishedMock).not.toHaveBeenCalled();
+  });
+
   it("publishes due scheduled posts and updates sitemap entries", async () => {
     const seed = createSeed();
     const editor = await signInAsEditor(`${seed}-auto-publish`);
@@ -386,6 +481,13 @@ describe("admin slug-history write paths", () => {
     expect(persistedDuePost?.status).toBe("published");
     expect(persistedFuturePost?.status).toBe("scheduled");
     expect((await getSitemapEntry(duePost.id))?.loc).toBe(`/post/${duePost.slug}`);
+    expect(notifyPostPublishedMock).toHaveBeenCalledTimes(1);
+    expect(notifyPostPublishedMock).toHaveBeenCalledWith({
+      postId: duePost.id,
+      postSlug: duePost.slug,
+      postTitle: "Due scheduled post",
+      excerpt: null,
+    });
   });
 
   it("publishes nothing when no scheduled post is due", async () => {
@@ -411,6 +513,7 @@ describe("admin slug-history write paths", () => {
       publishedPostIds: [],
       affectedSlugs: [],
     });
+    expect(notifyPostPublishedMock).not.toHaveBeenCalled();
   });
 });
 
@@ -503,7 +606,7 @@ async function signInAsEditor(seed: string) {
 
 async function createUser(input: {
   seed: string;
-  role: "author" | "editor";
+  role: "author" | "editor" | "subscriber";
   displayName: string;
 }) {
   const db = await getDb();
@@ -549,7 +652,6 @@ async function createPost(input: {
 
   return post;
 }
-
 
 async function createViewCount(postId: number, viewDate: string, viewCount: number) {
   const db = await getDb();

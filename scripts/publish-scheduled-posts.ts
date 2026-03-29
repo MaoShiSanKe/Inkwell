@@ -5,6 +5,7 @@ import { and, desc, eq, inArray, ne } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
+import { notifyPostPublished } from "../lib/email-notifications";
 import {
   postRevisions,
   posts,
@@ -143,16 +144,32 @@ export async function main() {
     const dueRows = scheduledRows.filter(
       (row) => row.publishedAt && row.publishedAt.getTime() <= now.getTime(),
     );
+    const notifications: Array<{
+      postId: number;
+      slug: string;
+      title: string;
+      excerpt: string | null;
+    }> = [];
 
     for (const row of dueRows) {
-      await db.transaction(async (tx) => {
-        await tx
+      const [publishedPost] = await db.transaction(async (tx) => {
+        const updatedRows = await tx
           .update(posts)
           .set({
             status: "published",
             updatedAt: now,
           })
-          .where(and(eq(posts.id, row.id), eq(posts.status, "scheduled")));
+          .where(and(eq(posts.id, row.id), eq(posts.status, "scheduled")))
+          .returning({
+            id: posts.id,
+            slug: posts.slug,
+            title: posts.title,
+            excerpt: posts.excerpt,
+          });
+
+        if (updatedRows.length === 0) {
+          return [];
+        }
 
         await tx
           .insert(sitemapEntries)
@@ -168,17 +185,38 @@ export async function main() {
               lastModifiedAt: now,
             },
           });
+
+        return updatedRows;
       });
 
+      if (!publishedPost) {
+        continue;
+      }
+
       await prunePostRevisions(db, row.id, retention);
+      notifications.push({
+        postId: publishedPost.id,
+        slug: publishedPost.slug,
+        title: publishedPost.title,
+        excerpt: publishedPost.excerpt,
+      });
+    }
+
+    for (const notification of notifications) {
+      await notifyPostPublished({
+        postId: notification.postId,
+        postSlug: notification.slug,
+        postTitle: notification.title,
+        excerpt: notification.excerpt,
+      });
     }
 
     console.log(
       JSON.stringify(
         {
-          publishedCount: dueRows.length,
-          publishedPostIds: dueRows.map((row) => row.id),
-          affectedSlugs: dueRows.map((row) => row.slug),
+          publishedCount: notifications.length,
+          publishedPostIds: notifications.map((row) => row.postId),
+          affectedSlugs: notifications.map((row) => row.slug),
         },
         null,
         2,

@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, desc, eq, inArray } from "drizzle-orm";
 
+import { notifyCommentApproved, notifyCommentReply } from "@/lib/email-notifications";
 import { getAdminSession, type AdminRole } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { comments, posts } from "@/lib/db/schema";
@@ -215,6 +216,14 @@ async function updateAdminCommentStatus(
         postSlug: comment.postSlug,
         status: "pending",
       };
+    }
+  }
+
+  if (nextStatus === "approved") {
+    await notifyCommentApproved(comment.id);
+
+    if (comment.parentId !== null) {
+      await notifyCommentReply(comment.id);
     }
   }
 

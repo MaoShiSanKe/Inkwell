@@ -55,6 +55,18 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
         : input.comment_moderation?.trim() === "pending"
           ? "pending"
           : "",
+    smtp_host: input.smtp_host?.trim() ?? "",
+    smtp_port: input.smtp_port?.trim() ?? "",
+    smtp_secure:
+      input.smtp_secure?.trim() === "true"
+        ? "true"
+        : input.smtp_secure?.trim() === "false"
+          ? "false"
+          : "false",
+    smtp_username: input.smtp_username?.trim() ?? "",
+    smtp_password: input.smtp_password ?? "",
+    smtp_from_email: input.smtp_from_email?.trim().toLowerCase() ?? "",
+    smtp_from_name: input.smtp_from_name?.trim() ?? "",
   };
 }
 
@@ -65,6 +77,13 @@ function toFormValues(values: SettingValues): SettingsFormValues {
     revision_ttl_days: String(values.revision_ttl_days),
     excerpt_length: String(values.excerpt_length),
     comment_moderation: values.comment_moderation,
+    smtp_host: values.smtp_host,
+    smtp_port: String(values.smtp_port),
+    smtp_secure: values.smtp_secure ? "true" : "false",
+    smtp_username: values.smtp_username,
+    smtp_password: "",
+    smtp_from_email: values.smtp_from_email,
+    smtp_from_name: values.smtp_from_name,
   };
 }
 
@@ -80,6 +99,20 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
       return "自动摘要长度必须是正整数。";
     case "comment_moderation":
       return "评论审核模式无效。";
+    case "smtp_host":
+      return "SMTP Host 格式无效。";
+    case "smtp_port":
+      return "SMTP 端口必须是正整数。";
+    case "smtp_secure":
+      return "SMTP 加密模式无效。";
+    case "smtp_username":
+      return "SMTP 用户名格式无效。";
+    case "smtp_password":
+      return "SMTP 密码格式无效。";
+    case "smtp_from_email":
+      return "发件邮箱格式无效。";
+    case "smtp_from_name":
+      return "发件人名称格式无效。";
   }
 }
 
@@ -228,13 +261,17 @@ export async function updateAdminSettings(
 
   try {
     const currentSettings = await getSettings();
-    await persistSettings(validation.parsed);
+    const nextSettings: SettingValues = {
+      ...validation.parsed,
+      smtp_password: validation.parsed.smtp_password || currentSettings.smtp_password,
+    };
+    await persistSettings(nextSettings);
 
     return {
       success: true,
-      nextAdminPath: validation.parsed.admin_path,
+      nextAdminPath: nextSettings.admin_path,
       previousAdminPath: currentSettings.admin_path,
-      adminPathChanged: validation.parsed.admin_path !== currentSettings.admin_path,
+      adminPathChanged: nextSettings.admin_path !== currentSettings.admin_path,
     };
   } catch {
     return {

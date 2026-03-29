@@ -3,7 +3,7 @@ import "server-only";
 import { eq, inArray } from "drizzle-orm";
 
 import { db } from "./db";
-import { settings } from "./db/schema";
+import { settings, users } from "./db/schema";
 import {
   DEFAULT_SETTINGS,
   SETTING_KEYS,
@@ -12,6 +12,7 @@ import {
   settingDefinitions,
   type SettingKey,
   type SettingValues,
+  type SmtpSettings,
 } from "./settings-config";
 
 function assignSettingValue<K extends SettingKey>(
@@ -120,6 +121,41 @@ export async function getExcerptLength() {
 
 export async function getCommentModeration() {
   return getSetting("comment_moderation");
+}
+
+export async function getSmtpSettings(): Promise<SmtpSettings> {
+  const values = await getSettings();
+
+  return {
+    smtp_host: values.smtp_host,
+    smtp_port: values.smtp_port,
+    smtp_secure: values.smtp_secure,
+    smtp_username: values.smtp_username,
+    smtp_password: values.smtp_password,
+    smtp_from_email: values.smtp_from_email,
+    smtp_from_name: values.smtp_from_name,
+  };
+}
+
+export async function listNotificationAdminRecipients() {
+  return db
+    .select({
+      email: users.email,
+      displayName: users.displayName,
+      role: users.role,
+    })
+    .from(users)
+    .where(inArray(users.role, ["super_admin", "editor"]));
+}
+
+export async function listSubscriberNotificationRecipients() {
+  return db
+    .select({
+      email: users.email,
+      displayName: users.displayName,
+    })
+    .from(users)
+    .where(eq(users.role, "subscriber"));
 }
 
 export function getSiteOrigin() {

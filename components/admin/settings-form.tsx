@@ -152,6 +152,126 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
           修改后台路径后，建议立即使用新路径重新访问后台，并确认部署环境中的进程或缓存策略不会延迟生效。
         </div>
 
+        <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              SMTP 配置
+            </h2>
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+              配置真实邮件发送所需的 SMTP 连接与发件人信息。未完整配置时，通知场景会自动跳过发送。
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              SMTP Host
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="smtp_host"
+                defaultValue={state.values.smtp_host}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              {state.errors.smtp_host ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.smtp_host}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              SMTP 端口
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="number"
+                min="1"
+                step="1"
+                name="smtp_port"
+                defaultValue={state.values.smtp_port}
+              />
+              {state.errors.smtp_port ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.smtp_port}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              SMTP 加密
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="smtp_secure"
+                defaultValue={state.values.smtp_secure}
+              >
+                <option value="false">STARTTLS / 普通端口（如 587）</option>
+                <option value="true">SSL/TLS（如 465）</option>
+              </select>
+              {state.errors.smtp_secure ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.smtp_secure}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              SMTP 用户名
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="smtp_username"
+                defaultValue={state.values.smtp_username}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              {state.errors.smtp_username ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.smtp_username}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              SMTP 密码
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="password"
+                name="smtp_password"
+                defaultValue={state.values.smtp_password}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              {state.errors.smtp_password ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.smtp_password}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              发件邮箱
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="email"
+                name="smtp_from_email"
+                defaultValue={state.values.smtp_from_email}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              {state.errors.smtp_from_email ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.smtp_from_email}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              发件人名称
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="smtp_from_name"
+                defaultValue={state.values.smtp_from_name}
+              />
+              {state.errors.smtp_from_name ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.smtp_from_name}</span>
+              ) : null}
+            </label>
+          </div>
+        </section>
+
         <div className="flex items-center gap-3">
           <button
             className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
@@ -174,7 +294,7 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
             邮件通知场景
           </h2>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-            仅管理各场景的启用状态，本阶段不包含 SMTP 配置或实际邮件发送流程。
+            配置各场景是否触发真实邮件通知；若 SMTP 未完整配置，启用的场景也会自动跳过发送。
           </p>
         </div>
 

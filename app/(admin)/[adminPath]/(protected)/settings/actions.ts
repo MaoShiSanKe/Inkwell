@@ -62,6 +62,13 @@ export async function saveSettingsAction(
       | "pending"
       | "approved"
       | "",
+    smtp_host: String(formData.get("smtp_host") ?? ""),
+    smtp_port: String(formData.get("smtp_port") ?? ""),
+    smtp_secure: String(formData.get("smtp_secure") ?? "false") as "true" | "false",
+    smtp_username: String(formData.get("smtp_username") ?? ""),
+    smtp_password: String(formData.get("smtp_password") ?? ""),
+    smtp_from_email: String(formData.get("smtp_from_email") ?? ""),
+    smtp_from_name: String(formData.get("smtp_from_name") ?? ""),
   });
 
   if (!result.success) {

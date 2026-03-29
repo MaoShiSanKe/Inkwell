@@ -4,6 +4,7 @@ import { isIP } from "node:net";
 
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 
+import { notifyCommentPending, notifyCommentReply } from "@/lib/email-notifications";
 import { db } from "@/lib/db";
 import { comments, posts } from "@/lib/db/schema";
 import { getCommentModeration } from "@/lib/settings";
@@ -423,6 +424,14 @@ export async function submitPublicComment(
     .returning({
       id: comments.id,
     });
+
+  if (nextStatus === "pending") {
+    await notifyCommentPending(insertedComment.id);
+  }
+
+  if (nextStatus === "approved" && validatedInput.parentId !== null) {
+    await notifyCommentReply(insertedComment.id);
+  }
 
   return {
     success: true,

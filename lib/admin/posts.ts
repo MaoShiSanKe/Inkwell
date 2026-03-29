@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
 
+import { notifyPostPublished } from "@/lib/email-notifications";
 import { getAdminSession, type AdminRole } from "@/lib/auth";
 import { getPublishedPostLikeCount } from "@/lib/blog/likes";
 import { getPublishedPostViewCount } from "@/lib/blog/views";
@@ -145,6 +146,13 @@ export type PublishScheduledPostsResult = {
   publishedCount: number;
   publishedPostIds: number[];
   affectedSlugs: string[];
+};
+
+type NewlyPublishedPostNotification = {
+  postId: number;
+  slug: string;
+  title: string;
+  excerpt: string | null;
 };
 
 type RevisionDbLike = {
@@ -555,7 +563,6 @@ export async function getAdminPostEditorData(
   };
 }
 
-
 export async function listAdminPostRevisions(
   postId: number,
   limit = 20,
@@ -694,6 +701,7 @@ export async function restoreAdminPostRevision(
     };
   }
 }
+
 export async function publishScheduledPosts(
   now = new Date(),
 ): Promise<PublishScheduledPostsResult> {
@@ -719,18 +727,28 @@ export async function publishScheduledPosts(
   }
 
   const retention = await getRevisionRetentionSettings();
-  const affectedSlugs = dueRows.map((row) => row.slug);
   const publishedPostIds: number[] = [];
+  const notifications: NewlyPublishedPostNotification[] = [];
 
   for (const row of dueRows) {
-    await db.transaction(async (tx) => {
-      await tx
+    const [publishedPost] = await db.transaction(async (tx) => {
+      const updatedRows = await tx
         .update(posts)
         .set({
           status: "published",
           updatedAt: now,
         })
-        .where(eq(posts.id, row.id));
+        .where(and(eq(posts.id, row.id), eq(posts.status, "scheduled")))
+        .returning({
+          id: posts.id,
+          slug: posts.slug,
+          title: posts.title,
+          excerpt: posts.excerpt,
+        });
+
+      if (updatedRows.length === 0) {
+        return [];
+      }
 
       await tx
         .insert(sitemapEntries)
@@ -748,15 +766,36 @@ export async function publishScheduledPosts(
         });
 
       await prunePostRevisions(tx, row.id, retention);
+
+      return updatedRows;
     });
 
+    if (!publishedPost) {
+      continue;
+    }
+
     publishedPostIds.push(row.id);
+    notifications.push({
+      postId: publishedPost.id,
+      slug: publishedPost.slug,
+      title: publishedPost.title,
+      excerpt: publishedPost.excerpt,
+    });
+  }
+
+  for (const notification of notifications) {
+    await notifyPostPublished({
+      postId: notification.postId,
+      postSlug: notification.slug,
+      postTitle: notification.title,
+      excerpt: notification.excerpt,
+    });
   }
 
   return {
     publishedCount: publishedPostIds.length,
     publishedPostIds,
-    affectedSlugs,
+    affectedSlugs: notifications.map((row) => row.slug),
   };
 }
 
@@ -790,6 +829,7 @@ export async function createAdminPost(
     validation;
   const now = new Date();
   const retention = await getRevisionRetentionSettings();
+  const shouldNotifyPublished = values.status === "published";
 
   try {
     const insertedPost = await db.transaction(async (tx) => {
@@ -873,6 +913,15 @@ export async function createAdminPost(
       return post;
     });
 
+    if (shouldNotifyPublished) {
+      await notifyPostPublished({
+        postId: insertedPost.id,
+        postSlug: values.slug,
+        postTitle: values.title,
+        excerpt: resolvedExcerpt,
+      });
+    }
+
     return {
       success: true,
       postId: insertedPost.id,
@@ -914,7 +963,7 @@ export async function updateAdminPost(
   }
 
   const [existingPost] = await db
-    .select({ id: posts.id, slug: posts.slug })
+    .select({ id: posts.id, slug: posts.slug, status: posts.status })
     .from(posts)
     .where(eq(posts.id, postId))
     .limit(1);
@@ -956,6 +1005,7 @@ export async function updateAdminPost(
   const now = new Date();
   const slugChanged = values.slug !== existingPost.slug;
   const retention = await getRevisionRetentionSettings();
+  const shouldNotifyPublished = existingPost.status !== "published" && values.status === "published";
 
   try {
     await db.transaction(async (tx) => {
@@ -1079,6 +1129,15 @@ export async function updateAdminPost(
 
       await prunePostRevisions(tx, postId, retention);
     });
+
+    if (shouldNotifyPublished) {
+      await notifyPostPublished({
+        postId,
+        postSlug: values.slug,
+        postTitle: values.title,
+        excerpt: resolvedExcerpt,
+      });
+    }
 
     return {
       success: true,
@@ -1501,6 +1560,17 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
       : values.status === "scheduled"
         ? scheduledAtDate
         : null;
+  const seo = {
+    metaTitle: values.metaTitle || null,
+    metaDescription: values.metaDescription || null,
+    ogTitle: values.ogTitle || null,
+    ogDescription: values.ogDescription || null,
+    ogImageMediaId: parsedOgImageMediaId,
+    canonicalUrl: values.canonicalUrl || null,
+    breadcrumbEnabled: values.breadcrumbEnabled,
+    noindex: values.noindex,
+    nofollow: values.nofollow,
+  };
 
   return {
     success: true as const,
@@ -1509,16 +1579,6 @@ async function validatePostInput(values: PostFormValues, currentPostId?: number)
     parsedSeriesIds: seriesIds,
     resolvedExcerpt,
     publishedAt,
-    seo: {
-      metaTitle: values.metaTitle || null,
-      metaDescription: values.metaDescription || null,
-      ogTitle: values.ogTitle || null,
-      ogDescription: values.ogDescription || null,
-      ogImageMediaId: parsedOgImageMediaId,
-      canonicalUrl: values.canonicalUrl || null,
-      breadcrumbEnabled: values.breadcrumbEnabled,
-      noindex: values.noindex,
-      nofollow: values.nofollow,
-    },
+    seo,
   };
 }

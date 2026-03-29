@@ -37,6 +37,38 @@ function parseNonNegativeInteger(value: string, key: string): number {
   return parsed;
 }
 
+function parseBooleanString(value: string, key: string) {
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === "true") {
+    return true;
+  }
+
+  if (normalized === "false") {
+    return false;
+  }
+
+  throw new Error(`${key} must be either 'true' or 'false'.`);
+}
+
+function parseOptionalText(value: string) {
+  return value.trim();
+}
+
+function parseOptionalEmail(value: string, key: string) {
+  const normalized = value.trim().toLowerCase();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    throw new Error(`${key} must be a valid email address.`);
+  }
+
+  return normalized;
+}
+
 function validateAdminPath(value: string): string {
   const normalized = value.trim();
 
@@ -92,6 +124,48 @@ export const settingDefinitions = {
     parse: (value: string) => parseCommentModeration(value),
     serialize: (value: CommentModerationMode) => parseCommentModeration(value),
   }),
+  smtp_host: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  smtp_port: defineSetting({
+    defaultValue: 587,
+    isSecret: false,
+    parse: (value: string) => parsePositiveInteger(value, "smtp_port"),
+    serialize: (value: number) => String(value),
+  }),
+  smtp_secure: defineSetting({
+    defaultValue: false,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "smtp_secure"),
+    serialize: (value: boolean) => String(value),
+  }),
+  smtp_username: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  smtp_password: defineSetting({
+    defaultValue: "",
+    isSecret: true,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => value,
+  }),
+  smtp_from_email: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalEmail(value, "smtp_from_email"),
+    serialize: (value: string) => parseOptionalEmail(value, "smtp_from_email"),
+  }),
+  smtp_from_name: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
 };
 
 export type SettingKey = keyof typeof settingDefinitions;
@@ -104,6 +178,17 @@ export type SettingValues = {
   [K in SettingKey]: InferSettingValue<(typeof settingDefinitions)[K]>;
 };
 
+export type SmtpSettings = Pick<
+  SettingValues,
+  | "smtp_host"
+  | "smtp_port"
+  | "smtp_secure"
+  | "smtp_username"
+  | "smtp_password"
+  | "smtp_from_email"
+  | "smtp_from_name"
+>;
+
 export const SETTING_KEYS = Object.keys(settingDefinitions) as SettingKey[];
 
 export const DEFAULT_SETTINGS: SettingValues = {
@@ -112,6 +197,13 @@ export const DEFAULT_SETTINGS: SettingValues = {
   revision_ttl_days: settingDefinitions.revision_ttl_days.defaultValue,
   excerpt_length: settingDefinitions.excerpt_length.defaultValue,
   comment_moderation: settingDefinitions.comment_moderation.defaultValue,
+  smtp_host: settingDefinitions.smtp_host.defaultValue,
+  smtp_port: settingDefinitions.smtp_port.defaultValue,
+  smtp_secure: settingDefinitions.smtp_secure.defaultValue,
+  smtp_username: settingDefinitions.smtp_username.defaultValue,
+  smtp_password: settingDefinitions.smtp_password.defaultValue,
+  smtp_from_email: settingDefinitions.smtp_from_email.defaultValue,
+  smtp_from_name: settingDefinitions.smtp_from_name.defaultValue,
 };
 
 export const DEFAULT_EMAIL_NOTIFICATION_SCENARIOS: EmailNotificationScenario[] = [
