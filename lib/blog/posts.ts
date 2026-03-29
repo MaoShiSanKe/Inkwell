@@ -172,10 +172,32 @@ export type ResolvedPublishedPost =
       kind: "not-found";
     };
 
+
 export async function listPublishedPosts(): Promise<PublishedPostListItem[]> {
   const rows = await buildPublishedPostListQuery()
     .where(eq(posts.status, "published"))
     .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return rows.map(mapPublishedPostListItem);
+}
+
+export async function searchPublishedPosts(query: string): Promise<PublishedPostListItem[]> {
+  const normalizedQuery = query.trim();
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const searchTerm = `%${normalizedQuery.slice(0, 100)}%`;
+  const rows = await buildPublishedPostListQuery()
+    .where(
+      and(
+        eq(posts.status, "published"),
+        sql`(${posts.title} ilike ${searchTerm} or ${posts.excerpt} ilike ${searchTerm})`,
+      ),
+    )
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt), desc(posts.id))
+    .limit(20);
 
   return rows.map(mapPublishedPostListItem);
 }
