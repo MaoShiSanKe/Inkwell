@@ -112,6 +112,8 @@ export default async function AdminPostsPage({
                   <th className="px-4 py-3">状态</th>
                   <th className="px-4 py-3">分类</th>
                   <th className="px-4 py-3">作者</th>
+                  <th className="px-4 py-3 text-right">浏览</th>
+                  <th className="px-4 py-3 text-right">点赞</th>
                   <th className="px-4 py-3">更新时间</th>
                   <th className="px-4 py-3">发布时间</th>
                   <th className="px-4 py-3 text-right">操作</th>
@@ -131,6 +133,8 @@ export default async function AdminPostsPage({
                     <td className="px-4 py-3">{getStatusLabel(post.status)}</td>
                     <td className="px-4 py-3">{post.categoryName ?? "—"}</td>
                     <td className="px-4 py-3">{post.authorDisplayName} ({post.authorUsername})</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{post.viewCount}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{post.likeCount}</td>
                     <td className="px-4 py-3">{post.updatedAt.toLocaleString()}</td>
                     <td className="px-4 py-3">{post.publishedAt ? post.publishedAt.toLocaleString() : "—"}</td>
                     <td className="px-4 py-3 text-right">

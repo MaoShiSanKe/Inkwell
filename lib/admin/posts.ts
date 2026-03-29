@@ -1,18 +1,22 @@
 import "server-only";
 
-import { and, desc, eq, inArray, ne } from "drizzle-orm";
+import { and, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
 
 import { getAdminSession, type AdminRole } from "@/lib/auth";
+import { getPublishedPostLikeCount } from "@/lib/blog/likes";
+import { getPublishedPostViewCount } from "@/lib/blog/views";
 import { db } from "@/lib/db";
 import {
   categories,
   media,
+  postLikes,
   postMeta,
   postRevisions,
   postSeries,
   postSlugAliases,
   posts,
   postTags,
+  postViews,
   series,
   sitemapEntries,
   tags,
@@ -41,6 +45,8 @@ export type AdminPostListItem = {
   authorUsername: string;
   updatedAt: Date;
   publishedAt: Date | null;
+  viewCount: number;
+  likeCount: number;
 };
 
 export type PostCategoryOption = {
@@ -117,6 +123,10 @@ export type AdminPostEditorData = {
   id: number;
   currentStatus: "draft" | "published" | "scheduled" | "trash";
   values: PostFormValues;
+  engagement: {
+    viewCount: number;
+    likeCount: number;
+  };
 };
 
 export type AdminPostRevisionItem = {
@@ -354,8 +364,42 @@ async function prunePostRevisions(
   await tx.delete(postRevisions).where(inArray(postRevisions.id, staleRevisionIds));
 }
 
+async function getPostViewCountMap(postIds: number[]) {
+  if (postIds.length === 0) {
+    return new Map<number, number>();
+  }
+
+  const rows = await db
+    .select({
+      postId: postViews.postId,
+      viewCount: sql<number>`coalesce(sum(${postViews.viewCount}), 0)`,
+    })
+    .from(postViews)
+    .where(inArray(postViews.postId, postIds))
+    .groupBy(postViews.postId);
+
+  return new Map(rows.map((row) => [row.postId, Number(row.viewCount)]));
+}
+
+async function getPostLikeCountMap(postIds: number[]) {
+  if (postIds.length === 0) {
+    return new Map<number, number>();
+  }
+
+  const rows = await db
+    .select({
+      postId: postLikes.postId,
+      likeCount: count(),
+    })
+    .from(postLikes)
+    .where(inArray(postLikes.postId, postIds))
+    .groupBy(postLikes.postId);
+
+  return new Map(rows.map((row) => [row.postId, Number(row.likeCount)]));
+}
+
 export async function listAdminPosts(): Promise<AdminPostListItem[]> {
-  return db
+  const rows = await db
     .select({
       id: posts.id,
       title: posts.title,
@@ -372,6 +416,18 @@ export async function listAdminPosts(): Promise<AdminPostListItem[]> {
     .leftJoin(categories, eq(posts.categoryId, categories.id))
     .orderBy(desc(posts.updatedAt))
     .limit(50);
+
+  const postIds = rows.map((row) => row.id);
+  const [viewCountMap, likeCountMap] = await Promise.all([
+    getPostViewCountMap(postIds),
+    getPostLikeCountMap(postIds),
+  ]);
+
+  return rows.map((row) => ({
+    ...row,
+    viewCount: viewCountMap.get(row.id) ?? 0,
+    likeCount: likeCountMap.get(row.id) ?? 0,
+  }));
 }
 
 export async function listPostCategoryOptions(): Promise<PostCategoryOption[]> {
@@ -410,7 +466,7 @@ export async function listPostSeriesOptions(): Promise<PostSeriesOption[]> {
 export async function getAdminPostEditorData(
   postId: number,
 ): Promise<AdminPostEditorData | null> {
-  const [[post], tagRows, seriesRows, [meta]] = await Promise.all([
+  const [[post], tagRows, seriesRows, [meta], viewCount, likeCount] = await Promise.all([
     db
       .select({
         id: posts.id,
@@ -449,6 +505,8 @@ export async function getAdminPostEditorData(
       .from(postMeta)
       .where(eq(postMeta.postId, postId))
       .limit(1),
+    getPublishedPostViewCount(postId),
+    getPublishedPostLikeCount(postId),
   ]);
 
   if (!post) {
@@ -490,6 +548,10 @@ export async function getAdminPostEditorData(
       noindex: meta?.noindex ?? false,
       nofollow: meta?.nofollow ?? false,
     }).values,
+    engagement: {
+      viewCount,
+      likeCount,
+    },
   };
 }
 

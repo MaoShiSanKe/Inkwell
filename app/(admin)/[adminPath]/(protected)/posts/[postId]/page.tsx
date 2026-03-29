@@ -63,6 +63,27 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
         </Link>
       </div>
 
+      <section className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            Views
+          </p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
+            {post.engagement.viewCount}
+          </p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">当前文章累计浏览量</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-950">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+            Likes
+          </p>
+          <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums">
+            {post.engagement.likeCount}
+          </p>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">当前文章累计点赞数</p>
+        </div>
+      </section>
+
       <PostEditForm
         adminPath={adminPath}
         postId={post.id}

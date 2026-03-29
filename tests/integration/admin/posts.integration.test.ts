@@ -4,9 +4,11 @@ import { desc, eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  postLikes,
   postRevisions,
   postSlugAliases,
   posts,
+  postViews,
   settings,
   sitemapEntries,
   users,
@@ -287,6 +289,63 @@ describe("admin slug-history write paths", () => {
     expect(revisionRows).toHaveLength(2);
   });
 
+  it("returns engagement counts for admin post list and editor data", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-engagement`);
+    const scheduledPost = await createPost({
+      authorId: editor.id,
+      title: "Scheduled engagement title",
+      slug: buildSlug(`scheduled-engagement-${seed}`),
+      excerpt: "Scheduled engagement excerpt",
+      content: "Scheduled engagement content",
+      status: "scheduled",
+      publishedAt: new Date("2026-04-08T08:30:00.000Z"),
+      updatedAt: new Date("2026-03-28T16:10:00.000Z"),
+    });
+    const quietPost = await createPost({
+      authorId: editor.id,
+      title: "Quiet draft title",
+      slug: buildSlug(`quiet-draft-${seed}`),
+      excerpt: null,
+      content: "Quiet draft content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-28T15:10:00.000Z"),
+    });
+
+    await createViewCount(scheduledPost.id, "2026-03-25", 3);
+    await createViewCount(scheduledPost.id, "2026-03-26", 2);
+    await createLike(scheduledPost.id, "203.0.113.10");
+    await createLike(scheduledPost.id, "203.0.113.11");
+
+    const { getAdminPostEditorData, listAdminPosts } = await import("@/lib/admin/posts");
+    const adminPosts = await listAdminPosts();
+    const scheduledListItem = adminPosts.find((post) => post.id === scheduledPost.id);
+    const quietListItem = adminPosts.find((post) => post.id === quietPost.id);
+
+    expect(scheduledListItem).toMatchObject({
+      id: scheduledPost.id,
+      status: "scheduled",
+      viewCount: 5,
+      likeCount: 2,
+    });
+    expect(quietListItem).toMatchObject({
+      id: quietPost.id,
+      status: "draft",
+      viewCount: 0,
+      likeCount: 0,
+    });
+
+    const editorData = await getAdminPostEditorData(scheduledPost.id);
+
+    expect(editorData).not.toBeNull();
+    expect(editorData?.currentStatus).toBe("scheduled");
+    expect(editorData?.engagement).toEqual({
+      viewCount: 5,
+      likeCount: 2,
+    });
+  });
+
   it("publishes due scheduled posts and updates sitemap entries", async () => {
     const seed = createSeed();
     const editor = await signInAsEditor(`${seed}-auto-publish`);
@@ -491,6 +550,25 @@ async function createPost(input: {
   return post;
 }
 
+
+async function createViewCount(postId: number, viewDate: string, viewCount: number) {
+  const db = await getDb();
+  await db.insert(postViews).values({
+    postId,
+    viewDate,
+    viewCount,
+    updatedAt: new Date("2026-03-28T12:00:00.000Z"),
+  });
+}
+
+async function createLike(postId: number, ipAddress: string) {
+  const db = await getDb();
+  await db.insert(postLikes).values({
+    postId,
+    ipAddress,
+    createdAt: new Date("2026-03-28T12:00:00.000Z"),
+  });
+}
 
 async function createRevision(input: {
   postId: number;
