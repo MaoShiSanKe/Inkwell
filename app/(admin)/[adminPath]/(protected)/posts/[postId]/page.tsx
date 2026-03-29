@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PostEditForm } from "@/components/admin/post-edit-form";
+import { PostRevisionHistory } from "@/components/admin/post-revision-history";
 import { listAdminMediaOptions } from "@/lib/admin/media";
 import {
   getAdminPostEditorData,
+  listAdminPostRevisions,
   listPostCategoryOptions,
   listPostSeriesOptions,
   listPostTagOptions,
@@ -27,8 +29,9 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
     notFound();
   }
 
-  const [post, categories, tags, series, mediaOptions] = await Promise.all([
+  const [post, revisions, categories, tags, series, mediaOptions] = await Promise.all([
     getAdminPostEditorData(numericPostId),
+    listAdminPostRevisions(numericPostId),
     listPostCategoryOptions(),
     listPostTagOptions(),
     listPostSeriesOptions(),
@@ -69,6 +72,8 @@ export default async function AdminPostEditPage({ params }: AdminPostEditPagePro
         mediaOptions={mediaOptions}
         initialValues={post.values}
       />
+
+      <PostRevisionHistory adminPath={adminPath} postId={post.id} revisions={revisions} />
 
       {post.currentStatus === "trash" ? (
         <form action={restorePostAction} className="flex justify-end">

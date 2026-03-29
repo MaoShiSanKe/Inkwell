@@ -119,6 +119,18 @@ export type AdminPostEditorData = {
   values: PostFormValues;
 };
 
+export type AdminPostRevisionItem = {
+  id: number;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  status: "draft" | "published" | "scheduled" | "trash";
+  reason: string | null;
+  createdAt: Date;
+  editorDisplayName: string | null;
+  editorUsername: string | null;
+};
+
 export type PublishScheduledPostsResult = {
   publishedCount: number;
   publishedPostIds: number[];
@@ -481,6 +493,145 @@ export async function getAdminPostEditorData(
   };
 }
 
+
+export async function listAdminPostRevisions(
+  postId: number,
+  limit = 20,
+): Promise<AdminPostRevisionItem[]> {
+  return db
+    .select({
+      id: postRevisions.id,
+      title: postRevisions.title,
+      excerpt: postRevisions.excerpt,
+      content: postRevisions.content,
+      status: postRevisions.status,
+      reason: postRevisions.reason,
+      createdAt: postRevisions.createdAt,
+      editorDisplayName: users.displayName,
+      editorUsername: users.username,
+    })
+    .from(postRevisions)
+    .leftJoin(users, eq(postRevisions.editorId, users.id))
+    .where(eq(postRevisions.postId, postId))
+    .orderBy(desc(postRevisions.createdAt), desc(postRevisions.id))
+    .limit(limit);
+}
+
+export async function restoreAdminPostRevision(
+  postId: number,
+  revisionId: number,
+): Promise<UpdateAdminPostResult> {
+  const session = await requireAdminSession();
+
+  if (!session) {
+    return {
+      success: false,
+      values: createPostFormState().values,
+      errors: {
+        form: "当前会话无效，请重新登录。",
+      },
+    };
+  }
+
+  if (
+    !Number.isInteger(postId) ||
+    postId <= 0 ||
+    !Number.isInteger(revisionId) ||
+    revisionId <= 0
+  ) {
+    return {
+      success: false,
+      values: createPostFormState().values,
+      errors: {
+        form: "修订记录不存在。",
+      },
+    };
+  }
+
+  const [[existingPost], [targetRevision], existingAliasRows] = await Promise.all([
+    db
+      .select({
+        id: posts.id,
+        slug: posts.slug,
+      })
+      .from(posts)
+      .where(eq(posts.id, postId))
+      .limit(1),
+    db
+      .select({
+        id: postRevisions.id,
+        title: postRevisions.title,
+        excerpt: postRevisions.excerpt,
+        content: postRevisions.content,
+      })
+      .from(postRevisions)
+      .where(and(eq(postRevisions.id, revisionId), eq(postRevisions.postId, postId)))
+      .limit(1),
+    db
+      .select({ slug: postSlugAliases.slug })
+      .from(postSlugAliases)
+      .where(eq(postSlugAliases.postId, postId)),
+  ]);
+
+  if (!existingPost || !targetRevision) {
+    return {
+      success: false,
+      values: createPostFormState().values,
+      errors: {
+        form: "修订记录不存在。",
+      },
+    };
+  }
+
+  const now = new Date();
+  const retention = await getRevisionRetentionSettings();
+  const affectedSlugs = collectAffectedSlugs(
+    existingPost.slug,
+    ...existingAliasRows.map((row) => row.slug),
+  );
+
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(posts)
+        .set({
+          title: targetRevision.title,
+          excerpt: targetRevision.excerpt,
+          content: targetRevision.content,
+          status: "draft",
+          publishedAt: null,
+          updatedAt: now,
+        })
+        .where(eq(posts.id, postId));
+
+      await tx.delete(sitemapEntries).where(eq(sitemapEntries.postId, postId));
+
+      await tx.insert(postRevisions).values({
+        postId,
+        editorId: session.userId,
+        title: targetRevision.title,
+        excerpt: targetRevision.excerpt,
+        content: targetRevision.content,
+        status: "draft",
+        reason: "restored from revision",
+      });
+
+      await prunePostRevisions(tx, postId, retention);
+    });
+
+    return {
+      success: true,
+      postId,
+      affectedSlugs,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      values: createPostFormState().values,
+      errors: getPostMutationErrors(error, "恢复修订失败，请重试。"),
+    };
+  }
+}
 export async function publishScheduledPosts(
   now = new Date(),
 ): Promise<PublishScheduledPostsResult> {

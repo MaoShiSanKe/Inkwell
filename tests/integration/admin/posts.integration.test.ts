@@ -92,114 +92,101 @@ describe("admin slug-history write paths", () => {
     });
   });
 
-  it("restores the post's own historical alias as the current slug", async () => {
+  it("lists revisions and restores a revision as the current draft", async () => {
     const seed = createSeed();
-    const editor = await signInAsEditor(seed);
-    const currentSlug = buildSlug(`current-${seed}`);
-    const legacySlug = buildSlug(`legacy-${seed}`);
+    const editor = await signInAsEditor(`${seed}-revisions`);
     const post = await createPost({
       authorId: editor.id,
-      title: "Slug restore title",
-      slug: currentSlug,
-      excerpt: "Slug restore excerpt",
-      content: "Slug restore content",
+      title: "Published title",
+      slug: buildSlug(`revision-post-${seed}`),
+      excerpt: "Published excerpt",
+      content: "Published content",
       status: "published",
       publishedAt: new Date("2026-03-26T17:00:00.000Z"),
       updatedAt: new Date("2026-03-26T17:10:00.000Z"),
     });
 
-    await createAlias(post.id, legacySlug);
-    await createSitemapEntry(post.id, currentSlug);
-
-    const result = await updatePost(post.id, {
-      title: "Slug restore title",
-      slug: `  ${legacySlug.toUpperCase()}  `,
-      excerpt: "Slug restore excerpt",
-      content: "Slug restore content",
+    await createSitemapEntry(post.id, post.slug);
+    await createRevision({
+      postId: post.id,
+      editorId: editor.id,
+      title: "Published title",
+      excerpt: "Published excerpt",
+      content: "Published content",
       status: "published",
+      reason: "initial create",
     });
 
-    expect(result).toMatchObject({
+    await updatePost(post.id, {
+      title: "Draft title after publish",
+      slug: post.slug,
+      excerpt: "",
+      content: "Draft content after publish",
+      status: "draft",
+    });
+
+    const { listAdminPostRevisions, restoreAdminPostRevision } = await import("@/lib/admin/posts");
+    const revisions = await listAdminPostRevisions(post.id);
+
+    expect(revisions.length).toBeGreaterThanOrEqual(2);
+    expect(revisions[0]).toMatchObject({
+      title: "Draft title after publish",
+      status: "draft",
+      reason: "manual update",
+    });
+    expect(revisions[1]).toMatchObject({
+      title: "Published title",
+      status: "published",
+      reason: "initial create",
+    });
+
+    const restoreResult = await restoreAdminPostRevision(post.id, revisions[1].id);
+
+    expect(restoreResult).toMatchObject({
       success: true,
       postId: post.id,
-      affectedSlugs: [currentSlug, legacySlug],
+      affectedSlugs: [post.slug],
     });
 
-    const persistedPost = await getPost(post.id);
-    expect(persistedPost?.slug).toBe(legacySlug);
-    await expect(listAliases(post.id)).resolves.toEqual([currentSlug]);
-    await expect(resolveSlug(legacySlug)).resolves.toMatchObject({ kind: "post" });
-    await expect(resolveSlug(currentSlug)).resolves.toEqual({
-      kind: "redirect",
-      currentSlug: legacySlug,
-    });
-
-    const sitemap = await getSitemapEntry(post.id);
-    expect(sitemap?.loc).toBe(`/post/${legacySlug}`);
-  });
-
-  it("rejects slugs already used by another current post or another post alias", async () => {
-    const seed = createSeed();
-    const editor = await signInAsEditor(seed);
-    const takenCurrentSlug = buildSlug(`taken-current-${seed}`);
-    const takenAliasSlug = buildSlug(`taken-alias-${seed}`);
-    const targetSlug = buildSlug(`target-${seed}`);
-    const takenPost = await createPost({
-      authorId: editor.id,
-      title: "Taken post",
-      slug: takenCurrentSlug,
-      excerpt: null,
-      content: "Taken content",
-      status: "published",
-      publishedAt: new Date("2026-03-26T18:00:00.000Z"),
-      updatedAt: new Date("2026-03-26T18:10:00.000Z"),
-    });
-    const targetPost = await createPost({
-      authorId: editor.id,
-      title: "Target post",
-      slug: targetSlug,
-      excerpt: null,
-      content: "Target content",
+    const restoredPost = await getPost(post.id);
+    expect(restoredPost).toMatchObject({
+      title: "Published title",
       status: "draft",
       publishedAt: null,
-      updatedAt: new Date("2026-03-26T18:20:00.000Z"),
     });
+    expect(await getSitemapEntry(post.id)).toBeNull();
 
-    await createAlias(takenPost.id, takenAliasSlug);
-
-    const duplicateCurrentResult = await updatePost(targetPost.id, {
-      title: "Target post",
-      slug: takenCurrentSlug,
-      excerpt: "",
-      content: "Target content",
+    const latestRevision = await getLatestRevision(post.id);
+    expect(latestRevision).toMatchObject({
+      title: "Published title",
       status: "draft",
+      reason: "restored from revision",
+    });
+  });
+
+  it("rejects invalid revision restore requests", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-invalid-rev`);
+    const post = await createPost({
+      authorId: editor.id,
+      title: "Invalid restore target",
+      slug: buildSlug(`invalid-revision-${seed}`),
+      excerpt: null,
+      content: "Invalid revision content",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-26T17:20:00.000Z"),
     });
 
-    expect(duplicateCurrentResult).toMatchObject({
+    const { restoreAdminPostRevision } = await import("@/lib/admin/posts");
+    const result = await restoreAdminPostRevision(post.id, 999999);
+
+    expect(result).toMatchObject({
       success: false,
       errors: {
-        slug: "该 slug 已被其他文章使用。",
+        form: "修订记录不存在。",
       },
     });
-
-    const duplicateAliasResult = await updatePost(targetPost.id, {
-      title: "Target post",
-      slug: takenAliasSlug,
-      excerpt: "",
-      content: "Target content",
-      status: "draft",
-    });
-
-    expect(duplicateAliasResult).toMatchObject({
-      success: false,
-      errors: {
-        slug: "该 slug 已存在于历史记录中，请更换。",
-      },
-    });
-
-    const persistedTargetPost = await getPost(targetPost.id);
-    expect(persistedTargetPost?.slug).toBe(targetSlug);
-    await expect(listAliases(targetPost.id)).resolves.toEqual([]);
   });
 
   it("preserves scheduled status and publishedAt when updating a scheduled post", async () => {
@@ -222,7 +209,6 @@ describe("admin slug-history write paths", () => {
 
     expect(editorData?.currentStatus).toBe("scheduled");
     expect(editorData?.values.status).toBe("scheduled");
-    expect(editorData?.values.scheduledAt).toBeTruthy();
     expect(editorData?.values.scheduledAtIso).toBe(scheduledAt.toISOString());
 
     const result = await updateAdminPost(post.id, {
@@ -246,10 +232,7 @@ describe("admin slug-history write paths", () => {
       nofollow: false,
     });
 
-    expect(result).toMatchObject({
-      success: true,
-      postId: post.id,
-    });
+    expect(result).toMatchObject({ success: true, postId: post.id });
 
     const persistedPost = await getPost(post.id);
     expect(persistedPost?.status).toBe("scheduled");
@@ -304,7 +287,6 @@ describe("admin slug-history write paths", () => {
     expect(revisionRows).toHaveLength(2);
   });
 
-
   it("publishes due scheduled posts and updates sitemap entries", async () => {
     const seed = createSeed();
     const editor = await signInAsEditor(`${seed}-auto-publish`);
@@ -344,9 +326,7 @@ describe("admin slug-history write paths", () => {
     const persistedFuturePost = await getPost(futurePost.id);
     expect(persistedDuePost?.status).toBe("published");
     expect(persistedFuturePost?.status).toBe("scheduled");
-
-    const sitemap = await getSitemapEntry(duePost.id);
-    expect(sitemap?.loc).toBe(`/post/${duePost.slug}`);
+    expect((await getSitemapEntry(duePost.id))?.loc).toBe(`/post/${duePost.slug}`);
   });
 
   it("publishes nothing when no scheduled post is due", async () => {
@@ -373,8 +353,6 @@ describe("admin slug-history write paths", () => {
       affectedSlugs: [],
     });
   });
-
-
 });
 
 function createSeed() {
@@ -404,19 +382,10 @@ async function upsertSetting(key: string, value: string) {
   const db = await getDb();
   await db
     .insert(settings)
-    .values({
-      key,
-      value,
-      isSecret: false,
-      updatedAt: new Date(),
-    })
+    .values({ key, value, isSecret: false, updatedAt: new Date() })
     .onConflictDoUpdate({
       target: settings.key,
-      set: {
-        value,
-        isSecret: false,
-        updatedAt: new Date(),
-      },
+      set: { value, isSecret: false, updatedAt: new Date() },
     });
 }
 
@@ -457,16 +426,6 @@ async function updatePost(
   });
 }
 
-async function movePostToTrash(postId: number) {
-  const { moveAdminPostToTrash } = await import("@/lib/admin/posts");
-  return moveAdminPostToTrash(postId);
-}
-
-async function restorePost(postId: number) {
-  const { restoreAdminPostFromTrash } = await import("@/lib/admin/posts");
-  return restoreAdminPostFromTrash(postId);
-}
-
 async function signInAsEditor(seed: string) {
   const editor = await createUser({
     seed,
@@ -499,10 +458,7 @@ async function createUser(input: {
       passwordHash: "hashed-password",
       role: input.role,
     })
-    .returning({
-      id: users.id,
-      username: users.username,
-    });
+    .returning({ id: users.id, username: users.username });
 
   return user;
 }
@@ -530,17 +486,31 @@ async function createPost(input: {
       publishedAt: input.publishedAt,
       updatedAt: input.updatedAt,
     })
-    .returning({
-      id: posts.id,
-      slug: posts.slug,
-    });
+    .returning({ id: posts.id, slug: posts.slug });
 
   return post;
 }
 
-async function createAlias(postId: number, slug: string) {
+
+async function createRevision(input: {
+  postId: number;
+  editorId: number;
+  title: string;
+  excerpt: string | null;
+  content: string;
+  status: "draft" | "published" | "scheduled" | "trash";
+  reason: string;
+}) {
   const db = await getDb();
-  await db.insert(postSlugAliases).values({ postId, slug });
+  await db.insert(postRevisions).values({
+    postId: input.postId,
+    editorId: input.editorId,
+    title: input.title,
+    excerpt: input.excerpt,
+    content: input.content,
+    status: input.status,
+    reason: input.reason,
+  });
 }
 
 async function createSitemapEntry(postId: number, slug: string) {

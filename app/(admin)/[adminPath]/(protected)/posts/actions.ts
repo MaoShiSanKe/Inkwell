@@ -7,14 +7,12 @@ import {
   createAdminPost,
   moveAdminPostToTrash,
   restoreAdminPostFromTrash,
+  restoreAdminPostRevision,
   updateAdminPost,
   type CreateAdminPostResult,
   type UpdateAdminPostResult,
 } from "@/lib/admin/posts";
-import {
-  createPostFormState,
-  toScheduledAtIso,
-} from "@/lib/admin/post-form";
+import { createPostFormState, toScheduledAtIso } from "@/lib/admin/post-form";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminPath } from "@/lib/settings";
 
@@ -191,4 +189,31 @@ export async function restorePostAction(formData: FormData): Promise<void> {
   revalidatePath(`/${effectiveAdminPath}/posts/${postId}`);
   revalidateBlogPostPaths(result.affectedSlugs);
   redirect(`/${effectiveAdminPath}/posts?restored=1`);
+}
+
+export async function restorePostRevisionAction(formData: FormData): Promise<void> {
+  const adminPath = String(formData.get("adminPath") ?? "");
+  const configuredAdminPath = await getAdminPath();
+  const effectiveAdminPath =
+    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
+  const session = await getAdminSession();
+
+  if (!session.isAuthenticated) {
+    redirect(
+      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/posts`)}`,
+    );
+  }
+
+  const postId = Number.parseInt(String(formData.get("postId") ?? ""), 10);
+  const revisionId = Number.parseInt(String(formData.get("revisionId") ?? ""), 10);
+  const result = await restoreAdminPostRevision(postId, revisionId);
+
+  if (!result.success) {
+    redirect(`/${effectiveAdminPath}/posts/${postId}?error=revision_restore_failed`);
+  }
+
+  revalidatePath(`/${effectiveAdminPath}/posts`);
+  revalidatePath(`/${effectiveAdminPath}/posts/${postId}`);
+  revalidateBlogPostPaths(result.affectedSlugs);
+  redirect(`/${effectiveAdminPath}/posts/${postId}?revisionRestored=1`);
 }

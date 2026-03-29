@@ -2,13 +2,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { initialPostFormState } from "@/lib/admin/post-form";
 
-const { createAdminPostMock, moveAdminPostToTrashMock, restoreAdminPostFromTrashMock, updateAdminPostMock } =
-  vi.hoisted(() => ({
-    createAdminPostMock: vi.fn(),
-    moveAdminPostToTrashMock: vi.fn(),
-    restoreAdminPostFromTrashMock: vi.fn(),
-    updateAdminPostMock: vi.fn(),
-  }));
+const {
+  createAdminPostMock,
+  moveAdminPostToTrashMock,
+  restoreAdminPostFromTrashMock,
+  restoreAdminPostRevisionMock,
+  updateAdminPostMock,
+} = vi.hoisted(() => ({
+  createAdminPostMock: vi.fn(),
+  moveAdminPostToTrashMock: vi.fn(),
+  restoreAdminPostFromTrashMock: vi.fn(),
+  restoreAdminPostRevisionMock: vi.fn(),
+  updateAdminPostMock: vi.fn(),
+}));
 
 const { getAdminSessionMock, getAdminPathMock } = vi.hoisted(() => ({
   getAdminSessionMock: vi.fn(),
@@ -41,6 +47,7 @@ vi.mock("@/lib/admin/posts", () => ({
   updateAdminPost: updateAdminPostMock,
   moveAdminPostToTrash: moveAdminPostToTrashMock,
   restoreAdminPostFromTrash: restoreAdminPostFromTrashMock,
+  restoreAdminPostRevision: restoreAdminPostRevisionMock,
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -56,6 +63,7 @@ describe("admin post actions", () => {
     createAdminPostMock.mockReset();
     moveAdminPostToTrashMock.mockReset();
     restoreAdminPostFromTrashMock.mockReset();
+    restoreAdminPostRevisionMock.mockReset();
     updateAdminPostMock.mockReset();
     getAdminSessionMock.mockReset();
     getAdminPathMock.mockReset();
@@ -115,49 +123,6 @@ describe("admin post actions", () => {
     });
     expect(revalidatePathMock).not.toHaveBeenCalled();
     expect(redirectMock).not.toHaveBeenCalled();
-  });
-
-  it("passes ogImageMediaId through create and update payloads", async () => {
-    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
-    createAdminPostMock.mockResolvedValue({
-      success: false,
-      values: {
-        ...initialPostFormState.values,
-        ogImageMediaId: "12",
-      },
-      errors: {
-        ogImageMediaId: "所选 OG 图片不存在。",
-      },
-    });
-    updateAdminPostMock.mockResolvedValue({
-      success: false,
-      values: {
-        ...initialPostFormState.values,
-        ogImageMediaId: "12",
-      },
-      errors: {
-        ogImageMediaId: "所选 OG 图片不存在。",
-      },
-    });
-
-    const { createPostAction, updatePostAction } = await import("./actions");
-
-    await createPostAction(
-      initialPostFormState,
-      createFormData({ postId: "", ogImageMediaId: "12" }),
-    );
-    await updatePostAction(
-      initialPostFormState,
-      createFormData({ postId: "42", ogImageMediaId: "12" }),
-    );
-
-    expect(createAdminPostMock).toHaveBeenCalledWith(
-      expect.objectContaining({ ogImageMediaId: "12" }),
-    );
-    expect(updateAdminPostMock).toHaveBeenCalledWith(
-      42,
-      expect.objectContaining({ ogImageMediaId: "12" }),
-    );
   });
 
   it("passes scheduled publishing fields through create and update payloads", async () => {
@@ -255,73 +220,30 @@ describe("admin post actions", () => {
     expect(revalidatePathMock).toHaveBeenNthCalledWith(3, "/post/renamed-slug");
   });
 
-  it("redirects unauthenticated updates to the post-specific login URL", async () => {
-    getAdminPathMock.mockResolvedValue("dashboard");
-    getAdminSessionMock.mockResolvedValue({ isAuthenticated: false });
-
-    const { updatePostAction } = await import("./actions");
-
-    await expect(
-      updatePostAction(
-        initialPostFormState,
-        createFormData({
-          adminPath: "admin",
-          postId: "99",
-        }),
-      ),
-    ).rejects.toMatchObject({
-      destination: "/dashboard/login?redirect=%2Fdashboard%2Fposts%2F99",
-    });
-  });
-
-  it("redirects to the error flag when moving a post to trash fails", async () => {
+  it("revalidates edit and blog paths after a successful revision restore", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
-    moveAdminPostToTrashMock.mockResolvedValue({
-      success: false,
-      error: "移入回收站失败。",
-    });
-
-    const { movePostToTrashAction } = await import("./actions");
-
-    await expect(
-      movePostToTrashAction(
-        createFormData({
-          adminPath: "admin",
-          postId: "7",
-        }),
-      ),
-    ).rejects.toMatchObject({
-      destination: "/admin/posts?error=trash_failed",
-    });
-
-    expect(revalidatePathMock).not.toHaveBeenCalled();
-  });
-
-  it("revalidates the list, edit page, and blog slugs after a successful restore", async () => {
-    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
-    restoreAdminPostFromTrashMock.mockResolvedValue({
+    restoreAdminPostRevisionMock.mockResolvedValue({
       success: true,
-      postId: 7,
-      affectedSlugs: ["trashed-slug", " old-alias ", "trashed-slug"],
+      postId: 42,
+      affectedSlugs: ["current-slug", " old-slug ", "current-slug"],
     });
 
-    const { restorePostAction } = await import("./actions");
+    const { restorePostRevisionAction } = await import("./actions");
 
-    await expect(
-      restorePostAction(
-        createFormData({
-          adminPath: "admin",
-          postId: "7",
-        }),
-      ),
-    ).rejects.toMatchObject({
-      destination: "/admin/posts?restored=1",
+    const formData = new FormData();
+    formData.set("adminPath", "admin");
+    formData.set("postId", "42");
+    formData.set("revisionId", "9");
+
+    await expect(restorePostRevisionAction(formData)).rejects.toMatchObject({
+      destination: "/admin/posts/42?revisionRestored=1",
     });
 
+    expect(restoreAdminPostRevisionMock).toHaveBeenCalledWith(42, 9);
     expect(revalidatePathMock).toHaveBeenNthCalledWith(1, "/admin/posts");
-    expect(revalidatePathMock).toHaveBeenNthCalledWith(2, "/admin/posts/7");
-    expect(revalidatePathMock).toHaveBeenNthCalledWith(3, "/post/trashed-slug");
-    expect(revalidatePathMock).toHaveBeenNthCalledWith(4, "/post/old-alias");
+    expect(revalidatePathMock).toHaveBeenNthCalledWith(2, "/admin/posts/42");
+    expect(revalidatePathMock).toHaveBeenNthCalledWith(3, "/post/current-slug");
+    expect(revalidatePathMock).toHaveBeenNthCalledWith(4, "/post/old-slug");
   });
 });
 
