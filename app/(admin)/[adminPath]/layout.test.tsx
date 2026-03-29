@@ -22,6 +22,10 @@ vi.mock("@/lib/settings", () => ({
   getAdminPath: getAdminPathMock,
 }));
 
+vi.mock("@/components/theme-toggle", () => ({
+  ThemeToggle: () => <div>theme-toggle</div>,
+}));
+
 describe("admin layout", () => {
   beforeEach(() => {
     getAdminPathMock.mockReset();
@@ -43,7 +47,7 @@ describe("admin layout", () => {
     expect(notFoundMock).toHaveBeenCalledTimes(1);
   });
 
-  it("renders children when the route admin path matches settings", async () => {
+  it("renders children and theme toggle when the route admin path matches settings", async () => {
     getAdminPathMock.mockResolvedValue("admin");
 
     const { default: AdminLayout } = await import("./layout");
@@ -52,6 +56,9 @@ describe("admin layout", () => {
       params: Promise.resolve({ adminPath: "admin" }),
     });
 
-    expect(renderToStaticMarkup(element)).toContain("Visible admin content");
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("theme-toggle");
+    expect(markup).toContain("Visible admin content");
   });
 });

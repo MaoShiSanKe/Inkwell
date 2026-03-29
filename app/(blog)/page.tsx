@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { ThemeToggle } from "@/components/theme-toggle";
 import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
 import { listPublishedPosts } from "@/lib/blog/posts";
 import { getSiteOrigin } from "@/lib/settings";
@@ -48,8 +47,6 @@ export default async function BlogHomePage() {
             浏览站点中已经发布的文章与公开归档。
           </p>
         </div>
-
-        <ThemeToggle />
       </div>
 
       {posts.length === 0 ? (

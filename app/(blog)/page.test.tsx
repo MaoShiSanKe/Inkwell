@@ -20,10 +20,6 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-vi.mock("@/components/theme-toggle", () => ({
-  ThemeToggle: () => <div>theme-toggle</div>,
-}));
-
 vi.mock("@/lib/settings", () => ({
   getSiteOrigin: getSiteOriginMock,
 }));
@@ -47,7 +43,6 @@ describe("blog home page", () => {
     const markup = renderToStaticMarkup(element);
 
     expect(markup).toContain("最新文章");
-    expect(markup).toContain("theme-toggle");
     expect(markup).toContain("Published title");
     expect(markup).toContain("Published excerpt");
     expect(markup).toContain("作者：Author Name");
@@ -63,7 +58,6 @@ describe("blog home page", () => {
     const element = await BlogHomePage();
     const markup = renderToStaticMarkup(element);
 
-    expect(markup).toContain("theme-toggle");
     expect(markup).toContain("还没有已发布文章");
     expect(markup).toContain("第一篇公开文章发布后，会显示在这里。");
   });

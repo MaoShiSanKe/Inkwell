@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { getAdminPath } from "@/lib/settings";
 
 export const metadata: Metadata = {
@@ -31,5 +32,12 @@ export default async function AdminLayout({
     notFound();
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <div className="mx-auto flex w-full max-w-4xl justify-end px-6 pt-6">
+        <ThemeToggle />
+      </div>
+      {children}
+    </>
+  );
 }

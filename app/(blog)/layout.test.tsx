@@ -9,6 +9,10 @@ vi.mock("@/lib/settings", () => ({
   getUmamiSettings: getUmamiSettingsMock,
 }));
 
+vi.mock("@/components/theme-toggle", () => ({
+  ThemeToggle: () => <div>theme-toggle</div>,
+}));
+
 vi.mock("next/script", () => ({
   default: ({ children, ...props }: React.ComponentPropsWithoutRef<"script">) => (
     <script {...props}>{children}</script>
@@ -29,7 +33,7 @@ describe("blog layout", () => {
     });
   });
 
-  it("renders children without Umami when analytics are disabled", async () => {
+  it("renders children and theme toggle without Umami when analytics are disabled", async () => {
     const { default: BlogLayout } = await import("./layout");
     const element = await BlogLayout({
       children: <div>Visible public content</div>,
@@ -38,6 +42,7 @@ describe("blog layout", () => {
     const markup = renderToStaticMarkup(element);
 
     expect(markup).toContain("Visible public content");
+    expect(markup).toContain("theme-toggle");
     expect(markup).not.toContain("umami-script");
     expect(markup).not.toContain("umami-pageview-tracker");
   });
@@ -57,6 +62,7 @@ describe("blog layout", () => {
     const markup = renderToStaticMarkup(element);
 
     expect(markup).toContain("Visible public content");
+    expect(markup).toContain("theme-toggle");
     expect(markup).toContain('id="umami-script"');
     expect(markup).toContain('src="https://umami.example.com/script.js"');
     expect(markup).toContain('data-website-id="550e8400-e29b-41d4-a716-446655440000"');
@@ -65,3 +71,4 @@ describe("blog layout", () => {
     expect(markup).toContain("umami-pageview-tracker");
   });
 });
+

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
-import { ThemeToggle } from "@/components/theme-toggle";
 import { getAdminSession } from "@/lib/auth";
 
 import { logoutAction } from "../actions";
@@ -34,8 +33,6 @@ export default async function AdminPage({ params }: AdminPageProps) {
             当前登录用户 ID：<code className="rounded bg-slate-100 px-2 py-1 dark:bg-slate-800">{session.userId ?? "unknown"}</code>
           </p>
         </div>
-
-        <ThemeToggle />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
