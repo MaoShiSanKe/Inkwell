@@ -272,6 +272,72 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
           </div>
         </section>
 
+        <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              Umami 统计
+            </h2>
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+              配置公开前台页面使用的 Umami 统计脚本。后台页面不会注入该脚本。
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              Umami 开关
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="umami_enabled"
+                defaultValue={state.values.umami_enabled}
+              >
+                <option value="false">关闭</option>
+                <option value="true">启用</option>
+              </select>
+              <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                仅对公开博客页面生效，后台登录页与管理页不会加载 Umami。
+              </span>
+              {state.errors.umami_enabled ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.umami_enabled}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              Website ID
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="umami_website_id"
+                defaultValue={state.values.umami_website_id}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+              />
+              {state.errors.umami_website_id ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.umami_website_id}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              脚本地址
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="umami_script_url"
+                defaultValue={state.values.umami_script_url}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="https://umami.example.com/script.js"
+              />
+              <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                支持完整 http(s) 地址，或站内反向代理后的根相对地址，例如 `/stats/script.js`。
+              </span>
+              {state.errors.umami_script_url ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.umami_script_url}</span>
+              ) : null}
+            </label>
+          </div>
+        </section>
         <div className="flex items-center gap-3">
           <button
             className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"

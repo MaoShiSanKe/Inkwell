@@ -69,6 +69,48 @@ function parseOptionalEmail(value: string, key: string) {
   return normalized;
 }
 
+function parseOptionalUuid(value: string, key: string) {
+  const normalized = value.trim().toLowerCase();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+    throw new Error(`${key} must be a valid UUID.`);
+  }
+
+  return normalized;
+}
+
+function parseOptionalScriptUrl(value: string, key: string) {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.startsWith("/")) {
+    if (normalized.startsWith("//")) {
+      throw new Error(`${key} must be a safe script URL.`);
+    }
+
+    return normalized;
+  }
+
+  try {
+    const url = new URL(normalized);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error(`${key} must use http or https.`);
+    }
+
+    return normalized;
+  } catch {
+    throw new Error(`${key} must be a valid script URL.`);
+  }
+}
+
 function validateAdminPath(value: string): string {
   const normalized = value.trim();
 
@@ -166,6 +208,24 @@ export const settingDefinitions = {
     parse: (value: string) => parseOptionalText(value),
     serialize: (value: string) => parseOptionalText(value),
   }),
+  umami_enabled: defineSetting({
+    defaultValue: false,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "umami_enabled"),
+    serialize: (value: boolean) => String(value),
+  }),
+  umami_website_id: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalUuid(value, "umami_website_id"),
+    serialize: (value: string) => parseOptionalUuid(value, "umami_website_id"),
+  }),
+  umami_script_url: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalScriptUrl(value, "umami_script_url"),
+    serialize: (value: string) => parseOptionalScriptUrl(value, "umami_script_url"),
+  }),
 };
 
 export type SettingKey = keyof typeof settingDefinitions;
@@ -189,6 +249,13 @@ export type SmtpSettings = Pick<
   | "smtp_from_name"
 >;
 
+export type UmamiSettings = Pick<
+  SettingValues,
+  | "umami_enabled"
+  | "umami_website_id"
+  | "umami_script_url"
+>;
+
 export const SETTING_KEYS = Object.keys(settingDefinitions) as SettingKey[];
 
 export const DEFAULT_SETTINGS: SettingValues = {
@@ -204,6 +271,9 @@ export const DEFAULT_SETTINGS: SettingValues = {
   smtp_password: settingDefinitions.smtp_password.defaultValue,
   smtp_from_email: settingDefinitions.smtp_from_email.defaultValue,
   smtp_from_name: settingDefinitions.smtp_from_name.defaultValue,
+  umami_enabled: settingDefinitions.umami_enabled.defaultValue,
+  umami_website_id: settingDefinitions.umami_website_id.defaultValue,
+  umami_script_url: settingDefinitions.umami_script_url.defaultValue,
 };
 
 export const DEFAULT_EMAIL_NOTIFICATION_SCENARIOS: EmailNotificationScenario[] = [

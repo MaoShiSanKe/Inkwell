@@ -13,6 +13,9 @@ export type SettingsFormValues = {
   smtp_password: string;
   smtp_from_email: string;
   smtp_from_name: string;
+  umami_enabled: "true" | "false";
+  umami_website_id: string;
+  umami_script_url: string;
 };
 
 export type SettingsFormErrors = Partial<
@@ -42,6 +45,9 @@ export const initialSettingsFormValues: SettingsFormValues = {
   smtp_password: "",
   smtp_from_email: "",
   smtp_from_name: "",
+  umami_enabled: "false",
+  umami_website_id: "",
+  umami_script_url: "",
 };
 
 export const initialSettingsFormState: SettingsFormState = {

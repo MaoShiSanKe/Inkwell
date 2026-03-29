@@ -19,6 +19,9 @@ const SETTINGS_KEYS = [
   "smtp_password",
   "smtp_from_email",
   "smtp_from_name",
+  "umami_enabled",
+  "umami_website_id",
+  "umami_script_url",
 ] as const;
 const EMAIL_SCENARIOS = [
   "comment_pending",
@@ -66,14 +69,18 @@ describe("admin settings write paths", () => {
       revision_limit: originalSettings.revision_limit ?? "20",
       revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
       excerpt_length: originalSettings.excerpt_length ?? "150",
-      comment_moderation: (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      comment_moderation:
+        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
       smtp_host: originalSettings.smtp_host ?? "",
       smtp_port: originalSettings.smtp_port ?? "587",
-      smtp_secure: originalSettings.smtp_secure ?? "false",
+      smtp_secure: (originalSettings.smtp_secure === "true" ? "true" : "false") as "true" | "false",
       smtp_username: originalSettings.smtp_username ?? "",
       smtp_password: "",
       smtp_from_email: originalSettings.smtp_from_email ?? "",
       smtp_from_name: originalSettings.smtp_from_name ?? "",
+      umami_enabled: originalSettings.umami_enabled ?? "false",
+      umami_website_id: originalSettings.umami_website_id ?? "",
+      umami_script_url: originalSettings.umami_script_url ?? "",
     });
   });
 
@@ -89,7 +96,7 @@ describe("admin settings write paths", () => {
     ]);
   });
 
-  it("persists validated settings updates including smtp values", async () => {
+  it("persists validated settings updates including smtp and umami values", async () => {
     const { updateAdminSettings } = await import("@/lib/admin/settings");
     const result = await updateAdminSettings({
       admin_path: `${INTEGRATION_PREFIX}panel`,
@@ -104,6 +111,9 @@ describe("admin settings write paths", () => {
       smtp_password: "super-secret",
       smtp_from_email: "noreply@example.com",
       smtp_from_name: "Inkwell Mailer",
+      umami_enabled: "true",
+      umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
+      umami_script_url: "https://umami.example.com/script.js",
     });
 
     expect(result).toEqual({
@@ -111,6 +121,7 @@ describe("admin settings write paths", () => {
       previousAdminPath: originalSettings.admin_path ?? "admin",
       nextAdminPath: `${INTEGRATION_PREFIX}panel`,
       adminPathChanged: (originalSettings.admin_path ?? "admin") !== `${INTEGRATION_PREFIX}panel`,
+      analyticsChanged: true,
     });
 
     const rows = await getSettingRows([...SETTINGS_KEYS]);
@@ -129,6 +140,9 @@ describe("admin settings write paths", () => {
         expect.objectContaining({ key: "smtp_password", value: "super-secret", isSecret: true }),
         expect.objectContaining({ key: "smtp_from_email", value: "noreply@example.com" }),
         expect.objectContaining({ key: "smtp_from_name", value: "Inkwell Mailer" }),
+        expect.objectContaining({ key: "umami_enabled", value: "true" }),
+        expect.objectContaining({ key: "umami_website_id", value: "550e8400-e29b-41d4-a716-446655440000" }),
+        expect.objectContaining({ key: "umami_script_url", value: "https://umami.example.com/script.js" }),
       ]),
     );
   });
@@ -142,7 +156,8 @@ describe("admin settings write paths", () => {
       revision_limit: originalSettings.revision_limit ?? "20",
       revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
       excerpt_length: originalSettings.excerpt_length ?? "150",
-      comment_moderation: (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      comment_moderation:
+        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
       smtp_host: "smtp.example.com",
       smtp_port: "587",
       smtp_secure: "false",
@@ -150,10 +165,41 @@ describe("admin settings write paths", () => {
       smtp_password: "",
       smtp_from_email: "noreply@example.com",
       smtp_from_name: "Inkwell Mailer",
+      umami_enabled: "false",
+      umami_website_id: "",
+      umami_script_url: "",
     });
 
     expect(result).toMatchObject({ success: true });
     await expect(getSettingValue("smtp_password")).resolves.toBe("persisted-secret");
+  });
+
+  it("returns no analytics change when Umami settings stay the same", async () => {
+    await setSettingRow("umami_enabled", "true");
+    await setSettingRow("umami_website_id", "550e8400-e29b-41d4-a716-446655440000");
+    await setSettingRow("umami_script_url", "https://umami.example.com/script.js");
+
+    const { updateAdminSettings } = await import("@/lib/admin/settings");
+    const result = await updateAdminSettings({
+      admin_path: originalSettings.admin_path ?? "admin",
+      revision_limit: originalSettings.revision_limit ?? "20",
+      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
+      excerpt_length: originalSettings.excerpt_length ?? "150",
+      comment_moderation:
+        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      smtp_host: originalSettings.smtp_host ?? "",
+      smtp_port: originalSettings.smtp_port ?? "587",
+      smtp_secure: (originalSettings.smtp_secure === "true" ? "true" : "false") as "true" | "false",
+      smtp_username: originalSettings.smtp_username ?? "",
+      smtp_password: "",
+      smtp_from_email: originalSettings.smtp_from_email ?? "",
+      smtp_from_name: originalSettings.smtp_from_name ?? "",
+      umami_enabled: "true",
+      umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
+      umami_script_url: "https://umami.example.com/script.js",
+    });
+
+    expect(result).toMatchObject({ success: true, analyticsChanged: false });
   });
 
   it("persists email notification toggles", async () => {
@@ -197,6 +243,9 @@ describe("admin settings write paths", () => {
       smtp_port: "0",
       smtp_secure: "false",
       smtp_from_email: "invalid-email",
+      umami_enabled: "true",
+      umami_website_id: "bad-id",
+      umami_script_url: "javascript:alert(1)",
     });
 
     expect(result).toMatchObject({
@@ -209,6 +258,38 @@ describe("admin settings write paths", () => {
         comment_moderation: "评论审核模式无效。",
         smtp_port: "SMTP 端口必须是正整数。",
         smtp_from_email: "发件邮箱格式无效。",
+        umami_website_id: "Umami Website ID 格式无效。",
+        umami_script_url: "Umami 脚本地址无效。",
+      },
+    });
+  });
+
+  it("requires complete Umami configuration when analytics are enabled", async () => {
+    const { updateAdminSettings } = await import("@/lib/admin/settings");
+    const result = await updateAdminSettings({
+      admin_path: originalSettings.admin_path ?? "admin",
+      revision_limit: originalSettings.revision_limit ?? "20",
+      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
+      excerpt_length: originalSettings.excerpt_length ?? "150",
+      comment_moderation:
+        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      smtp_host: originalSettings.smtp_host ?? "",
+      smtp_port: originalSettings.smtp_port ?? "587",
+      smtp_secure: (originalSettings.smtp_secure === "true" ? "true" : "false") as "true" | "false",
+      smtp_username: originalSettings.smtp_username ?? "",
+      smtp_password: "",
+      smtp_from_email: originalSettings.smtp_from_email ?? "",
+      smtp_from_name: originalSettings.smtp_from_name ?? "",
+      umami_enabled: "true",
+      umami_website_id: "",
+      umami_script_url: "",
+    });
+
+    expect(result).toMatchObject({
+      success: false,
+      errors: {
+        umami_website_id: "启用 Umami 时必须填写 Website ID。",
+        umami_script_url: "启用 Umami 时必须填写脚本地址。",
       },
     });
   });

@@ -106,7 +106,7 @@ describe("admin settings actions", () => {
     expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 
-  it("passes SMTP fields through settings save payload", async () => {
+  it("passes SMTP and Umami fields through settings save payload", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminSettingsMock.mockResolvedValue({
       success: false,
@@ -126,6 +126,9 @@ describe("admin settings actions", () => {
         smtp_password: "smtp-password",
         smtp_from_email: "noreply@example.com",
         smtp_from_name: "Inkwell Robot",
+        umami_enabled: "true",
+        umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
+        umami_script_url: "https://umami.example.com/script.js",
       }),
     );
   });
@@ -137,6 +140,7 @@ describe("admin settings actions", () => {
       nextAdminPath: "dashboard",
       previousAdminPath: "admin",
       adminPathChanged: true,
+      analyticsChanged: false,
     });
 
     const { saveSettingsAction } = await import("./actions");
@@ -153,6 +157,27 @@ describe("admin settings actions", () => {
     expect(revalidatePathMock).toHaveBeenNthCalledWith(4, "/dashboard/settings");
   });
 
+  it("revalidates the public layout when analytics settings change", async () => {
+    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
+    updateAdminSettingsMock.mockResolvedValue({
+      success: true,
+      nextAdminPath: "admin",
+      previousAdminPath: "admin",
+      adminPathChanged: false,
+      analyticsChanged: true,
+    });
+
+    const { saveSettingsAction } = await import("./actions");
+
+    await expect(
+      saveSettingsAction(initialSettingsFormState, createFormData()),
+    ).rejects.toMatchObject({
+      destination: "/admin/settings?saved=1",
+    });
+
+    expect(revalidatePathMock).toHaveBeenCalledWith("/", "layout");
+  });
+
   it("redirects back to same admin path when settings save does not change admin_path", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminSettingsMock.mockResolvedValue({
@@ -160,6 +185,7 @@ describe("admin settings actions", () => {
       nextAdminPath: "admin",
       previousAdminPath: "admin",
       adminPathChanged: false,
+      analyticsChanged: false,
     });
 
     const { saveSettingsAction } = await import("./actions");
@@ -264,6 +290,9 @@ function createFormData(
     smtp_password: string;
     smtp_from_email: string;
     smtp_from_name: string;
+    umami_enabled: string;
+    umami_website_id: string;
+    umami_script_url: string;
   }> = {},
 ) {
   const values = {
@@ -280,6 +309,9 @@ function createFormData(
     smtp_password: "smtp-password",
     smtp_from_email: "noreply@example.com",
     smtp_from_name: "Inkwell Robot",
+    umami_enabled: "true",
+    umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
+    umami_script_url: "https://umami.example.com/script.js",
     ...overrides,
   };
 
@@ -297,6 +329,9 @@ function createFormData(
   formData.set("smtp_password", values.smtp_password);
   formData.set("smtp_from_email", values.smtp_from_email);
   formData.set("smtp_from_name", values.smtp_from_name);
+  formData.set("umami_enabled", values.umami_enabled);
+  formData.set("umami_website_id", values.umami_website_id);
+  formData.set("umami_script_url", values.umami_script_url);
   return formData;
 }
 

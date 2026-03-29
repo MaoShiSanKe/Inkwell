@@ -13,6 +13,7 @@ import {
   type SettingKey,
   type SettingValues,
   type SmtpSettings,
+  type UmamiSettings,
 } from "./settings-config";
 
 function assignSettingValue<K extends SettingKey>(
@@ -134,6 +135,16 @@ export async function getSmtpSettings(): Promise<SmtpSettings> {
     smtp_password: values.smtp_password,
     smtp_from_email: values.smtp_from_email,
     smtp_from_name: values.smtp_from_name,
+  };
+}
+
+export async function getUmamiSettings(): Promise<UmamiSettings> {
+  const values = await getSettings();
+
+  return {
+    umami_enabled: values.umami_enabled,
+    umami_website_id: values.umami_website_id,
+    umami_script_url: values.umami_script_url,
   };
 }
 

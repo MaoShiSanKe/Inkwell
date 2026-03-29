@@ -21,7 +21,7 @@ const databaseUrl = getDatabaseUrl();
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("settings browser regression", () => {
-  test("updates comment moderation, excerpt length, smtp settings, and email notification scenarios from admin settings", async ({ page }) => {
+  test("updates comment moderation, excerpt length, smtp settings, umami settings, and email notification scenarios from admin settings", async ({ page }) => {
     const fixture = await seedSettingsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
@@ -44,11 +44,31 @@ test.describe("settings browser regression", () => {
       await page.getByLabel("SMTP 密码").fill("browser-secret");
       await page.getByLabel("发件邮箱").fill("noreply@example.com");
       await page.getByLabel("发件人名称").fill("Inkwell Browser Mailer");
+      await page.getByLabel("Umami 开关").selectOption("true");
+      await page.getByLabel("Website ID").fill("550e8400-e29b-41d4-a716-446655440000");
+      await page.getByLabel("脚本地址").fill("https://umami.example.com/script.js");
       await page.getByRole("button", { name: "保存设置" }).click();
 
-      await expect(page).toHaveURL(new RegExp(`/${fixture.adminPath}/settings\\?saved=1$`));
-      await expect(page.getByText("设置已保存成功。")).toBeVisible();
+      await expect.poll(() => new URL(page.url()).pathname).toBe(`/${fixture.adminPath}/settings`);
+      await expect.poll(() => new URL(page.url()).searchParams.get("saved")).toBe("1");
 
+      await page.goto("/");
+      await expect(page.locator('script#umami-script')).toHaveAttribute(
+        "src",
+        "https://umami.example.com/script.js",
+      );
+      await expect(page.locator('script#umami-script')).toHaveAttribute(
+        "data-website-id",
+        "550e8400-e29b-41d4-a716-446655440000",
+      );
+
+      await page.goto(`/${fixture.adminPath}/settings`);
+      await expect(page.locator('script#umami-script')).toHaveCount(0);
+
+      await page.goto(`/${fixture.adminPath}/login`);
+      await expect(page.locator('script#umami-script')).toHaveCount(0);
+
+      await page.goto(`/${fixture.adminPath}/settings`);
       await page.getByRole("checkbox", { name: /comment_pending/i }).uncheck();
       await page.getByRole("checkbox", { name: /post_published/i }).check();
       await page.getByRole("button", { name: "保存邮件通知" }).click();
@@ -62,6 +82,9 @@ test.describe("settings browser regression", () => {
       const smtpPassword = await getSettingValue("smtp_password");
       const smtpFromEmail = await getSettingValue("smtp_from_email");
       const smtpFromName = await getSettingValue("smtp_from_name");
+      const umamiEnabled = await getSettingValue("umami_enabled");
+      const umamiWebsiteId = await getSettingValue("umami_website_id");
+      const umamiScriptUrl = await getSettingValue("umami_script_url");
       const commentPending = await getEmailNotificationEnabled("comment_pending");
       const postPublished = await getEmailNotificationEnabled("post_published");
 
@@ -74,12 +97,16 @@ test.describe("settings browser regression", () => {
       expect(smtpPassword).toBe("browser-secret");
       expect(smtpFromEmail).toBe("noreply@example.com");
       expect(smtpFromName).toBe("Inkwell Browser Mailer");
+      expect(umamiEnabled).toBe("true");
+      expect(umamiWebsiteId).toBe("550e8400-e29b-41d4-a716-446655440000");
+      expect(umamiScriptUrl).toBe("https://umami.example.com/script.js");
       expect(commentPending).toBe(false);
       expect(postPublished).toBe(true);
     } finally {
       await cleanupSettingsFixture(
         fixture.originalCommentModeration,
         fixture.originalExcerptLength,
+        fixture.originalUmamiSettings,
         fixture.originalEmailNotifications,
       );
     }
@@ -92,6 +119,11 @@ type SettingsFixture = {
   password: string;
   originalCommentModeration: string | null;
   originalExcerptLength: string | null;
+  originalUmamiSettings: {
+    umami_enabled: string | null;
+    umami_website_id: string | null;
+    umami_script_url: string | null;
+  };
   originalEmailNotifications: Record<string, boolean | null>;
 };
 
@@ -101,15 +133,29 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
   const username = `${BROWSER_PREFIX}${seed}`;
   const password = `pw-${seed}-${randomUUID().slice(0, 8)}`;
 
-  await cleanupSettingsFixture(null, null, {
-    comment_pending: null,
-    comment_approved: null,
-    comment_reply: null,
-    post_published: null,
-  });
+  await cleanupSettingsFixture(
+    null,
+    null,
+    {
+      umami_enabled: null,
+      umami_website_id: null,
+      umami_script_url: null,
+    },
+    {
+      comment_pending: null,
+      comment_approved: null,
+      comment_reply: null,
+      post_published: null,
+    },
+  );
 
   const originalCommentModeration = await getSettingValue("comment_moderation");
   const originalExcerptLength = await getSettingValue("excerpt_length");
+  const originalUmamiSettings = {
+    umami_enabled: await getSettingValue("umami_enabled"),
+    umami_website_id: await getSettingValue("umami_website_id"),
+    umami_script_url: await getSettingValue("umami_script_url"),
+  };
   const originalEmailNotifications = {
     comment_pending: await getEmailNotificationEnabled("comment_pending"),
     comment_approved: await getEmailNotificationEnabled("comment_approved"),
@@ -133,6 +179,7 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
     password,
     originalCommentModeration,
     originalExcerptLength,
+    originalUmamiSettings,
     originalEmailNotifications,
   };
 }
@@ -140,6 +187,11 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
 async function cleanupSettingsFixture(
   originalCommentModeration: string | null,
   originalExcerptLength: string | null,
+  originalUmamiSettings: {
+    umami_enabled: string | null;
+    umami_website_id: string | null;
+    umami_script_url: string | null;
+  },
   originalEmailNotifications: Record<string, boolean | null>,
 ) {
   await withDb(async (db) => {
@@ -159,6 +211,9 @@ async function cleanupSettingsFixture(
 
     await restoreSetting(db, "comment_moderation", originalCommentModeration);
     await restoreSetting(db, "excerpt_length", originalExcerptLength);
+    await restoreSetting(db, "umami_enabled", originalUmamiSettings.umami_enabled);
+    await restoreSetting(db, "umami_website_id", originalUmamiSettings.umami_website_id);
+    await restoreSetting(db, "umami_script_url", originalUmamiSettings.umami_script_url);
     await restoreEmailNotification(db, "comment_pending", originalEmailNotifications.comment_pending);
     await restoreEmailNotification(db, "comment_approved", originalEmailNotifications.comment_approved);
     await restoreEmailNotification(db, "comment_reply", originalEmailNotifications.comment_reply);
@@ -168,7 +223,12 @@ async function cleanupSettingsFixture(
 
 async function restoreSetting(
   db: ReturnType<typeof drizzle>,
-  key: "comment_moderation" | "excerpt_length",
+  key:
+    | "comment_moderation"
+    | "excerpt_length"
+    | "umami_enabled"
+    | "umami_website_id"
+    | "umami_script_url",
   value: string | null,
 ) {
   if (value === null) {

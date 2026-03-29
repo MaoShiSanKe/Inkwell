@@ -25,6 +25,7 @@ export type UpdateAdminSettingsResult =
       nextAdminPath: string;
       previousAdminPath: string;
       adminPathChanged: boolean;
+      analyticsChanged: boolean;
     }
   | {
       success: false;
@@ -67,6 +68,14 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
     smtp_password: input.smtp_password ?? "",
     smtp_from_email: input.smtp_from_email?.trim().toLowerCase() ?? "",
     smtp_from_name: input.smtp_from_name?.trim() ?? "",
+    umami_enabled:
+      input.umami_enabled?.trim() === "true"
+        ? "true"
+        : input.umami_enabled?.trim() === "false"
+          ? "false"
+          : "false",
+    umami_website_id: input.umami_website_id?.trim().toLowerCase() ?? "",
+    umami_script_url: input.umami_script_url?.trim() ?? "",
   };
 }
 
@@ -84,6 +93,9 @@ function toFormValues(values: SettingValues): SettingsFormValues {
     smtp_password: "",
     smtp_from_email: values.smtp_from_email,
     smtp_from_name: values.smtp_from_name,
+    umami_enabled: values.umami_enabled ? "true" : "false",
+    umami_website_id: values.umami_website_id,
+    umami_script_url: values.umami_script_url,
   };
 }
 
@@ -113,6 +125,12 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
       return "发件邮箱格式无效。";
     case "smtp_from_name":
       return "发件人名称格式无效。";
+    case "umami_enabled":
+      return "Umami 开关无效。";
+    case "umami_website_id":
+      return "Umami Website ID 格式无效。";
+    case "umami_script_url":
+      return "Umami 脚本地址无效。";
   }
 }
 
@@ -127,6 +145,16 @@ function validateSettingsInput(values: SettingsFormValues):
       parsed[key] = parseSettingValue(key, values[key]) as never;
     } catch {
       errors[key] = getFieldErrorMessage(key);
+    }
+  }
+
+  if (Object.keys(errors).length === 0 && parsed.umami_enabled) {
+    if (!parsed.umami_website_id) {
+      errors.umami_website_id = "启用 Umami 时必须填写 Website ID。";
+    }
+
+    if (!parsed.umami_script_url) {
+      errors.umami_script_url = "启用 Umami 时必须填写脚本地址。";
     }
   }
 
@@ -272,6 +300,10 @@ export async function updateAdminSettings(
       nextAdminPath: nextSettings.admin_path,
       previousAdminPath: currentSettings.admin_path,
       adminPathChanged: nextSettings.admin_path !== currentSettings.admin_path,
+      analyticsChanged:
+        nextSettings.umami_enabled !== currentSettings.umami_enabled ||
+        nextSettings.umami_website_id !== currentSettings.umami_website_id ||
+        nextSettings.umami_script_url !== currentSettings.umami_script_url,
     };
   } catch {
     return {

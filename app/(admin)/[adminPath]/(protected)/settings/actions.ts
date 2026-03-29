@@ -18,6 +18,10 @@ import { DEFAULT_EMAIL_NOTIFICATION_SCENARIOS } from "@/lib/settings-config";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminPath } from "@/lib/settings";
 
+function revalidatePublicAnalyticsPaths() {
+  revalidatePath("/", "layout");
+}
+
 function revalidateSettingsPaths(currentAdminPath: string, nextAdminPath: string) {
   const pagePaths = new Set([
     `/${currentAdminPath}`,
@@ -69,6 +73,9 @@ export async function saveSettingsAction(
     smtp_password: String(formData.get("smtp_password") ?? ""),
     smtp_from_email: String(formData.get("smtp_from_email") ?? ""),
     smtp_from_name: String(formData.get("smtp_from_name") ?? ""),
+    umami_enabled: String(formData.get("umami_enabled") ?? "false") as "true" | "false",
+    umami_website_id: String(formData.get("umami_website_id") ?? ""),
+    umami_script_url: String(formData.get("umami_script_url") ?? ""),
   });
 
   if (!result.success) {
@@ -76,6 +83,11 @@ export async function saveSettingsAction(
   }
 
   revalidateSettingsPaths(effectiveAdminPath, result.nextAdminPath);
+
+  if (result.analyticsChanged) {
+    revalidatePublicAnalyticsPaths();
+  }
+
   redirect(
     `/${result.nextAdminPath}/settings?saved=1${result.adminPathChanged ? "&adminPathChanged=1" : ""}`,
   );
