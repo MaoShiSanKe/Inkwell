@@ -7,6 +7,10 @@ import postgres from "postgres";
 
 import { notifyPostPublished } from "../lib/email-notifications";
 import {
+  buildPublishedSearchDocument,
+  syncPublishedPostToSearchIndex,
+} from "../lib/meilisearch";
+import {
   postRevisions,
   posts,
   settings,
@@ -136,7 +140,11 @@ export async function main() {
       .select({
         id: posts.id,
         slug: posts.slug,
+        title: posts.title,
+        excerpt: posts.excerpt,
+        content: posts.content,
         publishedAt: posts.publishedAt,
+        updatedAt: posts.updatedAt,
       })
       .from(posts)
       .where(eq(posts.status, "scheduled"));
@@ -165,6 +173,9 @@ export async function main() {
             slug: posts.slug,
             title: posts.title,
             excerpt: posts.excerpt,
+            content: posts.content,
+            publishedAt: posts.publishedAt,
+            updatedAt: posts.updatedAt,
           });
 
         if (updatedRows.length === 0) {
@@ -194,6 +205,17 @@ export async function main() {
       }
 
       await prunePostRevisions(db, row.id, retention);
+      await syncPublishedPostToSearchIndex(
+        buildPublishedSearchDocument({
+          id: publishedPost.id,
+          title: publishedPost.title,
+          slug: publishedPost.slug,
+          excerpt: publishedPost.excerpt,
+          content: publishedPost.content,
+          publishedAt: publishedPost.publishedAt,
+          updatedAt: publishedPost.updatedAt,
+        }),
+      );
       notifications.push({
         postId: publishedPost.id,
         slug: publishedPost.slug,

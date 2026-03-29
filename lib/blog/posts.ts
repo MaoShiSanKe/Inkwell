@@ -3,6 +3,7 @@ import "server-only";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/lib/db";
+import { searchPublishedPostIds } from "@/lib/meilisearch";
 import {
   categories,
   media,
@@ -172,6 +173,7 @@ export type ResolvedPublishedPost =
       kind: "not-found";
     };
 
+const SEARCH_LIMIT = 20;
 
 export async function listPublishedPosts(): Promise<PublishedPostListItem[]> {
   const rows = await buildPublishedPostListQuery()
@@ -181,14 +183,8 @@ export async function listPublishedPosts(): Promise<PublishedPostListItem[]> {
   return rows.map(mapPublishedPostListItem);
 }
 
-export async function searchPublishedPosts(query: string): Promise<PublishedPostListItem[]> {
-  const normalizedQuery = query.trim();
-
-  if (!normalizedQuery) {
-    return [];
-  }
-
-  const searchTerm = `%${normalizedQuery.slice(0, 100)}%`;
+async function searchPublishedPostsByDatabase(query: string): Promise<PublishedPostListItem[]> {
+  const searchTerm = `%${query.slice(0, 100)}%`;
   const rows = await buildPublishedPostListQuery()
     .where(
       and(
@@ -197,9 +193,41 @@ export async function searchPublishedPosts(query: string): Promise<PublishedPost
       ),
     )
     .orderBy(desc(posts.publishedAt), desc(posts.updatedAt), desc(posts.id))
-    .limit(20);
+    .limit(SEARCH_LIMIT);
 
   return rows.map(mapPublishedPostListItem);
+}
+
+async function searchPublishedPostsByIds(postIds: number[]): Promise<PublishedPostListItem[]> {
+  if (postIds.length === 0) {
+    return [];
+  }
+
+  const rows = await buildPublishedPostListQuery()
+    .where(and(eq(posts.status, "published"), inArray(posts.id, postIds)))
+    .limit(SEARCH_LIMIT);
+
+  const itemsById = new Map(rows.map((row) => [row.id, mapPublishedPostListItem(row)]));
+
+  return postIds
+    .map((postId) => itemsById.get(postId) ?? null)
+    .filter((item): item is PublishedPostListItem => item !== null);
+}
+
+export async function searchPublishedPosts(query: string): Promise<PublishedPostListItem[]> {
+  const normalizedQuery = query.trim();
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  const matchedPostIds = await searchPublishedPostIds(normalizedQuery, SEARCH_LIMIT);
+
+  if (matchedPostIds !== null) {
+    return searchPublishedPostsByIds(matchedPostIds);
+  }
+
+  return searchPublishedPostsByDatabase(normalizedQuery);
 }
 
 export async function listSitemapEntries(): Promise<SitemapEntryItem[]> {

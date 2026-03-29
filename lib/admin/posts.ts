@@ -6,6 +6,11 @@ import { notifyPostPublished } from "@/lib/email-notifications";
 import { getAdminSession, type AdminRole } from "@/lib/auth";
 import { getPublishedPostLikeCount } from "@/lib/blog/likes";
 import { getPublishedPostViewCount } from "@/lib/blog/views";
+import {
+  buildPublishedSearchDocument,
+  removePublishedPostFromSearchIndex,
+  syncPublishedPostToSearchIndex,
+} from "@/lib/meilisearch";
 import { db } from "@/lib/db";
 import {
   categories,
@@ -406,6 +411,40 @@ async function getPostLikeCountMap(postIds: number[]) {
   return new Map(rows.map((row) => [row.postId, Number(row.likeCount)]));
 }
 
+async function syncPostSearchIndex(postId: number) {
+  const [post] = await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      slug: posts.slug,
+      excerpt: posts.excerpt,
+      content: posts.content,
+      status: posts.status,
+      publishedAt: posts.publishedAt,
+      updatedAt: posts.updatedAt,
+    })
+    .from(posts)
+    .where(eq(posts.id, postId))
+    .limit(1);
+
+  if (!post || post.status !== "published") {
+    await removePublishedPostFromSearchIndex(postId);
+    return;
+  }
+
+  await syncPublishedPostToSearchIndex(
+    buildPublishedSearchDocument({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt,
+      content: post.content,
+      publishedAt: post.publishedAt,
+      updatedAt: post.updatedAt,
+    }),
+  );
+}
+
 export async function listAdminPosts(): Promise<AdminPostListItem[]> {
   const rows = await db
     .select({
@@ -688,6 +727,8 @@ export async function restoreAdminPostRevision(
       await prunePostRevisions(tx, postId, retention);
     });
 
+    await removePublishedPostFromSearchIndex(postId);
+
     return {
       success: true,
       postId,
@@ -773,6 +814,8 @@ export async function publishScheduledPosts(
     if (!publishedPost) {
       continue;
     }
+
+    await syncPostSearchIndex(publishedPost.id);
 
     publishedPostIds.push(row.id);
     notifications.push({
@@ -912,6 +955,8 @@ export async function createAdminPost(
 
       return post;
     });
+
+    await syncPostSearchIndex(insertedPost.id);
 
     if (shouldNotifyPublished) {
       await notifyPostPublished({
@@ -1130,6 +1175,8 @@ export async function updateAdminPost(
       await prunePostRevisions(tx, postId, retention);
     });
 
+    await syncPostSearchIndex(postId);
+
     if (shouldNotifyPublished) {
       await notifyPostPublished({
         postId,
@@ -1237,6 +1284,8 @@ export async function moveAdminPostToTrash(
       await prunePostRevisions(tx, postId, retention);
     });
 
+    await removePublishedPostFromSearchIndex(postId);
+
     return {
       success: true,
       postId,
@@ -1334,6 +1383,8 @@ export async function restoreAdminPostFromTrash(
 
       await prunePostRevisions(tx, postId, retention);
     });
+
+    await removePublishedPostFromSearchIndex(postId);
 
     return {
       success: true,

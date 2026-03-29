@@ -1,23 +1,63 @@
 import { randomUUID } from "node:crypto";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { posts, users } from "@/lib/db/schema";
 
 import { cleanupIntegrationTables } from "../setup";
 
 const INTEGRATION_PREFIX = "integration-test-";
+const { searchPublishedPostIdsMock } = vi.hoisted(() => ({
+  searchPublishedPostIdsMock: vi.fn(),
+}));
+
+vi.mock("@/lib/meilisearch", () => ({
+  searchPublishedPostIds: searchPublishedPostIdsMock,
+}));
 
 describe("blog search integration", () => {
   beforeEach(async () => {
     await cleanupIntegrationTables();
+    searchPublishedPostIdsMock.mockReset();
+    searchPublishedPostIdsMock.mockResolvedValue(null);
   });
 
   afterEach(async () => {
     await cleanupIntegrationTables();
   });
 
-  it("finds published posts by title and excerpt only", async () => {
+  it("hydrates published results in Meilisearch hit order", async () => {
+    const seed = createSeed();
+    const author = await createAuthor(seed);
+    const firstPost = await createPost({
+      authorId: author.id,
+      title: `First search result ${seed}`,
+      slug: buildSlug(`first-${seed}`),
+      excerpt: "First excerpt",
+      content: "first body",
+      status: "published",
+      publishedAt: new Date("2026-03-26T10:00:00.000Z"),
+    });
+    const secondPost = await createPost({
+      authorId: author.id,
+      title: `Second search result ${seed}`,
+      slug: buildSlug(`second-${seed}`),
+      excerpt: "Second excerpt",
+      content: "second body",
+      status: "published",
+      publishedAt: new Date("2026-03-26T11:00:00.000Z"),
+    });
+
+    searchPublishedPostIdsMock.mockResolvedValue([secondPost.id, firstPost.id]);
+
+    const { searchPublishedPosts } = await import("@/lib/blog/posts");
+    const results = await searchPublishedPosts(`search ${seed}`);
+
+    expect(searchPublishedPostIdsMock).toHaveBeenCalledWith(`search ${seed}`, 20);
+    expect(results.map((post) => post.id)).toEqual([secondPost.id, firstPost.id]);
+  });
+
+  it("finds published posts by title and excerpt only when Meilisearch is unavailable", async () => {
     const seed = createSeed();
     const author = await createAuthor(seed);
     const publishedByTitle = await createPost({
@@ -80,6 +120,7 @@ describe("blog search integration", () => {
 
     await expect(searchPublishedPosts("")).resolves.toEqual([]);
     await expect(searchPublishedPosts("   ")).resolves.toEqual([]);
+    expect(searchPublishedPostIdsMock).not.toHaveBeenCalled();
   });
 });
 

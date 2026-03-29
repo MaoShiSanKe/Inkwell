@@ -55,7 +55,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </p>
         <h1 className="text-4xl font-semibold tracking-tight">搜索已发布文章</h1>
         <p className="max-w-2xl text-base leading-7 text-slate-600 dark:text-slate-300">
-          输入关键词搜索站内已经公开发布的文章。当前版本仅匹配标题与摘要。
+          输入关键词搜索站内已经公开发布的文章。
         </p>
       </div>
 

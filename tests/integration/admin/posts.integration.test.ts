@@ -17,9 +17,16 @@ import {
 import { cleanupIntegrationTables } from "../setup";
 
 const INTEGRATION_PREFIX = "integration-test-";
-const { getAdminSessionMock, notifyPostPublishedMock } = vi.hoisted(() => ({
+const {
+  getAdminSessionMock,
+  notifyPostPublishedMock,
+  syncPublishedPostToSearchIndexMock,
+  removePublishedPostFromSearchIndexMock,
+} = vi.hoisted(() => ({
   getAdminSessionMock: vi.fn(),
   notifyPostPublishedMock: vi.fn(),
+  syncPublishedPostToSearchIndexMock: vi.fn(),
+  removePublishedPostFromSearchIndexMock: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -30,16 +37,30 @@ vi.mock("@/lib/email-notifications", () => ({
   notifyPostPublished: notifyPostPublishedMock,
 }));
 
+vi.mock("@/lib/meilisearch", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/meilisearch")>("@/lib/meilisearch");
+
+  return {
+    ...actual,
+    syncPublishedPostToSearchIndex: syncPublishedPostToSearchIndexMock,
+    removePublishedPostFromSearchIndex: removePublishedPostFromSearchIndexMock,
+  };
+});
+
 describe("admin slug-history write paths", () => {
   beforeEach(async () => {
     await cleanupIntegrationTables();
     getAdminSessionMock.mockReset();
     notifyPostPublishedMock.mockReset();
+    syncPublishedPostToSearchIndexMock.mockReset();
+    removePublishedPostFromSearchIndexMock.mockReset();
     notifyPostPublishedMock.mockResolvedValue({
       scenario: "post_published",
       attempted: false,
       deliveries: [],
     });
+    syncPublishedPostToSearchIndexMock.mockResolvedValue(true);
+    removePublishedPostFromSearchIndexMock.mockResolvedValue(true);
   });
 
   afterEach(async () => {
@@ -154,6 +175,8 @@ describe("admin slug-history write paths", () => {
       reason: "initial create",
     });
 
+    removePublishedPostFromSearchIndexMock.mockClear();
+
     const restoreResult = await restoreAdminPostRevision(post.id, revisions[1].id);
 
     expect(restoreResult).toMatchObject({
@@ -176,6 +199,8 @@ describe("admin slug-history write paths", () => {
       status: "draft",
       reason: "restored from revision",
     });
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenCalledTimes(1);
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenCalledWith(post.id);
   });
 
   it("rejects invalid revision restore requests", async () => {
@@ -300,6 +325,181 @@ describe("admin slug-history write paths", () => {
       .where(eq(postRevisions.postId, post.id));
 
     expect(revisionRows).toHaveLength(2);
+  });
+
+  it("syncs the search index when creating and updating published posts", async () => {
+    const seed = createSeed();
+    await signInAsEditor(`${seed}-search-sync`);
+
+    const { createAdminPost, updateAdminPost } = await import("@/lib/admin/posts");
+    const createResult = await createAdminPost({
+      title: "Search synced publish",
+      slug: buildSlug(`search-sync-${seed}`),
+      categoryId: "",
+      excerpt: "Search synced excerpt",
+      content: "<p>Search synced content</p>",
+      status: "published",
+      tagIds: [],
+      seriesIds: [],
+      metaTitle: "",
+      metaDescription: "",
+      ogTitle: "",
+      ogDescription: "",
+      canonicalUrl: "",
+      breadcrumbEnabled: false,
+      noindex: false,
+      nofollow: false,
+    });
+
+    expect(createResult).toMatchObject({ success: true });
+
+    if (!createResult.success) {
+      throw new Error("Expected published post creation to succeed.");
+    }
+
+    expect(syncPublishedPostToSearchIndexMock).toHaveBeenCalledTimes(1);
+    expect(removePublishedPostFromSearchIndexMock).not.toHaveBeenCalled();
+
+    const createdDocument = syncPublishedPostToSearchIndexMock.mock.calls[0]?.[0];
+    expect(createdDocument).toMatchObject({
+      id: createResult.postId,
+      title: "Search synced publish",
+      slug: buildSlug(`search-sync-${seed}`),
+      excerpt: "Search synced excerpt",
+      publishedAt: expect.stringMatching(/2026-|\d{4}-\d{2}-\d{2}T/),
+    });
+    expect(createdDocument.contentPlainText).toContain("Search synced content");
+
+    syncPublishedPostToSearchIndexMock.mockClear();
+    removePublishedPostFromSearchIndexMock.mockClear();
+
+    const updateResult = await updateAdminPost(createResult.postId, {
+      title: "Search synced publish updated",
+      slug: buildSlug(`search-sync-updated-${seed}`),
+      categoryId: "",
+      excerpt: "Updated search excerpt",
+      content: "<p>Updated search content body</p>",
+      status: "published",
+      tagIds: [],
+      seriesIds: [],
+      metaTitle: "",
+      metaDescription: "",
+      ogTitle: "",
+      ogDescription: "",
+      canonicalUrl: "",
+      breadcrumbEnabled: false,
+      noindex: false,
+      nofollow: false,
+    });
+
+    expect(updateResult).toMatchObject({ success: true, postId: createResult.postId });
+    expect(syncPublishedPostToSearchIndexMock).toHaveBeenCalledTimes(1);
+    expect(removePublishedPostFromSearchIndexMock).not.toHaveBeenCalled();
+
+    const updatedDocument = syncPublishedPostToSearchIndexMock.mock.calls[0]?.[0];
+    expect(updatedDocument).toMatchObject({
+      id: createResult.postId,
+      title: "Search synced publish updated",
+      slug: buildSlug(`search-sync-updated-${seed}`),
+      excerpt: "Updated search excerpt",
+    });
+    expect(updatedDocument.contentPlainText).toContain("Updated search content body");
+  });
+
+  it("removes published posts from the search index when they leave the public surface", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-search-remove`);
+    const post = await createPost({
+      authorId: editor.id,
+      title: "Search removal post",
+      slug: buildSlug(`search-removal-${seed}`),
+      excerpt: "Search removal excerpt",
+      content: "Search removal content",
+      status: "published",
+      publishedAt: new Date("2026-03-27T10:00:00.000Z"),
+      updatedAt: new Date("2026-03-27T12:00:00.000Z"),
+    });
+
+    const { moveAdminPostToTrash, restoreAdminPostFromTrash, updateAdminPost } = await import(
+      "@/lib/admin/posts"
+    );
+
+    removePublishedPostFromSearchIndexMock.mockClear();
+
+    const trashResult = await moveAdminPostToTrash(post.id);
+    expect(trashResult).toMatchObject({ success: true, postId: post.id });
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenCalledTimes(1);
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenLastCalledWith(post.id);
+
+    removePublishedPostFromSearchIndexMock.mockClear();
+
+    const restoreResult = await restoreAdminPostFromTrash(post.id);
+    expect(restoreResult).toMatchObject({ success: true, postId: post.id });
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenCalledTimes(1);
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenLastCalledWith(post.id);
+
+    removePublishedPostFromSearchIndexMock.mockClear();
+
+    const unpublishResult = await updateAdminPost(post.id, {
+      title: "Search removal post draft",
+      slug: post.slug,
+      categoryId: "",
+      excerpt: "Search removal excerpt",
+      content: "Search removal content",
+      status: "draft",
+      tagIds: [],
+      seriesIds: [],
+      metaTitle: "",
+      metaDescription: "",
+      ogTitle: "",
+      ogDescription: "",
+      canonicalUrl: "",
+      breadcrumbEnabled: false,
+      noindex: false,
+      nofollow: false,
+    });
+
+    expect(unpublishResult).toMatchObject({ success: true, postId: post.id });
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenCalledTimes(1);
+    expect(removePublishedPostFromSearchIndexMock).toHaveBeenLastCalledWith(post.id);
+  });
+
+  it("syncs the search index when due scheduled posts are published", async () => {
+    const seed = createSeed();
+    const editor = await signInAsEditor(`${seed}-sched-sync`);
+    const dueAt = new Date("2026-03-28T08:00:00.000Z");
+    const duePost = await createPost({
+      authorId: editor.id,
+      title: "Due search indexed post",
+      slug: buildSlug(`due-search-indexed-${seed}`),
+      excerpt: null,
+      content: "Due search indexed content",
+      status: "scheduled",
+      publishedAt: dueAt,
+      updatedAt: new Date("2026-03-27T16:10:00.000Z"),
+    });
+
+    const { publishScheduledPosts } = await import("@/lib/admin/posts");
+
+    syncPublishedPostToSearchIndexMock.mockClear();
+
+    const result = await publishScheduledPosts(new Date("2026-03-29T00:00:00.000Z"));
+
+    expect(result).toMatchObject({
+      publishedCount: 1,
+      publishedPostIds: [duePost.id],
+      affectedSlugs: [duePost.slug],
+    });
+    expect(syncPublishedPostToSearchIndexMock).toHaveBeenCalledTimes(1);
+
+    const indexedDocument = syncPublishedPostToSearchIndexMock.mock.calls[0]?.[0];
+    expect(indexedDocument).toMatchObject({
+      id: duePost.id,
+      title: "Due search indexed post",
+      slug: duePost.slug,
+      excerpt: null,
+    });
+    expect(indexedDocument.contentPlainText).toContain("Due search indexed content");
   });
 
   it("returns engagement counts for admin post list and editor data", async () => {

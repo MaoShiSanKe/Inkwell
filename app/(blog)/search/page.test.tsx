@@ -66,6 +66,7 @@ describe("search page", () => {
     const element = await SearchPage({ searchParams: Promise.resolve({ q: "missing" }) });
     const markup = renderToStaticMarkup(element);
 
+    expect(searchPublishedPostsMock).toHaveBeenCalledWith("missing");
     expect(markup).toContain("没有找到相关文章");
     expect(markup).toContain("请尝试更换关键词");
   });
