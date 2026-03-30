@@ -16,6 +16,7 @@ npm run test:browser
 npm run db:generate
 npm run db:migrate
 npm run db:studio
+npm run backup:export -- --output ./backup
 ```
 
 ## 测试说明
@@ -34,6 +35,34 @@ npm run db:studio
 - `MEILISEARCH_API_KEY`
 - `NEXTAUTH_SECRET`
 - `NEXTAUTH_URL`
+- `INTERNAL_CRON_SECRET`
+
+## Docker / Compose（生产示例）
+
+仓库提供 `Dockerfile` 与 `docker-compose.production.yml`，用于单机生产示例：
+
+- `app`：Next.js 应用
+- `postgres`：主数据库
+- `meilisearch`：搜索索引服务
+
+使用前请先修改 Compose 中的默认 secret 与域名配置，再执行：
+
+```bash
+docker build -t inkwell:local .
+docker compose -f docker-compose.production.yml up -d
+```
+
+首次启动后，仍需在 app 容器内手动执行：
+
+```bash
+npm run db:migrate
+npm run admin:create -- <email> <username> <displayName> <password>
+```
+
+说明：
+- `public/uploads` 需要持久化，否则本地媒体会在重建后丢失
+- 定时发布仍建议通过宿主机 cron 或外部调度器触发，不在容器内附带 scheduler
+- 反向代理 / TLS 仍建议由容器外的 Nginx / Caddy 负责
 
 ## 数据库约定
 
