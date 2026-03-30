@@ -22,6 +22,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl(`/category/${result.category.slug}`, siteOrigin);
+  const rssUrl = buildSiteUrl(`/category/${result.category.slug}/rss.xml`, siteOrigin);
   const description =
     result.category.description?.trim() ||
     `查看分类“${result.category.name}”下已经发布的文章。`;
@@ -32,6 +33,9 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     description,
     alternates: {
       canonical: canonicalUrl,
+      types: {
+        "application/rss+xml": rssUrl,
+      },
     },
     openGraph: {
       type: "website",
@@ -47,6 +51,7 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
     },
   };
 }
+
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;

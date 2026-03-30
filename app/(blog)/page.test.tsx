@@ -35,6 +35,26 @@ describe("blog home page", () => {
     listPublishedPostsMock.mockReset();
   });
 
+  it("returns metadata for the homepage including the RSS alternate", async () => {
+    const { generateMetadata } = await import("./page");
+    const metadata = await generateMetadata();
+
+    expect(metadata).toMatchObject({
+      title: "首页",
+      description: "一个面向内容管理、评论互动与 SEO 优化的自建博客框架。",
+      alternates: {
+        canonical: "https://example.com/",
+        types: {
+          "application/rss+xml": "https://example.com/rss.xml",
+        },
+      },
+      openGraph: {
+        type: "website",
+        url: "https://example.com/",
+      },
+    });
+  });
+
   it("renders the published post list", async () => {
     listPublishedPostsMock.mockResolvedValue([createPostListItem()]);
 

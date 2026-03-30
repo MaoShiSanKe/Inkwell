@@ -10,12 +10,16 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata(): Promise<Metadata> {
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl("/", siteOrigin);
+  const rssUrl = buildSiteUrl("/rss.xml", siteOrigin);
 
   return {
     title: "首页",
     description: DEFAULT_DESCRIPTION,
     alternates: {
       canonical: canonicalUrl,
+      types: {
+        "application/rss+xml": rssUrl,
+      },
     },
     openGraph: {
       type: "website",
@@ -31,6 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
+
 
 export default async function BlogHomePage() {
   const posts = await listPublishedPosts();

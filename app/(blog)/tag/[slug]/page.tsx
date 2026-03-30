@@ -22,6 +22,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
 
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl(`/tag/${result.tag.slug}`, siteOrigin);
+  const rssUrl = buildSiteUrl(`/tag/${result.tag.slug}/rss.xml`, siteOrigin);
   const description =
     result.tag.description?.trim() || `查看标签“${result.tag.name}”下已经发布的文章。`;
   const title = `${result.tag.name} 标签`;
@@ -31,6 +32,9 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     description,
     alternates: {
       canonical: canonicalUrl,
+      types: {
+        "application/rss+xml": rssUrl,
+      },
     },
     openGraph: {
       type: "website",
@@ -46,6 +50,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     },
   };
 }
+
 
 export default async function TagPage({ params }: TagPageProps) {
   const { slug } = await params;

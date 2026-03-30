@@ -52,6 +52,38 @@ describe("blog category page", () => {
     notFoundMock.mockClear();
   });
 
+  it("returns metadata for the category archive including the RSS alternate", async () => {
+    resolvePublishedCategoryArchiveBySlugMock.mockResolvedValue({
+      kind: "archive",
+      category: {
+        id: 1,
+        name: "Frontend",
+        slug: "frontend",
+        description: "Frontend posts",
+      },
+      posts: [],
+    });
+
+    const { generateMetadata } = await import("./page");
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "frontend" }),
+    });
+
+    expect(metadata).toMatchObject({
+      title: "Frontend 分类",
+      description: "Frontend posts",
+      alternates: {
+        canonical: "https://example.com/category/frontend",
+        types: {
+          "application/rss+xml": "https://example.com/category/frontend/rss.xml",
+        },
+      },
+      openGraph: {
+        url: "https://example.com/category/frontend",
+      },
+    });
+  });
+
   it("renders the category archive list", async () => {
     resolvePublishedCategoryArchiveBySlugMock.mockResolvedValue({
       kind: "archive",

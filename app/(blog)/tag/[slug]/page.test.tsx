@@ -52,6 +52,38 @@ describe("blog tag page", () => {
     notFoundMock.mockClear();
   });
 
+  it("returns metadata for the tag archive including the RSS alternate", async () => {
+    resolvePublishedTagArchiveBySlugMock.mockResolvedValue({
+      kind: "archive",
+      tag: {
+        id: 1,
+        name: "Next.js",
+        slug: "nextjs",
+        description: "Tagged posts",
+      },
+      posts: [],
+    });
+
+    const { generateMetadata } = await import("./page");
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "nextjs" }),
+    });
+
+    expect(metadata).toMatchObject({
+      title: "Next.js 标签",
+      description: "Tagged posts",
+      alternates: {
+        canonical: "https://example.com/tag/nextjs",
+        types: {
+          "application/rss+xml": "https://example.com/tag/nextjs/rss.xml",
+        },
+      },
+      openGraph: {
+        url: "https://example.com/tag/nextjs",
+      },
+    });
+  });
+
   it("renders the tag archive list", async () => {
     resolvePublishedTagArchiveBySlugMock.mockResolvedValue({
       kind: "archive",
