@@ -17,6 +17,7 @@ npm run db:generate
 npm run db:migrate
 npm run db:studio
 npm run backup:export -- --output ./backup
+npm run search:reindex-posts
 ```
 
 ## 测试说明
@@ -57,10 +58,12 @@ docker compose -f docker-compose.production.yml up -d
 ```bash
 npm run db:migrate
 npm run admin:create -- <email> <username> <displayName> <password>
+npm run search:reindex-posts
 ```
 
 说明：
 - `public/uploads` 需要持久化，否则本地媒体会在重建后丢失
+- 若是新建或丢失了 `meilisearch_data` volume，需手动执行一次 `npm run search:reindex-posts` 回填历史已发布文章索引
 - 定时发布仍建议通过宿主机 cron 或外部调度器触发，不在容器内附带 scheduler
 - 反向代理 / TLS 仍建议由容器外的 Nginx / Caddy 负责
 

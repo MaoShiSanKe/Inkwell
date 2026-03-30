@@ -18,6 +18,7 @@
     "db:seed": "node --import tsx scripts/seed.ts",
     "posts:publish-scheduled": "node --import tsx scripts/publish-scheduled-posts.ts",
     "backup:export": "node --import tsx scripts/export-backup.ts",
+    "search:reindex-posts": "node --import tsx scripts/reindex-search-posts.ts",
     "admin:create": "node --import tsx scripts/create-admin.ts"
   },
   "dependencies": {

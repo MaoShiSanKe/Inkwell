@@ -1,13 +1,12 @@
-import "server-only";
-
 import { Meilisearch } from "meilisearch";
 
 import { stripHtml } from "@/lib/blog/post-seo";
 
 const POSTS_INDEX = "published_posts";
 const SEARCH_LIMIT = 20;
+const DEFAULT_REINDEX_BATCH_SIZE = 200;
 
-type PublishedSearchDocument = {
+export type PublishedSearchDocument = {
   id: number;
   title: string;
   slug: string;
@@ -51,8 +50,44 @@ function getIndex() {
   return client.index<PublishedSearchDocument>(POSTS_INDEX);
 }
 
+async function applyPostsIndexSettings(index: ReturnType<Meilisearch["index"]>) {
+  await index.updateSearchableAttributes(["title", "excerpt", "contentPlainText"]).waitTask();
+  await index.updateSortableAttributes(["publishedAt", "updatedAt"]).waitTask();
+}
+
+async function ensureIndex(indexUid: string) {
+  const client = getClient();
+
+  if (!client) {
+    return null;
+  }
+
+  const indexes = await client.getIndexes();
+  const exists = indexes.results.some((index) => index.uid === indexUid);
+
+  if (!exists) {
+    await client.createIndex(indexUid, { primaryKey: "id" }).waitTask();
+  }
+
+  const index = client.index<PublishedSearchDocument>(indexUid);
+  await applyPostsIndexSettings(index);
+  return index;
+}
+
+async function ensurePostsIndex() {
+  return ensureIndex(POSTS_INDEX);
+}
+
 export function isMeilisearchConfigured() {
   return getSearchConfig().enabled;
+}
+
+export function getPublishedPostsIndexName() {
+  return POSTS_INDEX;
+}
+
+export function getDefaultReindexBatchSize() {
+  return DEFAULT_REINDEX_BATCH_SIZE;
 }
 
 export function buildPublishedSearchDocument(input: {
@@ -73,26 +108,6 @@ export function buildPublishedSearchDocument(input: {
     publishedAt: input.publishedAt?.toISOString() ?? null,
     updatedAt: input.updatedAt.toISOString(),
   };
-}
-
-async function ensurePostsIndex() {
-  const client = getClient();
-
-  if (!client) {
-    return null;
-  }
-
-  const indexes = await client.getIndexes();
-  const exists = indexes.results.some((index) => index.uid === POSTS_INDEX);
-
-  if (!exists) {
-    await client.createIndex(POSTS_INDEX, { primaryKey: "id" }).waitTask();
-  }
-
-  const index = client.index<PublishedSearchDocument>(POSTS_INDEX);
-  await index.updateSearchableAttributes(["title", "excerpt", "contentPlainText"]).waitTask();
-  await index.updateSortableAttributes(["publishedAt", "updatedAt"]).waitTask();
-  return index;
 }
 
 export async function searchPublishedPostIds(query: string, limit = SEARCH_LIMIT) {
@@ -153,4 +168,27 @@ export async function removePublishedPostFromSearchIndex(postId: number) {
     console.error("Failed to remove post from Meilisearch.", error);
     return false;
   }
+}
+
+export async function replacePublishedPostsIndex(input: {
+  documents: PublishedSearchDocument[];
+  indexName?: string;
+}) {
+  const indexUid = input.indexName?.trim() || POSTS_INDEX;
+  const index = await ensureIndex(indexUid);
+
+  if (!index) {
+    throw new Error("MEILISEARCH_HOST is not configured.");
+  }
+
+  await index.deleteAllDocuments().waitTask();
+
+  if (input.documents.length > 0) {
+    await index.addDocuments(input.documents).waitTask();
+  }
+
+  return {
+    indexName: indexUid,
+    indexedCount: input.documents.length,
+  };
 }
