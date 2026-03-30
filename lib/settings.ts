@@ -162,6 +162,7 @@ export async function listNotificationAdminRecipients() {
 export async function listSubscriberNotificationRecipients() {
   return db
     .select({
+      id: users.id,
       email: users.email,
       displayName: users.displayName,
     })

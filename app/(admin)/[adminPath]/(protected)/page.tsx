@@ -118,6 +118,16 @@ export default async function AdminPage({ params }: AdminPageProps) {
 
         <Link
           className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/subscribers`}
+        >
+          <span className="text-lg font-semibold">订阅者管理</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            查看公开邮件订阅列表，并在需要时移除订阅者。
+          </span>
+        </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
           href={`/${adminPath}/ip-blacklist`}
         >
           <span className="text-lg font-semibold">IP 黑名单</span>

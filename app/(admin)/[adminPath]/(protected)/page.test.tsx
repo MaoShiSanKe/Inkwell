@@ -38,6 +38,7 @@ describe("admin dashboard page", () => {
     expect(markup).toContain("标签管理");
     expect(markup).toContain("系列管理");
     expect(markup).toContain("后台设置");
+    expect(markup).toContain("订阅者管理");
     expect(markup).toContain("IP 黑名单");
     expect(markup).toContain("/admin/comments");
     expect(markup).toContain("/admin/categories");
@@ -45,6 +46,7 @@ describe("admin dashboard page", () => {
     expect(markup).toContain("/admin/tags");
     expect(markup).toContain("/admin/series");
     expect(markup).toContain("/admin/settings");
+    expect(markup).toContain("/admin/subscribers");
     expect(markup).toContain("/admin/ip-blacklist");
   });
 });

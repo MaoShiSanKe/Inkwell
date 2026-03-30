@@ -41,7 +41,12 @@ export async function cleanupIntegrationTables() {
   const integrationUserIds = await db
     .select({ id: users.id })
     .from(users)
-    .where(like(users.username, `${INTEGRATION_PREFIX}%`));
+    .where(
+      or(
+        like(users.username, `${INTEGRATION_PREFIX}%`),
+        like(users.email, `${INTEGRATION_PREFIX}%`),
+      ),
+    );
 
   const integrationPosts = await db
     .select({ id: posts.id })

@@ -52,6 +52,12 @@ export default async function BlogHomePage() {
             浏览站点中已经发布的文章与公开归档。
           </p>
         </div>
+        <Link
+          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          href="/subscribe"
+        >
+          订阅新文章
+        </Link>
       </div>
 
       {posts.length === 0 ? (

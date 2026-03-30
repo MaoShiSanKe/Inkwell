@@ -3,7 +3,15 @@ import "server-only";
 import { eq } from "drizzle-orm";
 
 import { getAdminEmailNotifications } from "@/lib/admin/settings";
-import { SITE_NAME, buildPostUrl, buildSiteUrl } from "@/lib/blog/post-seo";
+import {
+  SITE_NAME,
+  buildPostUrl,
+  buildSiteUrl,
+} from "@/lib/blog/post-seo";
+import {
+  buildSubscribePath,
+  buildSubscriberUnsubscribePath,
+} from "@/lib/blog/subscribers";
 import { db } from "@/lib/db";
 import { comments, posts } from "@/lib/db/schema";
 import {
@@ -88,11 +96,11 @@ async function loadCommentNotificationContext(commentId: number): Promise<Commen
   return row ?? null;
 }
 
-async function deliverToRecipients(
+async function deliverToRecipients<T extends { email: string }>(
   scenario: NotificationScenario,
-  recipients: Array<{ email: string }>,
+  recipients: T[],
   mailConfig: MailConfig,
-  messageFactory: (recipient: { email: string }) => {
+  messageFactory: (recipient: T) => {
     subject: string;
     text: string;
     html?: string;
@@ -295,15 +303,25 @@ export async function notifyPostPublished(input: {
     getSmtpSettings(),
   ]);
   const postUrl = buildPostUrl(input.postSlug, siteOrigin);
+  const subscribeUrl = buildSubscribePath();
 
-  return deliverToRecipients("post_published", recipients, mailConfig, () => ({
-    subject: `[${SITE_NAME}] 新文章已发布：${input.postTitle}`,
-    text: [
-      `《${input.postTitle}》已发布。`,
-      input.excerpt?.trim() ? `摘要：${input.excerpt.trim()}` : null,
-      `阅读地址：${postUrl}`,
-    ]
-      .filter(Boolean)
-      .join("\n"),
-  }));
+  return deliverToRecipients("post_published", recipients, mailConfig, (recipient) => {
+    const unsubscribeUrl = buildSubscriberUnsubscribePath({
+      subscriberId: recipient.id,
+      email: recipient.email,
+    });
+
+    return {
+      subject: `[${SITE_NAME}] 新文章已发布：${input.postTitle}`,
+      text: [
+        `《${input.postTitle}》已发布。`,
+        input.excerpt?.trim() ? `摘要：${input.excerpt.trim()}` : null,
+        `阅读地址：${postUrl}`,
+        subscribeUrl ? `订阅入口：${subscribeUrl}` : null,
+        unsubscribeUrl ? `退订地址：${unsubscribeUrl}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    };
+  });
 }

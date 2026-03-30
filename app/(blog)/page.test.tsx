@@ -63,6 +63,8 @@ describe("blog home page", () => {
     const markup = renderToStaticMarkup(element);
 
     expect(markup).toContain("最新文章");
+    expect(markup).toContain("订阅新文章");
+    expect(markup).toContain('href="/subscribe"');
     expect(markup).toContain("Published title");
     expect(markup).toContain("Published excerpt");
     expect(markup).toContain("作者：Author Name");
