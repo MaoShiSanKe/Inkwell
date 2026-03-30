@@ -29,39 +29,6 @@ export type BlogPostSeoData = {
   nofollow: boolean;
 };
 
-export type BlogPostOgImageData = {
-  source: "local" | "external";
-  storagePath: string | null;
-  thumbnailPath: string | null;
-  externalUrl: string | null;
-  altText: string | null;
-  width: number | null;
-  height: number | null;
-};
-
-export type BlogPostCategoryData = {
-  id: number;
-  name: string;
-  slug: string;
-};
-
-export type BlogPostAuthorData = {
-  displayName: string;
-  slug: string;
-};
-
-type BlogArchiveAuthorData = {
-  id: number;
-  displayName: string;
-  slug: string;
-};
-
-export type BlogPostSeriesData = {
-  id: number;
-  name: string;
-  slug: string;
-};
-
 export type BlogPostPageData = {
   id: number;
   title: string;
@@ -70,12 +37,35 @@ export type BlogPostPageData = {
   content: string;
   publishedAt: Date | null;
   updatedAt: Date;
-  author: BlogPostAuthorData;
+  author: {
+    displayName: string;
+    slug: string;
+  };
   seo: BlogPostSeoData;
-  ogImage: BlogPostOgImageData | null;
-  category: BlogPostCategoryData | null;
-  categoryPath: BlogPostCategoryData[];
-  series: BlogPostSeriesData | null;
+  ogImage: {
+    source: "local" | "external";
+    storagePath: string | null;
+    thumbnailPath: string | null;
+    externalUrl: string | null;
+    altText: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+  category: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
+  categoryPath: Array<{
+    id: number;
+    name: string;
+    slug: string;
+  }>;
+  series: {
+    id: number;
+    name: string;
+    slug: string;
+  } | null;
   tags: Array<{
     id: number;
     name: string;
@@ -89,23 +79,14 @@ export type PublishedPostListItem = {
   slug: string;
   excerpt: string | null;
   publishedAt: Date | null;
-  author: BlogPostAuthorData;
+  author: {
+    displayName: string;
+    slug: string;
+  };
   category: {
     name: string;
     slug: string;
   } | null;
-};
-
-type BlogArchiveTerm = {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-};
-
-export type SitemapEntryItem = {
-  loc: string;
-  lastModifiedAt: Date;
 };
 
 export type PublishedRssPostItem = {
@@ -120,10 +101,20 @@ export type PublishedRssPostItem = {
   };
 };
 
+export type SitemapEntryItem = {
+  loc: string;
+  lastModifiedAt: Date;
+};
+
 export type ResolvedPublishedCategoryArchive =
   | {
       kind: "archive";
-      category: BlogArchiveTerm;
+      category: {
+        id: number;
+        name: string;
+        slug: string;
+        description: string | null;
+      };
       posts: PublishedPostListItem[];
     }
   | {
@@ -133,7 +124,12 @@ export type ResolvedPublishedCategoryArchive =
 export type ResolvedPublishedTagArchive =
   | {
       kind: "archive";
-      tag: BlogArchiveTerm;
+      tag: {
+        id: number;
+        name: string;
+        slug: string;
+        description: string | null;
+      };
       posts: PublishedPostListItem[];
     }
   | {
@@ -143,7 +139,11 @@ export type ResolvedPublishedTagArchive =
 export type ResolvedPublishedAuthorArchive =
   | {
       kind: "archive";
-      author: BlogArchiveAuthorData;
+      author: {
+        id: number;
+        displayName: string;
+        slug: string;
+      };
       posts: PublishedPostListItem[];
     }
   | {
@@ -153,8 +153,43 @@ export type ResolvedPublishedAuthorArchive =
 export type ResolvedPublishedSeriesArchive =
   | {
       kind: "archive";
-      series: BlogArchiveTerm;
+      series: {
+        id: number;
+        name: string;
+        slug: string;
+        description: string | null;
+      };
       posts: PublishedPostListItem[];
+    }
+  | {
+      kind: "not-found";
+    };
+
+export type ResolvedPublishedCategoryRss =
+  | {
+      kind: "feed";
+      category: {
+        id: number;
+        name: string;
+        slug: string;
+        description: string | null;
+      };
+      posts: PublishedRssPostItem[];
+    }
+  | {
+      kind: "not-found";
+    };
+
+export type ResolvedPublishedTagRss =
+  | {
+      kind: "feed";
+      tag: {
+        id: number;
+        name: string;
+        slug: string;
+        description: string | null;
+      };
+      posts: PublishedRssPostItem[];
     }
   | {
       kind: "not-found";
@@ -243,32 +278,11 @@ export async function listSitemapEntries(): Promise<SitemapEntryItem[]> {
 }
 
 export async function listPublishedRssPosts(): Promise<PublishedRssPostItem[]> {
-  const rows = await db
-    .select({
-      title: posts.title,
-      slug: posts.slug,
-      excerpt: posts.excerpt,
-      content: posts.content,
-      publishedAt: posts.publishedAt,
-      updatedAt: posts.updatedAt,
-      authorDisplayName: users.displayName,
-    })
-    .from(posts)
-    .innerJoin(users, eq(posts.authorId, users.id))
+  const rows = await buildPublishedRssQuery()
     .where(eq(posts.status, "published"))
     .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
 
-  return rows.map((row) => ({
-    title: row.title,
-    slug: row.slug,
-    excerpt: row.excerpt,
-    content: row.content,
-    publishedAt: row.publishedAt,
-    updatedAt: row.updatedAt,
-    author: {
-      displayName: row.authorDisplayName,
-    },
-  }));
+  return rows.map(mapPublishedRssPostItem);
 }
 
 export async function resolvePublishedCategoryArchiveBySlug(
@@ -339,6 +353,77 @@ export async function resolvePublishedTagArchiveBySlug(
     kind: "archive",
     tag,
     posts: archivePosts.map(mapPublishedPostListItem),
+  };
+}
+
+export async function resolvePublishedCategoryRssBySlug(
+  slug: string,
+): Promise<ResolvedPublishedCategoryRss> {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return { kind: "not-found" };
+  }
+
+  const [category] = await db
+    .select({
+      id: categories.id,
+      name: categories.name,
+      slug: categories.slug,
+      description: categories.description,
+    })
+    .from(categories)
+    .where(eq(categories.slug, normalizedSlug))
+    .limit(1);
+
+  if (!category) {
+    return { kind: "not-found" };
+  }
+
+  const rssPosts = await buildPublishedRssQuery()
+    .where(and(eq(posts.status, "published"), eq(posts.categoryId, category.id)))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return {
+    kind: "feed",
+    category,
+    posts: rssPosts.map(mapPublishedRssPostItem),
+  };
+}
+
+export async function resolvePublishedTagRssBySlug(
+  slug: string,
+): Promise<ResolvedPublishedTagRss> {
+  const normalizedSlug = normalizeSlug(slug);
+
+  if (!normalizedSlug) {
+    return { kind: "not-found" };
+  }
+
+  const [tag] = await db
+    .select({
+      id: tags.id,
+      name: tags.name,
+      slug: tags.slug,
+      description: tags.description,
+    })
+    .from(tags)
+    .where(eq(tags.slug, normalizedSlug))
+    .limit(1);
+
+  if (!tag) {
+    return { kind: "not-found" };
+  }
+
+  const rssPosts = await buildPublishedRssQuery()
+    .innerJoin(postTags, eq(postTags.postId, posts.id))
+    .where(and(eq(posts.status, "published"), eq(postTags.tagId, tag.id)))
+    .orderBy(desc(posts.publishedAt), desc(posts.updatedAt));
+
+  return {
+    kind: "feed",
+    tag,
+    posts: rssPosts.map(mapPublishedRssPostItem),
   };
 }
 
@@ -646,6 +731,21 @@ function buildPublishedPostListQuery() {
     .leftJoin(categories, eq(posts.categoryId, categories.id));
 }
 
+function buildPublishedRssQuery() {
+  return db
+    .select({
+      title: posts.title,
+      slug: posts.slug,
+      excerpt: posts.excerpt,
+      content: posts.content,
+      publishedAt: posts.publishedAt,
+      updatedAt: posts.updatedAt,
+      authorDisplayName: users.displayName,
+    })
+    .from(posts)
+    .innerJoin(users, eq(posts.authorId, users.id));
+}
+
 function mapPublishedPostListItem(row: {
   id: number;
   title: string;
@@ -674,6 +774,28 @@ function mapPublishedPostListItem(row: {
             slug: row.categorySlug,
           }
         : null,
+  };
+}
+
+function mapPublishedRssPostItem(row: {
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string;
+  publishedAt: Date | null;
+  updatedAt: Date;
+  authorDisplayName: string;
+}): PublishedRssPostItem {
+  return {
+    title: row.title,
+    slug: row.slug,
+    excerpt: row.excerpt,
+    content: row.content,
+    publishedAt: row.publishedAt,
+    updatedAt: row.updatedAt,
+    author: {
+      displayName: row.authorDisplayName,
+    },
   };
 }
 
