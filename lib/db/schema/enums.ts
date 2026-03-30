@@ -14,6 +14,12 @@ export const postStatusEnum = pgEnum("post_status", [
   "trash",
 ]);
 
+export const friendLinkStatusEnum = pgEnum("friend_link_status", [
+  "draft",
+  "published",
+  "trash",
+]);
+
 export const commentStatusEnum = pgEnum("comment_status", [
   "pending",
   "approved",

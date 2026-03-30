@@ -19,6 +19,11 @@ type MediaPickerProps = {
   mediaOptions: MediaPickerOption[];
   value: string;
   error?: string;
+  fieldName?: string;
+  label?: string;
+  emptyLabel?: string;
+  manageLabel?: string;
+  helperText?: string;
 };
 
 function formatSourceLabel(source: "local" | "external") {
@@ -33,7 +38,17 @@ function formatDimensions(width: number | null, height: number | null) {
   return `${width ?? "—"} × ${height ?? "—"}`;
 }
 
-export function MediaPicker({ adminPath, mediaOptions, value, error }: MediaPickerProps) {
+export function MediaPicker({
+  adminPath,
+  mediaOptions,
+  value,
+  error,
+  fieldName = "ogImageMediaId",
+  label = "OG 图",
+  emptyLabel = "不设置 OG 图",
+  manageLabel = "前往媒体库",
+  helperText = "从媒体库选择一张图片，作为文章的社交分享图。",
+}: MediaPickerProps) {
   const [selectedId, setSelectedId] = useState(value);
 
   useEffect(() => {
@@ -49,14 +64,14 @@ export function MediaPicker({ adminPath, mediaOptions, value, error }: MediaPick
     <div className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <label className="flex flex-1 flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-          OG 图
+          {label}
           <select
             className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-            name="ogImageMediaId"
+            name={fieldName}
             value={selectedId}
             onChange={(event) => setSelectedId(event.target.value)}
           >
-            <option value="">不设置 OG 图</option>
+            <option value="">{emptyLabel}</option>
             {mediaOptions.map((option) => (
               <option key={option.id} value={option.id}>
                 {option.label}
@@ -69,7 +84,7 @@ export function MediaPicker({ adminPath, mediaOptions, value, error }: MediaPick
           className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
           href={`/${adminPath}/media`}
         >
-          前往媒体库
+          {manageLabel}
         </Link>
       </div>
 
@@ -109,7 +124,7 @@ export function MediaPicker({ adminPath, mediaOptions, value, error }: MediaPick
         <p className="text-sm leading-6 text-slate-500 dark:text-slate-400">
           {mediaOptions.length === 0
             ? "媒体库还没有可用图片，请先上传本地图片或添加外链图片。"
-            : "从媒体库选择一张图片，作为文章的社交分享图。"}
+            : helperText}
         </p>
       )}
     </div>

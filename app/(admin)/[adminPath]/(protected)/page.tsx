@@ -68,6 +68,16 @@ export default async function AdminPage({ params }: AdminPageProps) {
 
         <Link
           className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/friend-links`}
+        >
+          <span className="text-lg font-semibold">友链管理</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            维护结构化友链列表，控制公开友链页的展示顺序、描述与 Logo。
+          </span>
+        </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
           href={`/${adminPath}/media`}
         >
           <span className="text-lg font-semibold">媒体库</span>

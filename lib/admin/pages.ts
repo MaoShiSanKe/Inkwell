@@ -75,6 +75,7 @@ const RESERVED_SEGMENTS = [
   "search",
   "subscribe",
   "unsubscribe",
+  "friend-links",
   "api",
   "pages",
   "robots.txt",

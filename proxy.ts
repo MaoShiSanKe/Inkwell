@@ -13,6 +13,7 @@ const RESERVED_SEGMENTS = new Set([
   "search",
   "subscribe",
   "unsubscribe",
+  "friend-links",
   "api",
   "standalone",
 ]);

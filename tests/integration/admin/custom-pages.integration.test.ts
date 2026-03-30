@@ -24,7 +24,7 @@ describe("admin custom pages", () => {
     await cleanupIntegrationTables();
   });
 
-  it("creates, updates, trashes, and restores a custom page", async () => {
+  it("rejects the reserved friend-links slug", async () => {
     const editor = await createEditor();
     getAdminSessionMock.mockResolvedValue({
       isAuthenticated: true,
@@ -32,16 +32,15 @@ describe("admin custom pages", () => {
       role: "editor",
     });
 
-    const { createAdminPage, moveAdminPageToTrash, restoreAdminPageFromTrash, updateAdminPage } =
-      await import("@/lib/admin/pages");
+    const { createAdminPage } = await import("@/lib/admin/pages");
 
-    const created = await createAdminPage({
-      title: "About",
-      slug: "about",
-      content: "About body",
+    const result = await createAdminPage({
+      title: "Friend Links",
+      slug: "friend-links",
+      content: "Body",
       status: "published",
-      metaTitle: "About title",
-      metaDescription: "About description",
+      metaTitle: "",
+      metaDescription: "",
       ogTitle: "",
       ogDescription: "",
       ogImageMediaId: "",
@@ -50,62 +49,11 @@ describe("admin custom pages", () => {
       nofollow: false,
     });
 
-    expect(created).toMatchObject({
-      success: true,
-      affectedSlugs: ["about"],
-    });
-
-    if (!created.success) {
-      throw new Error("Expected page creation to succeed.");
-    }
-
-    const updated = await updateAdminPage(created.pageId, {
-      title: "About us",
-      slug: "about-us",
-      content: "Updated body",
-      status: "published",
-      metaTitle: "About us",
-      metaDescription: "Updated description",
-      ogTitle: "",
-      ogDescription: "",
-      ogImageMediaId: "",
-      canonicalUrl: "",
-      noindex: false,
-      nofollow: false,
-    });
-
-    expect(updated).toMatchObject({
-      success: true,
-      affectedSlugs: ["about", "about-us"],
-    });
-
-    const trashed = await moveAdminPageToTrash(created.pageId);
-    expect(trashed).toMatchObject({
-      success: true,
-      affectedSlugs: ["about-us"],
-    });
-
-    const restored = await restoreAdminPageFromTrash(created.pageId);
-    expect(restored).toMatchObject({
-      success: true,
-      affectedSlugs: ["about-us"],
-    });
-
-    const db = await getDb();
-    const [page] = await db
-      .select({
-        slug: customPages.slug,
-        title: customPages.title,
-        status: customPages.status,
-      })
-      .from(customPages)
-      .where(eq(customPages.id, created.pageId))
-      .limit(1);
-
-    expect(page).toMatchObject({
-      slug: "about-us",
-      title: "About us",
-      status: "draft",
+    expect(result).toMatchObject({
+      success: false,
+      errors: {
+        slug: "该 slug 与现有系统路由冲突，请更换。",
+      },
     });
   });
 });

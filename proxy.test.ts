@@ -38,9 +38,9 @@ describe("proxy rewrite", () => {
     expect(response.headers.get("x-middleware-rewrite")).toContain("/standalone/about");
   });
 
-  it("does not rewrite reserved paths", async () => {
+  it("does not rewrite reserved friend-links path", async () => {
     const { proxy } = await import("./proxy");
-    const url = new URL("https://example.com/search");
+    const url = new URL("https://example.com/friend-links");
     const request = {
       headers: new Headers(),
       nextUrl: {
