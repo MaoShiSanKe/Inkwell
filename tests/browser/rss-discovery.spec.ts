@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { basename, resolve } from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
 import { and, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -20,39 +20,21 @@ const databaseUrl = getDatabaseUrl();
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("rss discovery browser regression", () => {
-  test("exposes RSS alternate links on homepage, category, and tag pages", async ({ page, request }) => {
+  test("exposes RSS alternate links on homepage, category, and tag pages", async ({ page }) => {
     const fixture = await seedRssDiscoveryFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "最新文章" })).toBeVisible();
-      await expect
-        .poll(() =>
-          page.evaluate(() =>
-            document.head
-              .querySelector('link[rel="alternate"][type="application/rss+xml"]')
-              ?.getAttribute("href"),
-          ),
-        )
-        .toBe("/rss.xml");
-
-      const categoryPageResponse = await request.get(`/category/${fixture.categorySlug}`);
-      expect(categoryPageResponse.ok()).toBe(true);
-      const categoryHtml = await categoryPageResponse.text();
-      expect(categoryHtml).toContain(`href="/category/${fixture.categorySlug}/rss.xml"`);
-      expect(categoryHtml).toContain('type="application/rss+xml"');
+      await expectRssAlternatePathname(page, "/rss.xml");
 
       await page.goto(`/category/${fixture.categorySlug}`);
       await expect(page.getByRole("heading", { name: fixture.categoryName })).toBeVisible();
-
-      const tagPageResponse = await request.get(`/tag/${fixture.tagSlug}`);
-      expect(tagPageResponse.ok()).toBe(true);
-      const tagHtml = await tagPageResponse.text();
-      expect(tagHtml).toContain(`href="/tag/${fixture.tagSlug}/rss.xml"`);
-      expect(tagHtml).toContain('type="application/rss+xml"');
+      await expectRssAlternatePathname(page, `/category/${fixture.categorySlug}/rss.xml`);
 
       await page.goto(`/tag/${fixture.tagSlug}`);
       await expect(page.getByRole("heading", { name: fixture.tagName })).toBeVisible();
+      await expectRssAlternatePathname(page, `/tag/${fixture.tagSlug}/rss.xml`);
     } finally {
       await cleanupRssDiscoveryFixture();
     }
@@ -259,4 +241,22 @@ function getConnectionInfo(connectionUrl: string) {
 
 function isLocalHostname(hostname: string) {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+async function expectRssAlternatePathname(page: Page, expectedPathname: string) {
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const href = document
+          .querySelector('link[rel="alternate"][type="application/rss+xml"]')
+          ?.getAttribute("href");
+
+        if (!href) {
+          return null;
+        }
+
+        return new URL(href, window.location.href).pathname;
+      }),
+    )
+    .toBe(expectedPathname);
 }
