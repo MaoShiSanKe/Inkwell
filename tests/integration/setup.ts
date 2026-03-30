@@ -26,6 +26,8 @@ export async function cleanupIntegrationTables() {
     { db },
     {
       categories,
+      customPageMeta,
+      customPages,
       ipBlacklist,
       media,
       postSeries,
@@ -72,6 +74,21 @@ export async function cleanupIntegrationTables() {
     .from(media)
     .where(like(media.altText, `${INTEGRATION_PREFIX}%`));
 
+  const integrationPageIds = await db
+    .select({ id: customPages.id })
+    .from(customPages)
+    .where(
+      integrationUserIds.length > 0
+        ? or(
+            like(customPages.slug, `${INTEGRATION_PREFIX}%`),
+            inArray(
+              customPages.authorId,
+              integrationUserIds.map((user) => user.id),
+            ),
+          )
+        : like(customPages.slug, `${INTEGRATION_PREFIX}%`),
+    );
+
   const integrationBlacklistRows = await db
     .select({ id: ipBlacklist.id })
     .from(ipBlacklist)
@@ -116,6 +133,22 @@ export async function cleanupIntegrationTables() {
     );
   }
 
+  if (integrationPageIds.length > 0) {
+    await db.delete(customPageMeta).where(
+      inArray(
+        customPageMeta.pageId,
+        integrationPageIds.map((page) => page.id),
+      ),
+    );
+
+    await db.delete(customPages).where(
+      inArray(
+        customPages.id,
+        integrationPageIds.map((page) => page.id),
+      ),
+    );
+  }
+
   if (integrationBlacklistRows.length > 0) {
     await db.delete(ipBlacklist).where(
       inArray(
@@ -136,7 +169,10 @@ export async function cleanupIntegrationTables() {
           users.id,
           integrationUserIds.map((user) => user.id),
         ),
-        like(users.username, `${INTEGRATION_PREFIX}%`),
+        or(
+          like(users.username, `${INTEGRATION_PREFIX}%`),
+          like(users.email, `${INTEGRATION_PREFIX}%`),
+        ),
       ),
     );
   }

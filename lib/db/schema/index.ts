@@ -2,6 +2,8 @@ import { relations } from "drizzle-orm";
 
 import { categories } from "./categories";
 import { comments } from "./comments";
+import { customPageMeta } from "./custom-page-meta";
+import { customPages } from "./custom-pages";
 import { ipBlacklist } from "./ip-blacklist";
 import { media } from "./media";
 import { postLikes } from "./post-likes";
@@ -19,6 +21,8 @@ import { users } from "./users";
 
 export * from "./categories";
 export * from "./comments";
+export * from "./custom-page-meta";
+export * from "./custom-pages";
 export * from "./custom-types";
 export * from "./email-notifications";
 export * from "./enums";
@@ -40,6 +44,7 @@ export * from "./users";
 
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
+  customPages: many(customPages),
   postRevisions: many(postRevisions),
   comments: many(comments),
   media: many(media),
@@ -56,6 +61,28 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
     relationName: "category_parent",
   }),
   posts: many(posts),
+}));
+
+export const customPagesRelations = relations(customPages, ({ one }) => ({
+  author: one(users, {
+    fields: [customPages.authorId],
+    references: [users.id],
+  }),
+  meta: one(customPageMeta, {
+    fields: [customPages.id],
+    references: [customPageMeta.pageId],
+  }),
+}));
+
+export const customPageMetaRelations = relations(customPageMeta, ({ one }) => ({
+  page: one(customPages, {
+    fields: [customPageMeta.pageId],
+    references: [customPages.id],
+  }),
+  ogImage: one(media, {
+    fields: [customPageMeta.ogImageMediaId],
+    references: [media.id],
+  }),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({

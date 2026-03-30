@@ -32,6 +32,7 @@ describe("admin dashboard page", () => {
 
     const markup = renderToStaticMarkup(element);
 
+    expect(markup).toContain("页面管理");
     expect(markup).toContain("评论管理");
     expect(markup).toContain("分类管理");
     expect(markup).toContain("媒体库");
@@ -40,6 +41,7 @@ describe("admin dashboard page", () => {
     expect(markup).toContain("后台设置");
     expect(markup).toContain("订阅者管理");
     expect(markup).toContain("IP 黑名单");
+    expect(markup).toContain("/admin/pages");
     expect(markup).toContain("/admin/comments");
     expect(markup).toContain("/admin/categories");
     expect(markup).toContain("/admin/media");

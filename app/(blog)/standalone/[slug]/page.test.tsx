@@ -1,0 +1,100 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { getSiteOriginMock, resolveStandalonePageBySlugMock } = vi.hoisted(() => ({
+  getSiteOriginMock: vi.fn(),
+  resolveStandalonePageBySlugMock: vi.fn(),
+}));
+
+vi.mock("@/lib/settings", () => ({
+  getSiteOrigin: getSiteOriginMock,
+}));
+
+vi.mock("@/lib/blog/pages", () => ({
+  resolveStandalonePageBySlug: resolveStandalonePageBySlugMock,
+  resolveStandalonePageDescription: ({
+    metaDescription,
+    content,
+  }: {
+    metaDescription: string | null;
+    content: string;
+  }) => metaDescription?.trim() || content,
+}));
+
+describe("standalone page", () => {
+  beforeEach(() => {
+    getSiteOriginMock.mockReset();
+    getSiteOriginMock.mockReturnValue("https://example.com");
+    resolveStandalonePageBySlugMock.mockReset();
+  });
+
+  it("returns metadata for a published standalone page", async () => {
+    resolveStandalonePageBySlugMock.mockResolvedValue({
+      id: 1,
+      title: "About",
+      slug: "about",
+      content: "About body",
+      publishedAt: new Date("2026-03-30T12:00:00.000Z"),
+      updatedAt: new Date("2026-03-30T12:10:00.000Z"),
+      seo: {
+        metaTitle: "About title",
+        metaDescription: "About description",
+        ogTitle: null,
+        ogDescription: null,
+        canonicalUrl: null,
+        noindex: false,
+        nofollow: false,
+      },
+      ogImage: null,
+    });
+
+    const { generateMetadata } = await import("./page");
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "about" }),
+    });
+
+    expect(metadata).toMatchObject({
+      title: "About title",
+      description: "About description",
+      alternates: {
+        canonical: "https://example.com/about",
+      },
+      openGraph: {
+        url: "https://example.com/about",
+      },
+    });
+  });
+
+  it("renders TOC and content blocks for a published standalone page", async () => {
+    resolveStandalonePageBySlugMock.mockResolvedValue({
+      id: 1,
+      title: "About",
+      slug: "about",
+      content: ["Intro", "", "## Section", "Body"].join("\n"),
+      publishedAt: new Date("2026-03-30T12:00:00.000Z"),
+      updatedAt: new Date("2026-03-30T12:10:00.000Z"),
+      seo: {
+        metaTitle: null,
+        metaDescription: null,
+        ogTitle: null,
+        ogDescription: null,
+        canonicalUrl: null,
+        noindex: false,
+        nofollow: false,
+      },
+      ogImage: null,
+    });
+
+    const { default: StandalonePage } = await import("./page");
+    const element = await StandalonePage({
+      params: Promise.resolve({ slug: "about" }),
+    });
+    const markup = await import("react-dom/server").then(({ renderToStaticMarkup }) =>
+      renderToStaticMarkup(element),
+    );
+
+    expect(markup).toContain("About");
+    expect(markup).toContain("文章目录");
+    expect(markup).toContain("Section");
+    expect(markup).toContain("Body");
+  });
+});

@@ -1,10 +1,15 @@
 import { buildSitemapXml } from "@/lib/blog/post-seo";
+import { listStandalonePageSitemapEntries } from "@/lib/blog/pages";
 import { listSitemapEntries } from "@/lib/blog/posts";
 import { getSiteOrigin } from "@/lib/settings";
 
 export async function GET() {
-  const [entries, siteOrigin] = await Promise.all([listSitemapEntries(), getSiteOrigin()]);
-  const xml = buildSitemapXml(entries, siteOrigin);
+  const [postEntries, pageEntries, siteOrigin] = await Promise.all([
+    listSitemapEntries(),
+    listStandalonePageSitemapEntries(),
+    getSiteOrigin(),
+  ]);
+  const xml = buildSitemapXml([...postEntries, ...pageEntries], siteOrigin);
 
   return new Response(xml, {
     headers: {
