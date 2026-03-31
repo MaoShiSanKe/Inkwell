@@ -62,6 +62,8 @@
   - 版本升级、失败回滚、恢复顺序与 smoke 建议
 - [`operations-reference.md`](operations-reference.md)
   - CLI、internal API、恢复命令与高频运维索引
+- [`reverse-proxy-examples.md`](reverse-proxy-examples.md)
+  - Nginx / Caddy 反向代理与 HTTPS 示例
 - [`troubleshooting.md`](troubleshooting.md)
   - 构建失败、登录异常、搜索与恢复问题排查
 - [`faq.md`](faq.md)
@@ -104,7 +106,7 @@
 | 改 schema / relation / migration | [`development.md`](development.md) | [`schema-and-migrations.md`](schema-and-migrations.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
 | 判断该用 server action、API 还是 CLI | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | 对应入口层文档与测试 |
 | 不确定该跑什么测试 | [`development.md`](development.md) | [`testing-strategy.md`](testing-strategy.md) | [`release-checklist.md`](release-checklist.md) |
-| 改部署、HTTPS、systemd、反向代理 | [`deployment.md`](deployment.md) | [`troubleshooting.md`](troubleshooting.md) | [`release-checklist.md`](release-checklist.md) |
+| 改部署、HTTPS、systemd、反向代理 | [`deployment.md`](deployment.md) | [`reverse-proxy-examples.md`](reverse-proxy-examples.md) | [`release-checklist.md`](release-checklist.md)、[`troubleshooting.md`](troubleshooting.md) |
 | 做版本升级、失败回滚、恢复站点 | [`deployment.md`](deployment.md) | [`upgrade-and-rollback.md`](upgrade-and-rollback.md) | [`release-checklist.md`](release-checklist.md)、[`troubleshooting.md`](troubleshooting.md) |
 | 查 CLI、internal API、恢复命令 | [`deployment.md`](deployment.md) | [`operations-reference.md`](operations-reference.md) | [`release-checklist.md`](release-checklist.md) |
 | 改搜索、备份恢复、定时发布 | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | [`testing-strategy.md`](testing-strategy.md)、[`deployment.md`](deployment.md) |

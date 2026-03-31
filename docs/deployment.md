@@ -287,56 +287,29 @@ NODE_OPTIONS=--max-old-space-size=768 npm run build
 
 这属于部署环境资源约束，不影响应用功能逻辑。
 
-### 7.4 Nginx 与静态文件
+### 7.4 反向代理与静态文件
 若使用本地媒体上传，建议：
 
 - 反向代理动态请求到 Next.js 应用端口
-- 直接由 Nginx 托管 `public/uploads`
+- 直接由代理层托管 `public/uploads`
 
 这样可以避免本地媒体请求回源到 Node.js。
 
-一个最小可用示例：
+当前更完整的可复用示例已整理为：
+- `docs/reverse-proxy-examples.md`
 
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
+其中包括：
+- Nginx 最小可用示例
+- Nginx + certbot HTTPS 示例
+- Caddy 最小可用示例
+- 部署后最小验证项
 
-    client_max_body_size 20m;
+如果你采用 HTTPS + certbot，建议先确保 HTTP 站点配置正确，再交给 `certbot` 自动完成 HTTPS 部署。
 
-    location /uploads/ {
-        alias /path/to/inkwell/public/uploads/;
-        access_log off;
-        expires 30d;
-    }
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-    }
-}
-```
-
-说明：
-
-- `/path/to/inkwell/public/uploads/` 替换为你的实际项目路径
-- 若后续启用 HTTPS，可继续由 `certbot --nginx` 自动改写站点配置
+关键点仍然是：
 - `X-Forwarded-Proto` 应保留，以便应用正确识别外部协议
-- 上传体积限制 `client_max_body_size` 可按需求调整
-
-如果你采用 HTTPS + certbot，最终 Nginx 配置通常会被自动扩展为：
-
-- 80 端口重定向到 443
-- 443 端口加载 `fullchain.pem` 与 `privkey.pem`
-- 保留上述 `/uploads/` 和反向代理逻辑
-
-因此，建议先确保 HTTP 站点配置正确，再交给 `certbot` 自动完成 HTTPS 部署。
+- `/uploads/` 的静态路径必须与你的实际目录一致
+- 上传体积限制可按需求调整
 
 ### 7.5 推荐 cron 配置
 若站点已经对公网开放，推荐优先在 **HTTPS** 地址上验证站点行为，再启用 cron / 外部调度器。

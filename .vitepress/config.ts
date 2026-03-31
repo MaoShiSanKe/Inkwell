@@ -51,6 +51,7 @@ export default defineConfig({
           { text: "部署说明", link: "/docs/deployment" },
           { text: "升级与回滚", link: "/docs/upgrade-and-rollback" },
           { text: "运维参考", link: "/docs/operations-reference" },
+          { text: "反向代理示例", link: "/docs/reverse-proxy-examples" },
           { text: "故障排查", link: "/docs/troubleshooting" },
           { text: "FAQ", link: "/docs/faq" },
         ],
