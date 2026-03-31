@@ -319,7 +319,7 @@ npm run search:reindex-posts
 2. [`docs/README.md`](docs/README.md) — 仓库文档索引、维护入口与 change type 导航
 3. [`docs/deployment.md`](docs/deployment.md) — 部署、HTTPS、运维、恢复
 4. [`docs/upgrade-and-rollback.md`](docs/upgrade-and-rollback.md) — 版本升级、失败回滚与恢复顺序
-5. [`docs/operations-reference.md`](docs/operations-reference.md) — CLI、internal API、恢复与验证命令速查
+5. [`docs/operations-reference.md`](docs/operations-reference.md) — CLI、internal API、公开验证入口与恢复链路总览
 6. [`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md) — Nginx / Caddy 反向代理与 HTTPS 示例
 7. [`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md) — 监控、日志入口与最小巡检手册
 8. [`docs/first-deployment-checklist.md`](docs/first-deployment-checklist.md) — 首次上线或迁移完成后的 go / no-go 验收顺序
@@ -338,7 +338,7 @@ npm run search:reindex-posts
 - 执行边界：[`docs/execution-boundaries.md`](docs/execution-boundaries.md)
 - 测试策略：[`docs/testing-strategy.md`](docs/testing-strategy.md)
 - 升级与回滚：[`docs/upgrade-and-rollback.md`](docs/upgrade-and-rollback.md)
-- 运维参考：[`docs/operations-reference.md`](docs/operations-reference.md)
+- 运维入口总览：[`docs/operations-reference.md`](docs/operations-reference.md)
 - 反向代理示例：[`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md)
 - 监控与日志：[`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md)
 - 首次部署验收：[`docs/first-deployment-checklist.md`](docs/first-deployment-checklist.md)
