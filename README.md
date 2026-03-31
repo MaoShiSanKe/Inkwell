@@ -1,8 +1,135 @@
 # Inkwell
 
-Inkwell 是一个基于 Next.js App Router、PostgreSQL 和 Drizzle ORM 的自建博客框架，目标是替代 WordPress，提供内容管理、评论互动、SEO 优化与访客统计能力。
+Inkwell 是一个面向自托管场景的博客 CMS / Publishing System，基于 Next.js App Router、PostgreSQL、Drizzle ORM 与 Meilisearch 构建，目标是提供一套可部署、可扩展、可恢复的内容发布系统，用于替代传统 WordPress 式博客后台。
 
-## 开发命令
+当前仓库已经具备博客 CMS 的核心能力，并已实测通过：
+
+- Linux VPS 原生部署（Nginx + systemd + HTTPS）
+- Docker / Docker Compose 单机部署示例
+- 后台登录、文章发布、搜索重建、备份恢复等关键链路
+
+## 项目定位
+
+Inkwell 适合以下场景：
+
+- 个人博客
+- 自托管内容站
+- 小团队编辑型站点
+- 希望掌控数据库、媒体文件与部署链路的用户
+
+当前更偏向：
+
+- **单站点、自托管博客 CMS**
+- **工程化可部署**
+- **公开发布前的持续完善阶段**
+
+## 功能概览
+
+### 内容管理
+- 文章创建、编辑、草稿、发布、定时发布
+- 修订历史与保留策略
+- slug 与历史别名管理
+- 分类、标签、系列管理
+- 自定义独立页面
+- 友链管理
+
+### 前台能力
+- 首页、文章页、分类页、标签页、系列页、作者页
+- 搜索页（Meilisearch）
+- RSS / Sitemap / SEO 元信息 / 结构化数据
+- 评论系统
+- 点赞、浏览量、主题切换等公开交互能力
+
+### 后台能力
+- 后台登录与路径配置
+- 文章管理、评论管理、媒体库、分类/标签/系列管理
+- IP 黑名单
+- 邮件通知开关与站点设置管理
+- 订阅者管理
+
+### 运维能力
+- `npm run posts:publish-scheduled`
+- `/api/internal/posts/publish-scheduled`
+- `npm run search:reindex-posts`
+- `npm run backup:export`
+- `npm run backup:import`
+- Docker / Compose 单机部署示例
+
+## 技术栈
+
+| 层级 | 方案 |
+| --- | --- |
+| 应用框架 | Next.js 16（App Router） |
+| 前端 | React 19 |
+| 数据库 | PostgreSQL |
+| ORM / 迁移 | Drizzle ORM / drizzle-kit |
+| 搜索 | Meilisearch |
+| 媒体处理 | Sharp |
+| 邮件 | Nodemailer |
+| 测试 | Vitest / Playwright |
+| 部署 | Nginx / systemd / Docker Compose |
+
+## 快速开始
+
+> 以下示例以本地开发为主。生产部署请直接看 `docs/deployment.md`。
+
+### 1. 前置要求
+
+你至少需要准备：
+
+- Node.js 20+
+- PostgreSQL
+- Meilisearch
+- 一个可写的本地项目目录
+
+### 2. 安装依赖
+
+```bash
+npm install
+```
+
+### 3. 配置环境变量
+
+复制 `.env.example` 为 `.env.local`，并填写：
+
+```bash
+DATABASE_URL=
+MEILISEARCH_HOST=
+MEILISEARCH_API_KEY=
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+INTERNAL_CRON_SECRET=
+```
+
+说明：
+
+- `NEXTAUTH_SECRET` 用于后台登录会话签名
+- `NEXTAUTH_URL` 应设置为站点对外访问地址
+- `INTERNAL_CRON_SECRET` 用于内部定时发布 API 鉴权
+- SMTP、Turnstile、Umami 等配置主要通过数据库 `settings` 管理
+
+### 4. 初始化数据库与管理员
+
+```bash
+npm run db:migrate
+npm run db:seed
+npm run admin:create -- admin@example.com admin Admin change-me-password
+```
+
+### 5. 启动开发环境
+
+```bash
+npm run dev
+```
+
+默认访问：
+
+- 前台：`http://localhost:3000`
+- 后台登录：`http://localhost:3000/admin/login`
+
+## 常用命令
+
+### 开发与测试
 
 ```bash
 npm run dev
@@ -13,68 +140,56 @@ npm run type-check
 npm run test
 npm run test:integration
 npm run test:browser
+```
+
+### 数据库
+
+```bash
 npm run db:generate
 npm run db:migrate
 npm run db:studio
-npm run backup:export -- --output ./backup
-npm run backup:import -- --input ./backup --force --reindex-search
+npm run db:seed
+npm run admin:create -- <email> <username> <displayName> <password>
+```
+
+### 运维与内容发布
+
+```bash
+npm run posts:publish-scheduled
 npm run search:reindex-posts
-```
-
-## 测试说明
-
-- `npm run test`：运行默认 Vitest 测试集，覆盖纯逻辑与 SSR 测试，并排除 `tests/integration/` 与 `tests/browser/`。
-- `npm run test:integration`：使用 `vitest.integration.config.ts` 运行数据库相关集成测试。
-- `npm run test:browser`：使用 Playwright 运行 `tests/browser/` 下的浏览器回归测试，默认访问 `http://localhost:3000`，必要时按 `playwright.config.ts` 自动启动 `npm run dev`。
-- 当前浏览器回归覆盖公开归档、文章目录（TOC）、相关文章、浏览量、点赞、主题切换，以及公开文章页面包屑与分类跳转链路（`tests/browser/post-breadcrumbs.spec.ts`）。
-
-## 环境变量
-
-复制 `.env.example` 为 `.env.local` 后填写以下变量：
-
-- `DATABASE_URL`
-- `MEILISEARCH_HOST`
-- `MEILISEARCH_API_KEY`
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL`
-- `INTERNAL_CRON_SECRET`
-
-## 备份与恢复
-
-导出当前数据库快照与本地上传文件：
-
-```bash
 npm run backup:export -- --output ./backup
-```
-
-将快照恢复到当前实例：
-
-```bash
 npm run backup:import -- --input ./backup --force --reindex-search
 ```
 
-说明：
-- `--force` 会清空当前数据库中的业务表数据，并替换 `public/uploads`
-- 默认拒绝导入到非空实例，避免误覆盖现有站点
-- 默认导出会对 `settings` 表中的 secret 做脱敏；导入时会尽量保留目标实例现有 secret 值
-- 由于备份不包含 Meilisearch 索引内容，恢复后建议配合 `--reindex-search` 或手动执行 `npm run search:reindex-posts`
+## 部署方式
 
-## Docker / Compose（生产示例）
+### 方式 A：Linux VPS 宿主机部署
 
-仓库提供 `Dockerfile` 与 `docker-compose.production.yml`，用于单机生产示例：
+已实测通过：
 
-- `app`：Next.js 应用
-- `postgres`：主数据库
-- `meilisearch`：搜索索引服务
+- Nginx 反向代理
+- systemd 托管 Next.js standalone
+- certbot 签发 HTTPS 证书
+- 后台登录与文章发布真实链路
 
-使用前请先修改 Compose 中的默认 secret 与域名配置，再执行：
+关键提醒：
 
-```bash
-docker build -t inkwell:local .
-docker compose -f docker-compose.production.yml up -d
-```
+- 生产环境必须启用 HTTPS
+- 后台会话在生产环境默认使用 `Secure` cookie
+- standalone 宿主机部署时，需补齐 `public` 与 `.next/static` 到 `.next/standalone`
+- 本地媒体建议由 Nginx 直接托管 `public/uploads`
 
-首次启动后，仍需在 app 容器内手动执行：
+详细步骤见：[`docs/deployment.md`](docs/deployment.md)
+
+### 方式 B：Docker / Compose 单机部署
+
+仓库提供：
+
+- `Dockerfile`
+- `.dockerignore`
+- `docker-compose.production.yml`
+
+首次启动后，仍需手动执行：
 
 ```bash
 npm run db:migrate
@@ -83,31 +198,74 @@ npm run search:reindex-posts
 ```
 
 说明：
-- `public/uploads` 需要持久化，否则本地媒体会在重建后丢失
-- 若是新建或丢失了 `meilisearch_data` volume，需手动执行一次 `npm run search:reindex-posts` 回填历史已发布文章索引
-- 定时发布仍建议通过宿主机 cron 或外部调度器触发，不在容器内附带 scheduler
+
+- `public/uploads` 需要持久化
+- PostgreSQL / Meilisearch 数据需要持久化
 - 反向代理 / TLS 仍建议由容器外的 Nginx / Caddy 负责
 
-## 宿主机 VPS 部署提示
+详细步骤同样见：[`docs/deployment.md`](docs/deployment.md)
 
-如果使用 Linux VPS 宿主机原生部署，当前已经实测通过的关键链路包括：
+## 备份、恢复与搜索重建
 
-- `npm run db:migrate`
-- `npm run db:seed`
-- `npm run admin:create -- <email> <username> <displayName> <password>`
-- `npm run search:reindex-posts`
-- `npm run backup:export -- --output <dir>`
-- `npm run backup:import -- --input <dir> --force --reindex-search`
+### 导出备份
 
-额外注意：
-- `next build` 在低内存机器上可能需要额外 swap 或 `NODE_OPTIONS=--max-old-space-size=768`
-- 若使用 systemd 托管 `.next/standalone/server.js`，要显式加载项目内 `.env.local`，否则运行期可能缺少 `DATABASE_URL` 等环境变量
-- 宿主机 standalone 部署时，还要额外补齐 `public` 与 `.next/static` 到 `.next/standalone`，否则前端静态资源可能 `404`
-- 本地媒体建议由 Nginx 直接托管 `public/uploads`
-- 详细步骤见 `docs/deployment.md`
+```bash
+npm run backup:export -- --output ./backup
+```
 
-## 数据库约定
+### 恢复备份
 
-- Drizzle schema 位于 `lib/db/schema/`
-- 自动生成的迁移位于 `lib/db/migrations/`
-- 不要手动编辑迁移文件
+```bash
+npm run backup:import -- --input ./backup --force --reindex-search
+```
+
+### 重建搜索索引
+
+```bash
+npm run search:reindex-posts
+```
+
+说明：
+
+- 默认导出会对 `settings` 表中的 secret 做脱敏
+- `--force` 会清空当前业务表并替换 `public/uploads`
+- 备份不包含 Meilisearch 索引数据，恢复后建议执行 `--reindex-search`
+
+## 文档导航
+
+当前仓库内推荐阅读顺序：
+
+1. [`README.md`](README.md) — 项目定位、快速开始、主要入口
+2. [`docs/README.md`](docs/README.md) — 仓库文档索引与阅读路径
+3. [`docs/deployment.md`](docs/deployment.md) — 部署、HTTPS、运维、恢复
+4. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
+5. [`docs/faq.md`](docs/faq.md) — 常见问题
+6. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 未来独立文档站规划
+7. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
+
+## 当前边界与已知非目标
+
+当前仓库的默认重心是：
+
+- 自托管博客 CMS
+- 单机部署优先
+- 可恢复、可维护、可扩展的工程基础
+
+当前未内置的能力包括：
+
+- 自动证书申请 / ACME 客户端
+- 多机集群 / Kubernetes 官方方案
+- 内置对象存储适配层
+- 文档站基础设施本身（例如 VitePress / Docusaurus 站点代码）
+
+这些能力更适合作为后续文档站与部署生态的一部分逐步完善。
+
+## 文档站计划
+
+当前建议的路线是：
+
+- **短期**：继续把仓库内 `README + docs/` 打磨成稳定信息源
+- **中期**：基于文档框架建设独立文档站
+- **长期**：把公开使用文档、操作手册、FAQ、升级指南沉淀成面向大众的正式文档门户
+
+具体建议见：[`docs/ROADMAP.md`](docs/ROADMAP.md)

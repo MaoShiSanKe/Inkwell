@@ -295,7 +295,52 @@ NODE_OPTIONS=--max-old-space-size=768 npm run build
 
 这样可以避免本地媒体请求回源到 Node.js。
 
+一个最小可用示例：
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    client_max_body_size 20m;
+
+    location /uploads/ {
+        alias /path/to/inkwell/public/uploads/;
+        access_log off;
+        expires 30d;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+    }
+}
+```
+
+说明：
+
+- `/path/to/inkwell/public/uploads/` 替换为你的实际项目路径
+- 若后续启用 HTTPS，可继续由 `certbot --nginx` 自动改写站点配置
+- `X-Forwarded-Proto` 应保留，以便应用正确识别外部协议
+- 上传体积限制 `client_max_body_size` 可按需求调整
+
+如果你采用 HTTPS + certbot，最终 Nginx 配置通常会被自动扩展为：
+
+- 80 端口重定向到 443
+- 443 端口加载 `fullchain.pem` 与 `privkey.pem`
+- 保留上述 `/uploads/` 和反向代理逻辑
+
+因此，建议先确保 HTTP 站点配置正确，再交给 `certbot` 自动完成 HTTPS 部署。
+
 ### 7.5 推荐 cron 配置
+若站点已经对公网开放，推荐优先在 **HTTPS** 地址上验证站点行为，再启用 cron / 外部调度器。
+
 每 5 分钟执行一次：
 
 ```cron
@@ -321,12 +366,70 @@ NODE_OPTIONS=--max-old-space-size=768 npm run build
 - `npm run backup:import -- --input <dir> --force --reindex-search`
 - `GET /api/health`
 - `POST /api/internal/posts/publish-scheduled`（带 `Authorization: Bearer <INTERNAL_CRON_SECRET>`）
+- HTTPS 证书签发与 Nginx TLS 部署
+- HTTPS 下后台登录、文章管理与真实发布文章链路
 
 说明：
 
 - `search:reindex-posts` 当前已可在 CLI 环境中直接运行，不再依赖 `server-only` 的应用 DB 入口
 - backup import 可在恢复后直接联动搜索重建
 - 若站点当前没有已发布文章，搜索重建结果中的 `sourceCount` 可能为 `0`，这属于正常现象
+- 后台登录会话默认使用 `Secure` cookie，公网生产环境必须启用 HTTPS 才能稳定工作
+
+### 7.7 HTTPS / 证书说明
+HTTPS 与证书管理属于**部署层责任**，不是 Inkwell 框架内置能力。
+
+也就是说：
+
+- Inkwell 不负责自动申请证书
+- Inkwell 不内置 ACME / certbot 客户端
+- Inkwell 不自动替你配置 Nginx / Caddy TLS
+
+但如果你要正式对公网开放站点，**HTTPS 是必需项**，尤其是后台登录场景。
+
+原因：
+
+- 后台会话 cookie 在生产环境应使用 `Secure` 选项
+- `Secure` cookie 只会通过 HTTPS 发送
+- 若公网仍是 HTTP，后台登录会话可能无法稳定持久化
+
+### 7.8 推荐证书方案（Nginx + certbot）
+若你使用 Linux VPS + Nginx，推荐直接使用：
+
+- `certbot`
+- `python3-certbot-nginx`
+
+示例：
+
+```bash
+apt-get update
+apt-get install -y certbot python3-certbot-nginx
+certbot --nginx -d your-domain.com --non-interactive --agree-tos -m you@example.com --redirect
+```
+
+作用：
+
+- 申请 Let's Encrypt 证书
+- 自动修改 Nginx 站点配置
+- 自动将 HTTP 重定向到 HTTPS
+- 自动安装续期任务
+
+说明：
+
+- 你的域名必须已经解析到目标 VPS
+- 80 端口需要可访问，便于 ACME 校验
+- 申请成功后，建议重新验证后台登录与关键页面访问
+
+### 7.9 续期说明
+使用 `certbot` 时，续期通常由系统定时任务自动处理。
+
+建议额外确认：
+
+```bash
+certbot renew --dry-run
+```
+
+若 dry-run 通过，说明证书续期链路基本正常。
 
 ---
 
@@ -549,13 +652,45 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 
 ---
 
-## 14. 后续文档建议
+## 14. 公开部署文档还应继续补的内容
 
-如果后续需要继续完善部署文档，建议新增章节：
+如果你的目标是面向大众开放部署，建议在后续文档中继续补齐：
 
 - Nginx / Caddy 反向代理示例
-- HTTPS / 域名配置
+- HTTPS / 域名配置完整教程
 - Docker Compose 扩展配置（多环境拆分）
+- 首次初始化检查清单
+- 升级与回滚流程
+- 故障排查与 FAQ
 - 容器镜像发布与 CI 自动构建
 
-这些内容属于后续增强，不影响当前 v1 容器化部署使用。
+这些内容不影响当前 v1 容器化部署使用，但会显著提升公开项目的可部署性与可理解性。
+
+## 15. 仓库文档与独立文档站的关系
+
+当前仓库文档承担的是：
+
+- 一手事实来源
+- 快速开始入口
+- 部署与运维最低完备说明
+
+如果未来建设独立文档站，建议遵循：
+
+- `README.md`：保持为项目首页与入口
+- `docs/deployment.md`：保持为仓库内一手部署说明
+- `docs/README.md`：作为仓库内文档索引
+- `docs/ROADMAP.md`：作为文档体系演进说明
+
+独立文档站更适合承载：
+
+- 多页教程
+- FAQ
+- 故障排查
+- 最佳实践
+- 面向大众的完整上手路径
+
+也就是说：
+
+> **仓库文档解决“代码仓库里必须知道什么”，独立文档站解决“第一次接触项目的人如何顺利用起来”。**
+
+当前推荐的独立文档站方案见 `docs/ROADMAP.md`。
