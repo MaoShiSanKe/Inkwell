@@ -221,9 +221,81 @@ npm run search:reindex-posts -- --batch-size 200
 
 如果是通用 Linux VPS，推荐优先使用：
 
-- **宿主机 cron + 脚本入口**
+- **systemd 托管 Next.js + 宿主机 cron / 外部调度器**
 
-### 7.1 推荐 cron 配置
+### 7.1 已验证的最小宿主机部署路径
+基于实际 Debian VPS 验证，通过以下组合可运行：
+
+- Node.js 20+
+- PostgreSQL
+- Meilisearch
+- Nginx
+- systemd 托管 Next.js standalone
+- 项目目录内 `.env.local`
+
+推荐步骤：
+
+1. 安装依赖：`npm install`
+2. 执行迁移：`npm run db:migrate`
+3. 初始化默认设置：`npm run db:seed`
+4. 构建：`npm run build`
+5. 创建管理员：`npm run admin:create -- <email> <username> <displayName> <password>`
+6. 用 systemd 启动 standalone 服务
+7. 用 Nginx 反向代理到应用端口
+
+### 7.2 systemd 托管建议
+Next.js 已启用 `standalone` 输出，可直接运行：
+
+```bash
+node .next/standalone/server.js
+```
+
+在宿主机部署中，构建完成后还应按 Next.js 官方 `output: "standalone"` 说明补齐静态资源：
+
+```bash
+mkdir -p .next/standalone/.next
+cp -r public .next/standalone/
+cp -r .next/static .next/standalone/.next/
+```
+
+若不补这一步，应用进程虽然可能已经启动，但 `public` 下资源、`/_next/static/*` 下的 JS/CSS 等静态文件仍可能返回 `404`。
+
+若使用 systemd，建议至少保证：
+
+- `NODE_ENV=production`
+- 通过 `EnvironmentFile` 显式加载项目内 `.env.local`
+- `ExecStart` 指向 `.next/standalone/server.js`
+
+关键点：
+
+- standalone 进程不会自动替你读取项目根目录 `.env.local`
+- standalone 输出默认不会替你复制 `public` 与 `.next/static`
+- 若未在 systemd 中显式加载环境文件，运行期会出现 `DATABASE_URL is not configured` 之类错误
+- 若未补齐静态资源，站点首页可能返回 `200`，但前端资源仍会加载失败
+
+### 7.3 低内存 VPS 注意事项
+在低内存 VPS（例如 1C1G）上，`next build` 可能因内存不足失败。
+
+如果构建时出现 OOM，可按需采取以下方式之一：
+
+- 临时增加 swap
+- 限制 Node 堆内存，例如：
+
+```bash
+NODE_OPTIONS=--max-old-space-size=768 npm run build
+```
+
+这属于部署环境资源约束，不影响应用功能逻辑。
+
+### 7.4 Nginx 与静态文件
+若使用本地媒体上传，建议：
+
+- 反向代理动态请求到 Next.js 应用端口
+- 直接由 Nginx 托管 `public/uploads`
+
+这样可以避免本地媒体请求回源到 Node.js。
+
+### 7.5 推荐 cron 配置
 每 5 分钟执行一次：
 
 ```cron
@@ -237,6 +309,24 @@ npm run search:reindex-posts -- --batch-size 200
 - 每 5 分钟通常足够满足博客定时发布需求
 
 如果你需要更高精度，可调整频率，但通常没必要每分钟执行一次。
+
+### 7.6 已验证的运维 smoke 项
+当前已在真实 VPS 上验证通过：
+
+- `npm run db:migrate`
+- `npm run db:seed`
+- `npm run admin:create -- <email> <username> <displayName> <password>`
+- `npm run search:reindex-posts`
+- `npm run backup:export -- --output <dir>`
+- `npm run backup:import -- --input <dir> --force --reindex-search`
+- `GET /api/health`
+- `POST /api/internal/posts/publish-scheduled`（带 `Authorization: Bearer <INTERNAL_CRON_SECRET>`）
+
+说明：
+
+- `search:reindex-posts` 当前已可在 CLI 环境中直接运行，不再依赖 `server-only` 的应用 DB 入口
+- backup import 可在恢复后直接联动搜索重建
+- 若站点当前没有已发布文章，搜索重建结果中的 `sourceCount` 可能为 `0`，这属于正常现象
 
 ---
 
@@ -368,6 +458,23 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 7. 上传本地图片，重启容器后确认图片仍存在
 8. 运行 `npm run backup:export -- --output <dir>`，确认容器化环境下备份仍可执行
 9. 运行 `npm run backup:import -- --input <dir> --force --reindex-search`，确认容器化环境下恢复链路可执行
+
+### 10.5 宿主机 VPS 验证流程
+若你采用宿主机原生部署，可按以下顺序做上线后核验：
+
+1. `npm install`
+2. `npm run db:migrate`
+3. `npm run db:seed`
+4. `npm run build`
+5. `npm run admin:create -- <email> <username> <displayName> <password>`
+6. 启动 systemd 服务并确认站点首页返回 200
+7. 调用 `GET /api/health`，确认健康检查通过
+8. 调用内部发布 API，确认 `INTERNAL_CRON_SECRET` 鉴权与路由可用
+9. 运行 `npm run search:reindex-posts`
+10. 运行 `npm run backup:export -- --output <dir>`
+11. 再运行 `npm run backup:import -- --input <dir> --force --reindex-search`
+
+这样可以一次性覆盖：应用启动、数据库迁移、管理员初始化、搜索重建、备份导出、备份恢复与内部调度入口。
 
 ---
 

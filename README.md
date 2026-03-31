@@ -88,6 +88,24 @@ npm run search:reindex-posts
 - 定时发布仍建议通过宿主机 cron 或外部调度器触发，不在容器内附带 scheduler
 - 反向代理 / TLS 仍建议由容器外的 Nginx / Caddy 负责
 
+## 宿主机 VPS 部署提示
+
+如果使用 Linux VPS 宿主机原生部署，当前已经实测通过的关键链路包括：
+
+- `npm run db:migrate`
+- `npm run db:seed`
+- `npm run admin:create -- <email> <username> <displayName> <password>`
+- `npm run search:reindex-posts`
+- `npm run backup:export -- --output <dir>`
+- `npm run backup:import -- --input <dir> --force --reindex-search`
+
+额外注意：
+- `next build` 在低内存机器上可能需要额外 swap 或 `NODE_OPTIONS=--max-old-space-size=768`
+- 若使用 systemd 托管 `.next/standalone/server.js`，要显式加载项目内 `.env.local`，否则运行期可能缺少 `DATABASE_URL` 等环境变量
+- 宿主机 standalone 部署时，还要额外补齐 `public` 与 `.next/static` 到 `.next/standalone`，否则前端静态资源可能 `404`
+- 本地媒体建议由 Nginx 直接托管 `public/uploads`
+- 详细步骤见 `docs/deployment.md`
+
 ## 数据库约定
 
 - Drizzle schema 位于 `lib/db/schema/`
