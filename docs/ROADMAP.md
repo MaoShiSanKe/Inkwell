@@ -156,18 +156,18 @@
 当前更值得继续补的内容是：
 
 ### 7.1 部署与运维继续下沉
-- 更细的运维排障案例
-
 说明：
 - `升级与回滚流程` 已补到 `docs/upgrade-and-rollback.md`
 - `参考命令与日常维护索引` 已补到 `docs/operations-reference.md`
 - `反向代理示例` 已补到 `docs/reverse-proxy-examples.md`
 - `监控与日志说明` 已补到 `docs/monitoring-and-logs.md`
+- `首次部署后的巡检/验收清单` 已补到 `docs/first-deployment-checklist.md`
+- `更细的运维排障案例` 已补到 `docs/troubleshooting.md`
 
 当前这条线更适合继续补：
-- 更细的巡检/排障案例
-- 首次部署后的巡检/验收清单
 - 更明确的发布后值班/回看建议
+- 更细的长期维护参考页
+- internal API / CLI 能力索引式总览与交叉导航
 
 ### 7.2 公开入口继续打磨
 - 文档首页与上手路径继续打磨

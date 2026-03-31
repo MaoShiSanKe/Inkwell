@@ -370,10 +370,9 @@ npm run search:reindex-posts
 
 接下来更值得继续补的内容：
 
-- Nginx / Caddy 更完整的公开部署示例
-- 升级与回滚指南
-- 更细的 FAQ / Troubleshooting
 - 文档站首页与公开上手路径继续打磨
+- 更细的 FAQ 持续补充
 - 更多面向长期维护的参考型文档
+- 更明确的发布后值班 / 回看建议
 
 具体建议见：[`docs/ROADMAP.md`](docs/ROADMAP.md)
