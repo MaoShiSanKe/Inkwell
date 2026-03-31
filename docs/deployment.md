@@ -316,7 +316,7 @@ NODE_OPTIONS=--max-old-space-size=768 npm run build
 
 每 5 分钟执行一次：
 
-```cron
+```txt
 */5 * * * * cd /path/to/inkwell && npm run posts:publish-scheduled >> /var/log/inkwell-cron.log 2>&1
 ```
 
