@@ -1,5 +1,8 @@
 name: Deploy docs site to Pages
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [master]
@@ -7,9 +10,9 @@ on:
       - "README.md"
       - "CONTRIBUTING.md"
       - "docs/**"
-      - "site/**"
       - "package.json"
       - "package-lock.json"
+      - ".vitepress/**"
       - ".github/workflows/docs-site.yml"
   workflow_dispatch:
 
