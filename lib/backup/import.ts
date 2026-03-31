@@ -41,12 +41,14 @@ type DbContext = ReturnType<typeof createDbContext>["db"];
 
 type TableMetadata = BackupTableExport;
 
-type RestorableSettingsRow = {
+type ExportedSettingsRow = {
   key: string;
   value: string | null;
   isSecret: boolean;
   updatedAt?: unknown;
 };
+
+type RestorableSettingsRow = RawRow;
 
 type ImportBackupResult = {
   inputDir: string;
@@ -290,24 +292,27 @@ async function insertRows(
       return normalizeTableRow(row, table);
     }
 
-    const normalized = normalizeTableRow(row, table) as RestorableSettingsRow;
-    const secret = isSecretKey(normalized.key, normalized.isSecret);
+    const exported = stripRedactedMarker(row) as ExportedSettingsRow;
+    const secret = isSecretKey(exported.key, exported.isSecret);
 
-    if (!secret || normalized.value !== null) {
-      return normalized;
+    if (!secret || exported.value !== null) {
+      return normalizeTableRow(exported as unknown as RawRow, table);
     }
 
-    const currentValue = currentSecretValues.get(normalized.key);
+    const currentValue = currentSecretValues.get(exported.key);
 
     if (currentValue !== undefined) {
-      preservedSecretKeys.push(normalized.key);
-      return {
-        ...normalized,
-        value: currentValue,
-      };
+      preservedSecretKeys.push(exported.key);
+      return normalizeTableRow(
+        {
+          ...exported,
+          value: currentValue,
+        },
+        table,
+      );
     }
 
-    skippedRedactedSecretKeys.push(normalized.key);
+    skippedRedactedSecretKeys.push(exported.key);
     return null;
   }).filter((row): row is RawRow => row !== null);
 
@@ -315,8 +320,9 @@ async function insertRows(
     const overridingClause = table.identityAlwaysColumnNames.length > 0
       ? " overriding system value"
       : "";
+    const { columnsClause, valuesClause } = buildInsertValues(payload);
     await db.execute(
-      sql.raw(`insert into ${quoteIdentifier(table.tableName)} ${overridingClause} ${buildInsertValues(payload)}`),
+      sql.raw(`insert into ${quoteIdentifier(table.tableName)} ${columnsClause}${overridingClause} ${valuesClause}`),
     );
 
     if (table.identityAlwaysColumnNames.length > 0) {
@@ -349,7 +355,10 @@ function toSqlLiteral(value: unknown): string {
 function buildInsertValues(rows: RawRow[]) {
   const columns = Object.keys(rows[0] ?? {});
   const values = rows.map((row) => `(${columns.map((column) => toSqlLiteral(row[column])).join(", ")})`);
-  return `(${columns.map((column) => quoteIdentifier(column)).join(", ")}) values ${values.join(", ")}`;
+  return {
+    columnsClause: `(${columns.map((column) => quoteIdentifier(column)).join(", ")})`,
+    valuesClause: `values ${values.join(", ")}`,
+  };
 }
 
 async function restoreMediaTree(inputDir: string, rootDir: string, mediaRoot: string) {

@@ -5,9 +5,11 @@ import { resolve } from "node:path";
 import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { settings } from "@/lib/db/schema";
+import { settings, users } from "@/lib/db/schema";
 
 import { cleanupIntegrationTables } from "../setup";
+
+const INTEGRATION_PREFIX = "integration-test-backup-import-";
 
 const { reindexMainMock } = vi.hoisted(() => ({
   reindexMainMock: vi.fn(),
@@ -78,14 +80,23 @@ describe("backup import integration", () => {
 
     try {
       const db = await getDb();
+      const seed = createSeed();
       await db
         .insert(settings)
-        .values({
-          key: "smtp_password",
-          value: "persisted-secret",
-          isSecret: true,
-          updatedAt: new Date(),
-        })
+        .values([
+          {
+            key: "smtp_password",
+            value: "persisted-secret",
+            isSecret: true,
+            updatedAt: new Date(),
+          },
+          {
+            key: `${INTEGRATION_PREFIX}${seed}-custom-secret`,
+            value: "custom-persisted-secret",
+            isSecret: true,
+            updatedAt: new Date(),
+          },
+        ])
         .onConflictDoUpdate({
           target: settings.key,
           set: {
@@ -94,6 +105,17 @@ describe("backup import integration", () => {
             updatedAt: new Date(),
           },
         });
+
+      const [userBeforeExport] = await db
+        .insert(users)
+        .values({
+          email: `${INTEGRATION_PREFIX}${seed}@example.com`,
+          username: `${INTEGRATION_PREFIX}${seed}`,
+          displayName: "Backup Import Identity",
+          passwordHash: "hashed-password",
+          role: "editor",
+        })
+        .returning({ id: users.id, email: users.email });
 
       const { main: exportMain } = await import("@/scripts/export-backup");
       await exportMain(["--output", exportDir]);
@@ -106,8 +128,11 @@ describe("backup import integration", () => {
         redacted?: boolean;
       }>;
       const smtpPasswordRow = originalSettings.find((row) => row.key === "smtp_password");
+      const customSecretRow = originalSettings.find((row) => row.key === `${INTEGRATION_PREFIX}${seed}-custom-secret`);
       expect(smtpPasswordRow?.value).toBeNull();
       expect(smtpPasswordRow?.redacted).toBe(true);
+      expect(customSecretRow?.value).toBeNull();
+      expect(customSecretRow?.redacted).toBe(true);
 
       await db
         .update(settings)
@@ -116,6 +141,13 @@ describe("backup import integration", () => {
           updatedAt: new Date(),
         })
         .where(eq(settings.key, "smtp_password"));
+      await db
+        .update(settings)
+        .set({
+          value: "custom-replacement-secret",
+          updatedAt: new Date(),
+        })
+        .where(eq(settings.key, `${INTEGRATION_PREFIX}${seed}-custom-secret`));
 
       const { importBackup } = await import("@/lib/backup/import");
       const result = await importBackup({
@@ -129,17 +161,35 @@ describe("backup import integration", () => {
         .from(settings)
         .where(eq(settings.key, "smtp_password"))
         .limit(1);
+      const [restoredCustomSecret] = await db
+        .select({ value: settings.value })
+        .from(settings)
+        .where(eq(settings.key, `${INTEGRATION_PREFIX}${seed}-custom-secret`))
+        .limit(1);
+      const [restoredUser] = await db
+        .select({ id: users.id, email: users.email })
+        .from(users)
+        .where(eq(users.email, userBeforeExport.email))
+        .limit(1);
 
       expect(result.importedTableCount).toBeGreaterThan(0);
-      expect(result.preservedSecretKeys).toContain("smtp_password");
+      expect(result.preservedSecretKeys).toEqual(
+        expect.arrayContaining(["smtp_password", `${INTEGRATION_PREFIX}${seed}-custom-secret`]),
+      );
       expect(result.reindexedSearch).toBe(true);
       expect(restoredSecret?.value).toBe("replacement-secret");
+      expect(restoredCustomSecret?.value).toBe("custom-replacement-secret");
+      expect(restoredUser).toEqual(userBeforeExport);
       expect(reindexMainMock).toHaveBeenCalledTimes(1);
     } finally {
       await rm(exportDir, { recursive: true, force: true });
     }
   });
 });
+
+function createSeed() {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 async function getDb() {
   const { db } = await import("@/lib/db");
