@@ -121,6 +121,10 @@ HTTPS、证书申请、反向代理仍建议由容器外 Nginx / Caddy 负责。
 - FAQ / Troubleshooting 继续补充
 - 更多维护参考型文档
 
+当前已补：
+- `docs/upgrade-and-rollback.md`
+- `docs/operations-reference.md`
+
 ## 为什么推荐 VitePress？
 
 因为它：
