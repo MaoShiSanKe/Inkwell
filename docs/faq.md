@@ -100,6 +100,93 @@ npm run backup:import -- --input ./backup --force --reindex-search
 
 HTTPS、证书申请、反向代理仍建议由容器外 Nginx / Caddy 负责。
 
+## 为什么 `GET /api/health` 正常，站点仍可能不可用？
+
+因为它只能证明：
+- 应用进程正在响应
+- 当前接口能返回 JSON
+
+它不能自动证明这些链路也都正常：
+- 首页 CSS / JS
+- 后台登录与会话
+- 搜索
+- 备份导出 / 恢复
+- internal API
+
+所以 `GET /api/health` 更像“最小探活”，不是整站验收结论。
+
+如果你要判断站点是否真的可用，继续看：
+- `docs/first-deployment-checklist.md`
+- `docs/monitoring-and-logs.md`
+
+## 什么时候该用 CLI，什么时候该用 internal API？
+
+简单判断：
+- **宿主机 cron / SSH 手动排查 / 本机执行**：优先用 CLI
+- **外部调度器 / 平台任务系统 / 机器对机器调用**：优先用 internal API
+
+当前最典型的是 scheduled publish：
+- CLI：`npm run posts:publish-scheduled`
+- internal API：`POST /api/internal/posts/publish-scheduled`
+
+如果你只是人工排查，CLI 通常更直接；如果你要接第三方调度器，internal API 更合适。
+
+更完整对照见：`docs/operations-reference.md`
+
+## 为什么后台路径会突然变成 404？
+
+因为 Inkwell 的后台路径不是写死的，而是来自数据库 `settings` 里的 `admin_path`。
+
+如果：
+- 你访问的是旧后台路径
+- 最近有人改了 `admin_path`
+- 部署后文档 / 书签 / 路由认知没有同步
+
+那么后台入口就可能直接 404。
+
+这通常不是“页面丢了”，而是你访问的路径已经不是当前有效后台路径。
+
+优先检查：
+- 是否改过 `admin_path`
+- 当前访问 URL 是否还是旧路径
+- `docs/troubleshooting.md`
+
+## 为什么恢复后搜索可能是空的？
+
+因为 backup 不包含 Meilisearch 索引。
+
+恢复后常见状态是：
+- PostgreSQL 数据已经回来了
+- 文章页可以打开
+- 但搜索索引还没重建
+
+此时直接执行：
+
+```bash
+npm run search:reindex-posts
+```
+
+或者恢复时直接带：
+
+```bash
+npm run backup:import -- --input ./backup --force --reindex-search
+```
+
+## 为什么发布后还要继续回看 24~48 小时？
+
+因为很多问题不会在“刚发布完的 5 分钟内”立刻暴露，例如：
+- 定时发布链路到下一次触发时才出问题
+- 搜索或备份策略在后续运行时才显现异常
+- 日志中连续错误需要一段时间才看得出来
+- 用户会话、反向代理、静态资源缓存问题可能有延迟表现
+
+所以发布后至少建议：
+- 当天再回看一次
+- 第二天再回看一次
+- 如果改动涉及登录、搜索、备份恢复、代理层，适当提高频率
+
+具体回看项见：`docs/monitoring-and-logs.md`
+
 ## 文档站是不是已经建好了？
 
 是，当前已经上线基础可用版本，访问地址：
