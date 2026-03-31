@@ -2,26 +2,86 @@
 
 Inkwell 是一个面向自托管场景的博客 CMS / Publishing System，基于 Next.js App Router、PostgreSQL、Drizzle ORM 与 Meilisearch 构建，目标是提供一套可部署、可扩展、可恢复的内容发布系统，用于替代传统 WordPress 式博客后台。
 
+[在线文档](https://maoshisanke.github.io/Inkwell/) · [部署指南](https://maoshisanke.github.io/Inkwell/docs/deployment) · [开发接手](https://maoshisanke.github.io/Inkwell/docs/development) · [贡献指南](CONTRIBUTING.md)
+
+## 快速入口
+
+| 入口 | 说明 |
+| --- | --- |
+| [在线文档](https://maoshisanke.github.io/Inkwell/) | 面向公开访客的独立文档站 |
+| [部署指南](docs/deployment.md) | VPS / Docker / HTTPS / 备份恢复 / 搜索重建 |
+| [开发接手文档](docs/development.md) | 面向未来维护者与贡献者的开发指南 |
+| [架构总览](docs/architecture.md) | 快速恢复目录结构与关键链路认知 |
+| [贡献指南](CONTRIBUTING.md) | 本地开发、提交流程与文档同步规则 |
+
+## 当前状态
+
 当前仓库已经具备博客 CMS 的核心能力，并已实测通过：
 
 - Linux VPS 原生部署（Nginx + systemd + HTTPS）
 - Docker / Docker Compose 单机部署示例
 - 后台登录、文章发布、搜索重建、备份恢复等关键链路
-
-## 项目定位
-
-Inkwell 适合以下场景：
-
-- 个人博客
-- 自托管内容站
-- 小团队编辑型站点
-- 希望掌控数据库、媒体文件与部署链路的用户
+- 独立文档站（GitHub Pages + VitePress）已上线
+- 面向未来维护者的开发接手文档已补齐
 
 当前更偏向：
 
 - **单站点、自托管博客 CMS**
 - **工程化可部署**
 - **公开发布前的持续完善阶段**
+
+## 为什么是 Inkwell
+
+- **自托管优先**：数据库、媒体文件、搜索服务与部署链路都掌握在自己手里
+- **工程化部署**：同时覆盖 Linux VPS 宿主机部署与 Docker / Compose 单机示例
+- **可恢复**：已经具备 backup export / import 与搜索重建链路
+- **对维护者友好**：除公开文档外，还补齐了开发接手、环境配置与发布检查文档
+
+## 适合谁
+
+- 个人博客
+- 自托管内容站
+- 小团队编辑型站点
+- 希望掌控数据库、媒体文件与部署链路的用户
+- 接受 PostgreSQL / Nginx / Docker / VPS 基础运维概念的开发者
+
+## 当前不主打的场景
+
+- 零门槛 SaaS 型博客后台
+- 多租户 / 多站点平台
+- 多机集群 / Kubernetes 官方部署方案
+- 开箱即用对象存储适配层
+- 完全不接触部署与运维细节的使用方式
+
+## 项目预览
+
+> 当前 README 先预留截图位置，后续可直接补入仓库图片资源：
+>
+> - 前台首页截图：`docs/assets/readme-frontend-home.png`
+> - 后台管理截图：`docs/assets/readme-admin-dashboard.png`
+> - 文档站首页截图：`docs/assets/readme-docs-home.png`
+
+> 截图补入后，建议在本区域展示前台首页、后台文章管理页与文档站首页三个视角。
+
+## 项目定位
+
+Inkwell 更适合“希望自己掌控内容系统与部署链路”的用户，而不是追求插件堆叠式后台体验或零运维 SaaS 的场景。
+
+它当前最强调的是：
+
+- **内容发布系统本身可用**
+- **部署链路可验证**
+- **搜索与备份恢复可落地**
+- **未来继续维护时能快速恢复上下文**
+
+因此，它更像一个面向自托管博客场景、持续打磨中的工程化 CMS，而不是一个强调一键式平台体验的托管产品。
+
+## 项目亮点
+
+- 公开文档站与仓库内 Markdown 同步维护
+- 后台路径由数据库 settings 控制，而不是写死路由
+- 生产环境登录、HTTPS、搜索、备份恢复等真实问题已在文档中沉淀
+- 当前仓库已经具备继续公开完善的结构基础
 
 ## 功能概览
 
@@ -55,6 +115,26 @@ Inkwell 适合以下场景：
 - `npm run backup:import`
 - Docker / Compose 单机部署示例
 
+## 已验证能力
+
+### 部署与访问
+- Linux VPS 原生部署（Nginx + systemd + HTTPS）
+- Docker / Docker Compose 单机部署示例
+- 独立文档站通过 GitHub Pages 发布
+
+### 核心链路
+- 后台登录与受保护后台访问
+- 文章创建、编辑、真实发布链路
+- 搜索索引重建
+- 备份导出与恢复
+- 定时发布脚本与内部 API 触发
+
+### 文档与接手
+- 仓库首页 README
+- 独立文档站
+- 部署文档 / FAQ / Troubleshooting
+- 架构总览 / 开发指南 / 环境说明 / 发布检查清单
+
 ## 技术栈
 
 | 层级 | 方案 |
@@ -68,6 +148,7 @@ Inkwell 适合以下场景：
 | 邮件 | Nodemailer |
 | 测试 | Vitest / Playwright |
 | 部署 | Nginx / systemd / Docker Compose |
+| 文档站 | VitePress / GitHub Pages |
 
 ## 快速开始
 
