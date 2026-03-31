@@ -17,6 +17,7 @@ npm run db:generate
 npm run db:migrate
 npm run db:studio
 npm run backup:export -- --output ./backup
+npm run backup:import -- --input ./backup --force --reindex-search
 npm run search:reindex-posts
 ```
 
@@ -37,6 +38,26 @@ npm run search:reindex-posts
 - `NEXTAUTH_SECRET`
 - `NEXTAUTH_URL`
 - `INTERNAL_CRON_SECRET`
+
+## 备份与恢复
+
+导出当前数据库快照与本地上传文件：
+
+```bash
+npm run backup:export -- --output ./backup
+```
+
+将快照恢复到当前实例：
+
+```bash
+npm run backup:import -- --input ./backup --force --reindex-search
+```
+
+说明：
+- `--force` 会清空当前数据库中的业务表数据，并替换 `public/uploads`
+- 默认拒绝导入到非空实例，避免误覆盖现有站点
+- 默认导出会对 `settings` 表中的 secret 做脱敏；导入时会尽量保留目标实例现有 secret 值
+- 由于备份不包含 Meilisearch 索引内容，恢复后建议配合 `--reindex-search` 或手动执行 `npm run search:reindex-posts`
 
 ## Docker / Compose（生产示例）
 

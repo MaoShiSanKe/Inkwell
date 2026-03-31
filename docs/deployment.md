@@ -150,9 +150,43 @@ Authorization: Bearer <INTERNAL_CRON_SECRET>
 
 ---
 
-## 6. 搜索索引重建
+## 6. 备份恢复与搜索索引重建
 
-### 6.1 什么时候需要执行
+### 6.1 备份导出
+导出当前数据库快照与本地上传文件：
+
+```bash
+npm run backup:export -- --output ./backup
+```
+
+说明：
+
+- 导出内容包含数据库业务表快照与 `public/uploads`
+- 默认会对 `settings` 表中的 secret 做脱敏
+- 备份 manifest 会记录校验和、恢复顺序与当前迁移标签
+
+### 6.2 备份导入
+将快照恢复到当前实例：
+
+```bash
+npm run backup:import -- --input ./backup --force --reindex-search
+```
+
+可选：
+
+```bash
+npm run backup:import -- --input ./backup --force
+```
+
+说明：
+
+- 默认拒绝导入到非空实例，防止误覆盖现有数据
+- `--force` 会清空当前业务表并替换 `public/uploads`
+- 导入前会校验 manifest、表文件校验和、媒体校验和与迁移标签
+- 若备份中的 secret 为脱敏值，导入时会优先保留目标实例当前已有 secret
+- 若目标实例没有对应 secret，而备份中该 secret 为脱敏值，则该键会被跳过，不会凭空恢复真实值
+
+### 6.3 什么时候需要执行搜索索引重建
 以下场景推荐执行：
 
 - 首次为已有站点启用 Meilisearch
@@ -160,7 +194,7 @@ Authorization: Bearer <INTERNAL_CRON_SECRET>
 - 从数据库与媒体备份恢复后
 - 怀疑 `published_posts` 索引与 PostgreSQL 已发布文章不一致时
 
-### 6.2 重建命令
+### 6.4 重建命令
 
 ```bash
 npm run search:reindex-posts
@@ -172,7 +206,7 @@ npm run search:reindex-posts
 npm run search:reindex-posts -- --batch-size 200
 ```
 
-### 6.3 作用
+### 6.5 作用
 
 - 从 PostgreSQL 读取所有 `status = published` 的文章
 - 重建 `published_posts` 索引内容
@@ -183,9 +217,6 @@ npm run search:reindex-posts -- --batch-size 200
 - backup/export 不包含 Meilisearch 索引数据
 - canonical source of truth 仍是 PostgreSQL
 - 索引重建属于正常恢复流程的一部分
-
----
-
 ## 7. 生产环境推荐方案（Linux VPS）
 
 如果是通用 Linux VPS，推荐优先使用：
@@ -274,7 +305,7 @@ npm run search:reindex-posts
 
 - 本地媒体文件存放于这里
 - 若不持久化，重建容器后会丢失上传图片
-- 备份导出也依赖这些文件存在
+- 备份导出与恢复都依赖这些文件存在
 
 ### 9.5 反向代理与 TLS
 Docker v1 不负责处理：
@@ -336,6 +367,7 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 6. 访问站点首页，确认 app 正常可用
 7. 上传本地图片，重启容器后确认图片仍存在
 8. 运行 `npm run backup:export -- --output <dir>`，确认容器化环境下备份仍可执行
+9. 运行 `npm run backup:import -- --input <dir> --force --reindex-search`，确认容器化环境下恢复链路可执行
 
 ---
 
@@ -372,6 +404,7 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 - `npm run posts:publish-scheduled` 脚本入口
 - `/api/internal/posts/publish-scheduled` 内部 API 入口
 - `npm run backup:export` 备份导出 CLI
+- `npm run backup:import` 备份恢复 CLI
 - `npm run search:reindex-posts` 搜索索引重建 CLI
 - Docker / Compose 单机生产示例
 - sitemap 同步更新
@@ -379,7 +412,7 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 
 这意味着：
 
-> **框架层已具备定时发布、备份导出、索引重建与容器化部署基础能力，部署阶段只需选择调度方式并补齐反向代理/TLS。**
+> **框架层已具备定时发布、备份导出、备份恢复、索引重建与容器化部署基础能力，部署阶段只需选择调度方式并补齐反向代理/TLS。**
 
 ---
 
@@ -393,7 +426,9 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 3. 在 Linux 宿主机上配置 cron
 4. 每 5 分钟执行：
    - `npm run posts:publish-scheduled`
-5. 在首次启用或恢复 Meilisearch 后执行：
+5. 需要恢复站点时执行：
+   - `npm run backup:import -- --input <dir> --force --reindex-search`
+6. 在首次启用或恢复 Meilisearch 后执行：
    - `npm run search:reindex-posts`
 
 ### 13.2 Docker / Compose 单机部署
@@ -403,6 +438,7 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 4. 在 app 容器内执行一次 `npm run search:reindex-posts`
 5. 在容器外配置反向代理 / TLS
 6. 用宿主机 cron 或外部调度器触发 scheduled publish
+7. 需要恢复站点时，在 app 容器内执行 `npm run backup:import -- --input <dir> --force --reindex-search`
 
 ---
 

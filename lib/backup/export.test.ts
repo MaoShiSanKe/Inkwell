@@ -90,5 +90,24 @@ describe("backup export helpers", () => {
       "friend_links",
       "sitemap_entries",
     ]);
+
+    expect(exports.find((entry) => entry.key === "users")).toMatchObject({
+      tableName: "users",
+      identityAlwaysColumnNames: ["id"],
+      propertyColumnMap: expect.objectContaining({
+        displayName: "display_name",
+        passwordHash: "password_hash",
+        lastLoginAt: "last_login_at",
+      }),
+    });
+
+    expect(exports.find((entry) => entry.key === "settings")).toMatchObject({
+      tableName: "settings",
+      identityAlwaysColumnNames: [],
+      propertyColumnMap: expect.objectContaining({
+        isSecret: "is_secret",
+        updatedAt: "updated_at",
+      }),
+    });
   });
 });

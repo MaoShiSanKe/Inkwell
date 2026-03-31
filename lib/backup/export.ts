@@ -48,6 +48,14 @@ type TableExportDefinition = {
   orderBy: SQL[];
 };
 
+export type BackupTableExport = {
+  key: string;
+  fileName: string;
+  tableName: string;
+  propertyColumnMap: Record<string, string>;
+  identityAlwaysColumnNames: string[];
+};
+
 type ExportedTableSummary = {
   key: string;
   fileName: string;
@@ -210,11 +218,34 @@ const TABLE_EXPORTS: TableExportDefinition[] = [
   },
 ];
 
-export function getBackupTableExports() {
+function getPropertyColumnMap(table: AnyPgTable) {
+  return Object.fromEntries(
+    Object.entries(table)
+      .filter(([, value]) => Boolean(value) && typeof value === "object" && "config" in value)
+      .map(([propertyName, value]) => [propertyName, (value as { name: string }).name]),
+  );
+}
+
+function getIdentityAlwaysColumnNames(table: AnyPgTable) {
+  return Object.entries(table)
+    .filter(([, value]) => {
+      if (!value || typeof value !== "object" || !("config" in value)) {
+        return false;
+      }
+
+      const generatedIdentity = (value as { config?: { generatedIdentity?: { type?: string } } }).config?.generatedIdentity;
+      return generatedIdentity?.type === "always";
+    })
+    .map(([, value]) => (value as { name: string }).name);
+}
+
+export function getBackupTableExports(): BackupTableExport[] {
   return TABLE_EXPORTS.map((entry) => ({
     key: entry.key,
     fileName: entry.fileName,
     tableName: getTableName(entry.table),
+    propertyColumnMap: getPropertyColumnMap(entry.table),
+    identityAlwaysColumnNames: getIdentityAlwaysColumnNames(entry.table),
   }));
 }
 
