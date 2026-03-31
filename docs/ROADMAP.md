@@ -159,79 +159,59 @@ Docusaurus 也很强，尤其适合：
 
 > **仓库文档负责“可信的一手事实”，文档站负责“对外可读的完整体验”。**
 
-## 6. 推荐迁移策略
+## 6. 推荐演进策略
 
-建议按三阶段推进：
+当前已经完成：
 
-### 阶段 1：先把仓库内文档整理好
-目标：
+### 阶段 1：整理仓库内文档
+已完成：
 
-- README 成为对外首页
-- docs 目录具备清晰索引
-- 部署与运维文档可直接指导工程师部署
+- README 已作为对外首页入口
+- `docs/` 目录已具备清晰索引
+- 部署与运维文档已可直接指导工程师部署
 
-当前已经在做这一阶段。
-
-### 阶段 2：建立 VitePress 文档站骨架
-当前建议直接在主仓库内建设轻量文档站展示层：
+### 阶段 2：建立 VitePress 文档站展示层
+已完成：
 
 - 使用 `VitePress`
 - 使用 `GitHub Pages`
 - 仓库 Markdown 继续作为 source of truth
 - 文档站负责导航、搜索与展示
 
-首批接入内容：
+当前已接入内容包括：
 
-- Quick Start
+- README / Quick Start
 - Deployment
-- Backup / Restore
-- Search
 - FAQ
+- Troubleshooting
 - Contributing
 - 开发接手文档
 
-### 阶段 3：形成正式公开文档门户
-目标：
+### 阶段 3：继续打磨公开文档门户
+接下来重点不再是“有没有文档站”，而是继续提升公开体验：
 
-- 搜索
-- 导航
-- SEO
-- 多页教程
-- 版本演进策略
-- 对外公开部署说明
+- 文档首页与上手路径继续打磨
+- 更完整的部署教程与反向代理示例
+- 升级 / 回滚指南
+- FAQ / Troubleshooting 持续补充
+- 后续如有需要再评估版本演进策略
 
 ## 7. 当前优先事项
 
-在 docs site 基础设施接入后，仓库内建议优先继续补：
+当前更值得继续补的内容是：
 
-1. `docs/architecture.md`
-   - 目录结构
-   - 核心链路入口
-   - source of truth 地图
-
-2. `docs/development.md`
-   - 本地开发流程
-   - 常见改动路径
-   - 提交前检查
-
-3. `docs/environment.md`
-   - 环境变量职责
-   - env 与 settings 表边界
-
-4. `docs/release-checklist.md`
-   - 发布前检查
-   - smoke 验证
-   - 文档同步检查
-
-5. 继续补部署与运维细节
+1. 继续补部署与运维细节
    - Nginx / Caddy 示例
    - 升级与回滚流程
    - 更完整 FAQ / Troubleshooting
 
-6. 完成 GitHub Pages 首次发布与验收
-   - workflow 成功
-   - Pages 地址正常访问
-   - 站内导航与搜索可用
+2. 持续打磨文档站公开体验
+   - 首页信息组织
+   - 公开上手路径
+   - 页面导航与阅读流
+
+3. 继续维护开发接手材料
+   - 保持 architecture / development / environment / release-checklist 与代码同步
 
 这些内容最直接决定未来的自己和外部贡献者能否快速接手。
 ## 8. 最终建议

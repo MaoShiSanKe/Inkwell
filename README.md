@@ -338,12 +338,19 @@ npm run search:reindex-posts
 
 这些能力更适合作为后续部署生态的一部分逐步完善。
 
-## 文档站计划
+## 文档站现状与后续
 
-当前建议的路线是：
+当前已经完成：
 
-- **当前**：继续把仓库内 `README + docs/` 打磨成稳定信息源，并接入独立文档站展示层
-- **下一阶段**：补齐开发接手文档、发布检查文档与更细的参考页
-- **长期**：把公开使用文档、操作手册、FAQ、升级指南沉淀成面向大众的正式文档门户
+- 独立文档站已通过 GitHub Pages + VitePress 上线
+- 仓库 Markdown 继续作为 source of truth
+- README、部署文档、FAQ、故障排查、开发接手文档已接入展示层
+
+接下来更值得继续补的内容：
+
+- Nginx / Caddy 更完整的公开部署示例
+- 升级与回滚指南
+- 更细的 FAQ / Troubleshooting
+- 文档站首页与公开上手路径继续打磨
 
 具体建议见：[`docs/ROADMAP.md`](docs/ROADMAP.md)

@@ -102,20 +102,23 @@ HTTPS、证书申请、反向代理仍建议由容器外 Nginx / Caddy 负责。
 
 ## 文档站是不是已经建好了？
 
-基础版已经开始建设：
+是，当前已经上线基础可用版本，访问地址：
+
+- `https://maoshisanke.github.io/Inkwell/`
+
+当前状态：
 
 - 仓库 Markdown 仍作为 source of truth
 - 文档站使用 `VitePress`
-- 托管目标是 `GitHub Pages`
+- 托管在 `GitHub Pages`
+- README、部署、FAQ、故障排查与开发接手文档已接入展示层
 
-当前仍在继续补的内容包括：
+当前仍在继续完善：
 
-- 开发接手文档
-- 发布检查文档
-- 文档导航与页面组织优化
-- 首次 Pages 发布与验收
-
-也就是说：文档站方向已经落地，但还在从“基础可用”继续走向“公开项目级体验”。
+- 文档首页与公开上手路径
+- Nginx / Caddy 更完整示例
+- 升级与回滚指南
+- FAQ / Troubleshooting 继续补充
 
 ## 为什么推荐 VitePress？
 
@@ -136,4 +139,4 @@ HTTPS、证书申请、反向代理仍建议由容器外 Nginx / Caddy 负责。
 - 升级与回滚指南
 - 首次部署检查清单
 - 更完整的 FAQ
-- 未来 docs site 骨架
+- 文档站首页与导航继续打磨

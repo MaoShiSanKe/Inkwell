@@ -674,12 +674,12 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 - 快速开始入口
 - 部署与运维最低完备说明
 
-如果未来建设独立文档站，建议遵循：
+当前独立文档站已经上线，建议继续保持：
 
-- `README.md`：保持为项目首页与入口
-- `docs/deployment.md`：保持为仓库内一手部署说明
-- `docs/README.md`：作为仓库内文档索引
-- `docs/ROADMAP.md`：作为文档体系演进说明
+- `README.md`：项目首页与入口
+- `docs/deployment.md`：仓库内一手部署说明
+- `docs/README.md`：仓库内文档索引
+- `docs/ROADMAP.md`：文档体系演进说明
 
 独立文档站更适合承载：
 
