@@ -32,6 +32,7 @@ export default defineConfig({
       { text: "文档", link: "/docs/" },
       { text: "部署", link: "/docs/deployment" },
       { text: "开发", link: "/docs/architecture" },
+      { text: "扩展", link: "/docs/admin-extension-workflow" },
       { text: "贡献", link: "/community/contributing" },
       { text: "GitHub", link: "https://github.com/MaoShiSanKe/Inkwell" },
     ],
@@ -53,13 +54,23 @@ export default defineConfig({
         ],
       },
       {
-        text: "开发与贡献",
+        text: "开发与维护",
         items: [
           { text: "架构总览", link: "/docs/architecture" },
           { text: "开发指南", link: "/docs/development" },
           { text: "环境配置", link: "/docs/environment" },
+          { text: "测试策略", link: "/docs/testing-strategy" },
           { text: "发布检查", link: "/docs/release-checklist" },
           { text: "贡献指南", link: "/community/contributing" },
+        ],
+      },
+      {
+        text: "扩展指南",
+        items: [
+          { text: "后台模块扩展", link: "/docs/admin-extension-workflow" },
+          { text: "设置系统", link: "/docs/settings-system" },
+          { text: "Schema 与迁移", link: "/docs/schema-and-migrations" },
+          { text: "执行边界", link: "/docs/execution-boundaries" },
         ],
       },
     ],
