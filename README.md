@@ -315,12 +315,22 @@ npm run search:reindex-posts
 当前仓库内推荐阅读顺序：
 
 1. [`README.md`](README.md) — 项目定位、快速开始、主要入口
-2. [`docs/README.md`](docs/README.md) — 仓库文档索引与阅读路径
+2. [`docs/README.md`](docs/README.md) — 仓库文档索引、维护入口与 change type 导航
 3. [`docs/deployment.md`](docs/deployment.md) — 部署、HTTPS、运维、恢复
-4. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
-5. [`docs/faq.md`](docs/faq.md) — 常见问题
-6. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 未来独立文档站规划
-7. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
+4. [`docs/architecture.md`](docs/architecture.md) — 系统分层、执行边界、核心链路
+5. [`docs/development.md`](docs/development.md) — 本地开发流程、按改动类型找入口
+6. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
+7. [`docs/faq.md`](docs/faq.md) — 常见问题
+8. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
+9. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
+
+如果你已经确定要改哪类内容，可以直接看：
+
+- 后台模块扩展：[`docs/admin-extension-workflow.md`](docs/admin-extension-workflow.md)
+- 设置系统：[`docs/settings-system.md`](docs/settings-system.md)
+- Schema 与迁移：[`docs/schema-and-migrations.md`](docs/schema-and-migrations.md)
+- 执行边界：[`docs/execution-boundaries.md`](docs/execution-boundaries.md)
+- 测试策略：[`docs/testing-strategy.md`](docs/testing-strategy.md)
 
 ## 当前边界与已知非目标
 
@@ -345,6 +355,7 @@ npm run search:reindex-posts
 - 独立文档站已通过 GitHub Pages + VitePress 上线
 - 仓库 Markdown 继续作为 source of truth
 - README、部署文档、FAQ、故障排查、开发接手文档已接入展示层
+- 面向维护者的扩展手册已经补齐：后台扩展、设置系统、schema/migration、执行边界、测试策略
 
 接下来更值得继续补的内容：
 
@@ -352,5 +363,6 @@ npm run search:reindex-posts
 - 升级与回滚指南
 - 更细的 FAQ / Troubleshooting
 - 文档站首页与公开上手路径继续打磨
+- 更多面向长期维护的参考型文档
 
 具体建议见：[`docs/ROADMAP.md`](docs/ROADMAP.md)
