@@ -317,12 +317,13 @@ npm run search:reindex-posts
 1. [`README.md`](README.md) — 项目定位、快速开始、主要入口
 2. [`docs/README.md`](docs/README.md) — 仓库文档索引、维护入口与 change type 导航
 3. [`docs/deployment.md`](docs/deployment.md) — 部署、HTTPS、运维、恢复
-4. [`docs/architecture.md`](docs/architecture.md) — 系统分层、执行边界、核心链路
-5. [`docs/development.md`](docs/development.md) — 本地开发流程、按改动类型找入口
-6. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
-7. [`docs/faq.md`](docs/faq.md) — 常见问题
-8. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
-9. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
+4. [`docs/upgrade-and-rollback.md`](docs/upgrade-and-rollback.md) — 版本升级、失败回滚与恢复顺序
+5. [`docs/architecture.md`](docs/architecture.md) — 系统分层、执行边界、核心链路
+6. [`docs/development.md`](docs/development.md) — 本地开发流程、按改动类型找入口
+7. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
+8. [`docs/faq.md`](docs/faq.md) — 常见问题
+9. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
+10. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
 
 如果你已经确定要改哪类内容，可以直接看：
 
@@ -331,6 +332,7 @@ npm run search:reindex-posts
 - Schema 与迁移：[`docs/schema-and-migrations.md`](docs/schema-and-migrations.md)
 - 执行边界：[`docs/execution-boundaries.md`](docs/execution-boundaries.md)
 - 测试策略：[`docs/testing-strategy.md`](docs/testing-strategy.md)
+- 升级与回滚：[`docs/upgrade-and-rollback.md`](docs/upgrade-and-rollback.md)
 
 ## 当前边界与已知非目标
 

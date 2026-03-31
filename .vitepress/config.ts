@@ -49,6 +49,7 @@ export default defineConfig({
         text: "部署与运维",
         items: [
           { text: "部署说明", link: "/docs/deployment" },
+          { text: "升级与回滚", link: "/docs/upgrade-and-rollback" },
           { text: "故障排查", link: "/docs/troubleshooting" },
           { text: "FAQ", link: "/docs/faq" },
         ],

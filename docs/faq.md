@@ -112,13 +112,14 @@ HTTPS、证书申请、反向代理仍建议由容器外 Nginx / Caddy 负责。
 - 文档站使用 `VitePress`
 - 托管在 `GitHub Pages`
 - README、部署、FAQ、故障排查与开发接手文档已接入展示层
+- 升级与回滚指南已补到 `docs/upgrade-and-rollback.md`
 
 当前仍在继续完善：
 
 - 文档首页与公开上手路径
 - Nginx / Caddy 更完整示例
-- 升级与回滚指南
 - FAQ / Troubleshooting 继续补充
+- 更多维护参考型文档
 
 ## 为什么推荐 VitePress？
 

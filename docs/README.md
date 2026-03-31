@@ -58,6 +58,8 @@
   - 项目定位、能力边界、快速开始、常用命令
 - [`deployment.md`](deployment.md)
   - VPS / Docker 部署、HTTPS、运维命令、生产注意事项
+- [`upgrade-and-rollback.md`](upgrade-and-rollback.md)
+  - 版本升级、失败回滚、恢复顺序与 smoke 建议
 - [`troubleshooting.md`](troubleshooting.md)
   - 构建失败、登录异常、搜索与恢复问题排查
 - [`faq.md`](faq.md)
@@ -101,6 +103,7 @@
 | 判断该用 server action、API 还是 CLI | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | 对应入口层文档与测试 |
 | 不确定该跑什么测试 | [`development.md`](development.md) | [`testing-strategy.md`](testing-strategy.md) | [`release-checklist.md`](release-checklist.md) |
 | 改部署、HTTPS、systemd、反向代理 | [`deployment.md`](deployment.md) | [`troubleshooting.md`](troubleshooting.md) | [`release-checklist.md`](release-checklist.md) |
+| 做版本升级、失败回滚、恢复站点 | [`deployment.md`](deployment.md) | [`upgrade-and-rollback.md`](upgrade-and-rollback.md) | [`release-checklist.md`](release-checklist.md)、[`troubleshooting.md`](troubleshooting.md) |
 | 改搜索、备份恢复、定时发布 | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | [`testing-strategy.md`](testing-strategy.md)、[`deployment.md`](deployment.md) |
 | 改文档站导航或仓库文档结构 | 本文档 | [`ROADMAP.md`](ROADMAP.md) | `npm run docs:build` |
 

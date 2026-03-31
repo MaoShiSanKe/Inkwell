@@ -660,9 +660,11 @@ curl -X POST "http://localhost:3000/api/internal/posts/publish-scheduled" \
 - HTTPS / 域名配置完整教程
 - Docker Compose 扩展配置（多环境拆分）
 - 首次初始化检查清单
-- 升级与回滚流程
 - 故障排查与 FAQ
 - 容器镜像发布与 CI 自动构建
+
+其中“升级与回滚流程”已经独立整理为：
+- `docs/upgrade-and-rollback.md`
 
 这些内容不影响当前 v1 容器化部署使用，但会显著提升公开项目的可部署性与可理解性。
 
