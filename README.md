@@ -10,6 +10,7 @@ Inkwell 是一个面向自托管场景的博客 CMS / Publishing System，基于
 | --- | --- |
 | [在线文档](https://maoshisanke.github.io/Inkwell/) | 面向公开访客的独立文档站 |
 | [部署指南](docs/deployment.md) | VPS / Docker / HTTPS / 备份恢复 / 搜索重建 |
+| [首次部署验收清单](docs/first-deployment-checklist.md) | 部署完成后按 go / no-go 顺序确认站点真的可用 |
 | [开发接手文档](docs/development.md) | 面向未来维护者与贡献者的开发指南 |
 | [架构总览](docs/architecture.md) | 快速恢复目录结构与关键链路认知 |
 | [贡献指南](CONTRIBUTING.md) | 本地开发、提交流程与文档同步规则 |
@@ -321,12 +322,13 @@ npm run search:reindex-posts
 5. [`docs/operations-reference.md`](docs/operations-reference.md) — CLI、internal API、恢复与验证命令速查
 6. [`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md) — Nginx / Caddy 反向代理与 HTTPS 示例
 7. [`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md) — 监控、日志入口与最小巡检手册
-8. [`docs/architecture.md`](docs/architecture.md) — 系统分层、执行边界、核心链路
-9. [`docs/development.md`](docs/development.md) — 本地开发流程、按改动类型找入口
-10. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
-11. [`docs/faq.md`](docs/faq.md) — 常见问题
-12. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
-13. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
+8. [`docs/first-deployment-checklist.md`](docs/first-deployment-checklist.md) — 首次上线或迁移完成后的 go / no-go 验收顺序
+9. [`docs/architecture.md`](docs/architecture.md) — 系统分层、执行边界、核心链路
+10. [`docs/development.md`](docs/development.md) — 本地开发流程、按改动类型找入口
+11. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
+12. [`docs/faq.md`](docs/faq.md) — 常见问题
+13. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
+14. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
 
 如果你已经确定要改哪类内容，可以直接看：
 
@@ -339,6 +341,7 @@ npm run search:reindex-posts
 - 运维参考：[`docs/operations-reference.md`](docs/operations-reference.md)
 - 反向代理示例：[`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md)
 - 监控与日志：[`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md)
+- 首次部署验收：[`docs/first-deployment-checklist.md`](docs/first-deployment-checklist.md)
 
 ## 当前边界与已知非目标
 

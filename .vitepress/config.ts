@@ -53,6 +53,7 @@ export default defineConfig({
           { text: "运维参考", link: "/docs/operations-reference" },
           { text: "反向代理示例", link: "/docs/reverse-proxy-examples" },
           { text: "监控与日志", link: "/docs/monitoring-and-logs" },
+          { text: "首次部署验收", link: "/docs/first-deployment-checklist" },
           { text: "故障排查", link: "/docs/troubleshooting" },
           { text: "FAQ", link: "/docs/faq" },
         ],

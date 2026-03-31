@@ -40,10 +40,11 @@
 ### 2.3 长时间搁置后重新接手
 1. [`../README.md`](../README.md)
 2. [`deployment.md`](deployment.md)
-3. [`troubleshooting.md`](troubleshooting.md)
-4. [`architecture.md`](architecture.md)
-5. [`development.md`](development.md)
-6. [`release-checklist.md`](release-checklist.md)
+3. [`first-deployment-checklist.md`](first-deployment-checklist.md)
+4. [`troubleshooting.md`](troubleshooting.md)
+5. [`architecture.md`](architecture.md)
+6. [`development.md`](development.md)
+7. [`release-checklist.md`](release-checklist.md)
 
 ### 2.4 准备扩展功能或提交 PR
 1. [`development.md`](development.md)
@@ -66,6 +67,8 @@
   - Nginx / Caddy 反向代理与 HTTPS 示例
 - [`monitoring-and-logs.md`](monitoring-and-logs.md)
   - 监控、日志入口、最小巡检与运行态排查顺序
+- [`first-deployment-checklist.md`](first-deployment-checklist.md)
+  - 首次上线、新环境迁移或恢复后的 go / no-go 验收顺序
 - [`troubleshooting.md`](troubleshooting.md)
   - 构建失败、登录异常、搜索与恢复问题排查
 - [`faq.md`](faq.md)
