@@ -295,15 +295,62 @@ npm run backup:import -- --input <backup-dir> --force --reindex-search
 - PostgreSQL / Meilisearch 进程或容器存活状态
 - 最近一次备份是否成功
 
-## 9. 常见误区
+## 9. 发布后值班 / 回看建议
+
+### 9.1 刚发布后的前 15~30 分钟
+建议至少确认：
+- 首页与一篇已发布文章页正常
+- `GET /api/health` 正常
+- 后台登录仍稳定
+- 最近 100 行 app / 代理层日志没有连续错误
+- 搜索页可查到至少一个已发布文章关键词
+- 若本次涉及运维链路，`posts:publish-scheduled` / `api/internal/posts/publish-scheduled` 至少一种仍可用
+
+重点关注的异常信号：
+- 连续 5xx
+- `/_next/static/*` 404
+- 登录后被打回登录页
+- 明显的数据库连接错误
+- 明显的 Meilisearch 连接错误
+- backup / restore / internal API 命令报错
+
+### 9.2 接下来 24~48 小时的观察窗口
+如果当前没有完整监控平台，也建议至少做这些低成本回看：
+- 再次检查首页、后台登录、搜索
+- 看一次 Nginx / app 最近日志
+- 确认 PostgreSQL / Meilisearch 进程或容器仍健康
+- 确认最近一次备份策略没有因为本次改动被破坏
+- 如果近期存在 scheduled 文章，确认定时发布链路仍按预期工作
+
+建议频率：
+- 发布后当天至少回看一次
+- 第二天再回看一次
+- 若改动涉及登录、搜索、备份恢复、代理层，适当提高频率
+
+### 9.3 什么时候应该立刻处理
+如果出现以下任一情况，不要继续观察，应立即处理或回退：
+- 首页、文章页或后台出现持续性 5xx
+- 后台无法稳定登录
+- 首页无样式或关键静态资源持续 404
+- 搜索完全不可用且 reindex 后仍异常
+- 备份导出失败
+- internal API / scheduled publish 入口失效且影响生产调度
+
+优先动作：
+1. 先看 app / 代理层日志
+2. 再确认是否是环境变量、反向代理、静态资源、外部服务问题
+3. 若是本次发布直接引入且短时间内无法修复，按 `docs/upgrade-and-rollback.md` 回退
+
+## 10. 常见误区
 
 - 只看 `api/health` 正常就认为整站没问题
 - 搜索异常时不先尝试 reindex
 - 后台登录异常时先怪代码，不先看 HTTPS / 代理层
 - 容器 unhealthy 但不去看容器日志
 - systemd 服务起不来却只看浏览器，不看 `journalctl`
+- 发布刚完成就完全不再回看，默认认为后续一定稳定
 
-## 10. 推荐搭配阅读
+## 11. 推荐搭配阅读
 
 - 运行命令速查：`docs/operations-reference.md`
 - 部署路径：`docs/deployment.md`
