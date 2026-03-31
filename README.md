@@ -55,13 +55,11 @@ Inkwell 是一个面向自托管场景的博客 CMS / Publishing System，基于
 
 ## 项目预览
 
-> 当前 README 先预留截图位置，后续可直接补入仓库图片资源：
->
-> - 前台首页截图：`docs/assets/readme-frontend-home.png`
-> - 后台管理截图：`docs/assets/readme-admin-dashboard.png`
-> - 文档站首页截图：`docs/assets/readme-docs-home.png`
+| 前台首页 | 后台管理 |
+| --- | --- |
+| ![Inkwell 前台首页预览](docs/assets/readme-frontend-home.png) | ![Inkwell 后台管理预览](docs/assets/readme-admin-dashboard.png) |
 
-> 截图补入后，建议在本区域展示前台首页、后台文章管理页与文档站首页三个视角。
+上图分别展示了公开前台首页与后台管理首页的当前界面状态。
 
 ## 项目定位
 
