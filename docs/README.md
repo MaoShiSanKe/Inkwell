@@ -1,137 +1,151 @@
 # Inkwell 文档索引
 
-本目录用于存放 **仓库内一手文档**。
+本目录存放 **仓库内一手文档**。
 
-目标不是替代未来的独立文档站，而是保证：
+当前仓库已经有独立文档站：
+- 文档站：`https://maoshisanke.github.io/Inkwell/`
+- 展示层：`VitePress + GitHub Pages`
+- 事实来源：仓库中的 Markdown
 
-- 仓库访客可以直接获得必要信息
-- 开发者在本仓库内即可完成开发与部署
-- 后续迁移到独立文档站时，有清晰的内容来源与结构基础
+因此这里的目标不是再维护第二份说明，而是让你在仓库内也能快速找到：
+- 该先读哪份文档
+- 改某类能力时该看哪里
+- 改完后至少要验证什么
+- 哪些改动必须同步文档
 
-## 当前文档结构
+## 1. 建议怎么使用这份索引
 
-### 面向仓库首页访客
-- [`../README.md`](../README.md)
-  - 项目定位
-  - 核心能力
-  - 快速开始
-  - 常用命令
-  - 部署入口
-
-### 面向部署与运维
-- [`deployment.md`](deployment.md)
-  - Linux VPS 宿主机部署
-  - Docker / Compose 单机部署
-  - HTTPS / certbot / Nginx 说明
-  - 搜索重建、备份恢复、定时发布运维流程
-
-### 面向故障排查
-- [`troubleshooting.md`](troubleshooting.md)
-  - standalone 静态资源 404
-  - HTTPS / Secure cookie 登录问题
-  - 低内存构建 OOM
-  - 搜索重建与备份恢复常见问题
-
-### 面向常见问题
-- [`faq.md`](faq.md)
-  - 项目定位
-  - Docker / VPS 选择
-  - HTTPS 与证书责任边界
-  - 当前上线成熟度判断
-
-### 面向开发接手与贡献
-- [`architecture.md`](architecture.md)
-  - 目录结构与核心链路
-  - 鉴权、设置、搜索、备份恢复入口
-- [`development.md`](development.md)
-  - 本地开发流程
-  - 常见改动路径
-  - 提交前检查
-- [`environment.md`](environment.md)
-  - 环境变量职责
-  - env 与 settings 表边界
-- [`release-checklist.md`](release-checklist.md)
-  - 发布前检查
-  - 上线后 smoke 项
-- [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
-  - 开发环境
-  - 文档同步规则
-  - 敏感信息与部署改动注意事项
-
-### 面向文档体系规划
-- [`ROADMAP.md`](ROADMAP.md)
-  - 独立文档站演进目标
-  - 推荐框架
-  - 信息架构建议
-  - 仓库文档与 docs site 的分工
-
-### 面向独立文档站展示
-当前文档站推荐以这些 Markdown 为 source of truth：
-- `../README.md`
-- `deployment.md`
-- `troubleshooting.md`
-- `faq.md`
-- `architecture.md`
-- `development.md`
-- `environment.md`
-- `release-checklist.md`
-- `../CONTRIBUTING.md`
-
-文档站只负责展示，不维护第二份正文。原始 Markdown 仍应优先在仓库中更新。
-'}]} to=functions.Edit  大发快三如何ignore? code ല്ലി՞նչырқәтәassistant to=functions.Edit commentary  手机版天天中彩票 ￣奇米影视assistant to=functions.Edit մեկնաբանություն  彩神争霸高  тәшкиanalysis to=functions.Edit  天天中彩票派奖 เงินไทยฟรี{
-## 推荐阅读顺序
-
-### 如果你是第一次接触 Inkwell
-1. 先看 [`../README.md`](../README.md)
-2. 再看 [`deployment.md`](deployment.md)
-3. 最后看 [`ROADMAP.md`](ROADMAP.md)
-
-### 如果你要自己部署博客
+如果你只是第一次来到仓库，先从：
 1. [`../README.md`](../README.md)
 2. [`deployment.md`](deployment.md)
+3. 本文档 `docs/README.md`
 
-### 如果你要参与文档体系建设
-1. [`ROADMAP.md`](ROADMAP.md)
+如果你是未来的维护者、贡献者或很久之后回来的自己，建议把这里当作：
+- 文档导航页
+- 维护入口页
+- change type → 文档入口 的跳转表
+
+## 2. 按目标选择阅读路径
+
+### 2.1 第一次了解 Inkwell
+1. [`../README.md`](../README.md)
+2. [`faq.md`](faq.md)
+3. [`deployment.md`](deployment.md)
+
+### 2.2 准备本地开发
+1. [`development.md`](development.md)
+2. [`environment.md`](environment.md)
+3. [`architecture.md`](architecture.md)
+
+### 2.3 长时间搁置后重新接手
+1. [`../README.md`](../README.md)
 2. [`deployment.md`](deployment.md)
-3. 回到 [`../README.md`](../README.md) 做首页导航对齐
+3. [`troubleshooting.md`](troubleshooting.md)
+4. [`architecture.md`](architecture.md)
+5. [`development.md`](development.md)
+6. [`release-checklist.md`](release-checklist.md)
 
-## 当前文档策略
+### 2.4 准备扩展功能或提交 PR
+1. [`development.md`](development.md)
+2. [`architecture.md`](architecture.md)
+3. [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
+4. 再按改动类型进入下方对应详细手册
 
-当前采用“两层结构”：
+## 3. 当前文档地图
+
+### 3.1 项目与部署
+- [`../README.md`](../README.md)
+  - 项目定位、能力边界、快速开始、常用命令
+- [`deployment.md`](deployment.md)
+  - VPS / Docker 部署、HTTPS、运维命令、生产注意事项
+- [`troubleshooting.md`](troubleshooting.md)
+  - 构建失败、登录异常、搜索与恢复问题排查
+- [`faq.md`](faq.md)
+  - 项目定位、部署方式、成熟度、文档站现状
+
+### 3.2 开发与维护总览
+- [`architecture.md`](architecture.md)
+  - 系统分层、执行边界、核心链路、source of truth
+- [`development.md`](development.md)
+  - 本地开发流程、change type 入口、最低验证建议
+- [`environment.md`](environment.md)
+  - `.env` 与 `settings` 边界、secret 维护规则、配置排查
+- [`release-checklist.md`](release-checklist.md)
+  - 发布前检查、专项变更检查、上线后 smoke
+- [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
+  - 贡献流程、最小验证、文档同步与敏感信息规则
+
+### 3.3 扩展指南
+- [`admin-extension-workflow.md`](admin-extension-workflow.md)
+  - 如何新增/改造后台模块
+- [`settings-system.md`](settings-system.md)
+  - 如何新增 DB-backed setting，哪些配置不该进 `settings`
+- [`schema-and-migrations.md`](schema-and-migrations.md)
+  - schema 改动的 blast radius、迁移流程、连带影响
+- [`execution-boundaries.md`](execution-boundaries.md)
+  - server action / route handler / CLI / service layer 如何分工
+- [`testing-strategy.md`](testing-strategy.md)
+  - 改完后至少该跑哪些测试、什么时候补 integration/browser
+
+### 3.4 文档体系
+- [`ROADMAP.md`](ROADMAP.md)
+  - 文档体系演进方向与 docs site 定位
+
+## 4. 如果你要改 X，从哪里开始看
+
+| 你的改动 | 先看哪份总览 | 再看哪份详细手册 | 最低还要检查什么 |
+| --- | --- | --- | --- |
+| 新增后台模块、扩展后台 CRUD | [`development.md`](development.md) | [`admin-extension-workflow.md`](admin-extension-workflow.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
+| 新增站点设置、调整后台设置页 | [`environment.md`](environment.md) | [`settings-system.md`](settings-system.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
+| 改 schema / relation / migration | [`development.md`](development.md) | [`schema-and-migrations.md`](schema-and-migrations.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
+| 判断该用 server action、API 还是 CLI | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | 对应入口层文档与测试 |
+| 不确定该跑什么测试 | [`development.md`](development.md) | [`testing-strategy.md`](testing-strategy.md) | [`release-checklist.md`](release-checklist.md) |
+| 改部署、HTTPS、systemd、反向代理 | [`deployment.md`](deployment.md) | [`troubleshooting.md`](troubleshooting.md) | [`release-checklist.md`](release-checklist.md) |
+| 改搜索、备份恢复、定时发布 | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | [`testing-strategy.md`](testing-strategy.md)、[`deployment.md`](deployment.md) |
+| 改文档站导航或仓库文档结构 | 本文档 | [`ROADMAP.md`](ROADMAP.md) | `npm run docs:build` |
+
+## 5. 维护时的最小原则
+
+### 5.1 先看总览，再看专项手册
+高层文档负责告诉你“去哪改、影响到哪里”；详细手册负责告诉你“具体怎么改”。
+
+### 5.2 仓库 Markdown 是 source of truth
+不要在 docs site 再维护第二份正文。
+
+### 5.3 改代码时同步改文档
+只要行为、入口、配置、验证方式发生变化，就应该同步更新对应文档。
+
+### 5.4 不确定验证范围时，先看测试策略与发布检查
+优先参考：
+- [`testing-strategy.md`](testing-strategy.md)
+- [`release-checklist.md`](release-checklist.md)
+
+## 6. 文档站与仓库文档的分工
+
+当前采用两层结构：
 
 ### 第 1 层：仓库内文档
 适合：
-
-- 项目首页介绍
-- 安装与快速开始
-- 部署与运维一手说明
-- 开发者必需信息
-
-特点：
-
-- 和代码一起版本化
-- PR 同步更新
-- 适合做事实来源与最小完备说明
+- 与代码版本强绑定的说明
+- 开发者与维护者必须了解的规则
+- PR 必须同步更新的一手事实
 
 ### 第 2 层：独立文档站
 适合：
+- 展示、导航、搜索
+- 更舒服的阅读体验
+- 面向公开访客的入口聚合
 
-- 面向大众的完整使用手册
-- 多页教程 / FAQ / 故障排查
-- 公开访问时的导航、搜索与更友好的阅读体验
-- 后续继续演进为更完整的文档门户
+结论：
+> **先更新仓库 Markdown，再让 docs site 展示它。**
 
-当前仓库已通过 GitHub Pages + VitePress 提供独立文档站；仍建议继续保持仓库 Markdown 为 source of truth，再由文档站负责展示与导航。
+## 7. 当前推荐阅读顺序
 
-## 当前主要缺口
+如果你现在就要继续维护 Inkwell，推荐按顺序读：
 
-虽然现在的文档已经足以支撑工程师部署和验证，但如果目标是面向大众公开发布，仍建议优先补齐：
-
-- 更细的部署步骤拆解
-- Nginx / Caddy 反向代理示例
-- HTTPS / 证书续期章节
-- 常见故障排查
-- 首次初始化与升级流程
-- FAQ
-
-这些内容将优先沉淀在仓库文档中，再迁移到未来 docs site。
+1. [`../README.md`](../README.md)
+2. [`deployment.md`](deployment.md)
+3. [`architecture.md`](architecture.md)
+4. [`development.md`](development.md)
+5. 按改动类型进入对应详细手册
+6. 发版前回到 [`release-checklist.md`](release-checklist.md)

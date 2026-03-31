@@ -2,6 +2,14 @@
 
 本文档面向未来维护者与贡献者，说明如何在本地恢复开发环境、修改代码并安全提交。
 
+如果你是第一次接手本仓库，建议先看：
+1. `README.md`
+2. `docs/deployment.md`
+3. `docs/architecture.md`
+4. 本文档
+
+如果你已经知道要改什么，但不确定该从哪里入手，优先看本文第 4 节的“按改动类型找入口”。
+
 ## 1. 本地开发最小前提
 
 至少需要：
@@ -21,6 +29,8 @@ NEXTAUTH_SECRET=
 NEXTAUTH_URL=
 INTERNAL_CRON_SECRET=
 ```
+
+配置归属与边界建议继续看：`docs/environment.md`
 
 ## 2. 首次启动顺序
 
@@ -94,19 +104,158 @@ npm run docs:build
 npm run docs:preview
 ```
 
-## 4. 常见开发改动路径
+## 4. 按改动类型找入口
 
-### 4.1 改前台页面
+这是未来维护时最有用的一节：先判断你改动的类型，再进入对应文档，而不是一上来就在代码里盲找。
+
+### 4.1 新增或改造后台模块
+通常会涉及：
+- `app/(admin)/[adminPath]/**`
+- `components/admin/**`
+- `lib/admin/**`
+
+先看：
+- `docs/admin-extension-workflow.md`
+- `docs/execution-boundaries.md`
+
+至少验证：
+```bash
+npm run test
+npm run test:integration
+```
+
+如果影响真实交互流程，再补：
+```bash
+npm run test:browser
+```
+
+### 4.2 新增或调整 DB-backed setting
+通常会涉及：
+- `lib/settings-config.ts`
+- `lib/settings.ts`
+- `lib/admin/settings.ts`
+- `components/admin/settings-form.tsx`
+- `app/(admin)/[adminPath]/(protected)/settings/actions.ts`
+
+先看：
+- `docs/settings-system.md`
+- `docs/environment.md`
+
+建议验证：
+```bash
+npm run test
+npm run test:integration
+npm run test:browser
+```
+
+### 4.3 修改 schema / migration / relation
+通常会涉及：
+- `lib/db/schema/**`
+- `lib/db/schema/index.ts`
+- `lib/db/migrations/**`
+
+先看：
+- `docs/schema-and-migrations.md`
+- `docs/testing-strategy.md`
+
+最低流程：
+```bash
+npm run db:generate
+npm run db:migrate
+npm run type-check
+npm run lint
+npm run test
+```
+
+### 4.4 判断该用 server action、route handler 还是 CLI
+通常会涉及：
+- `app/(admin)/**/actions.ts`
+- `app/api/**`
+- `scripts/*.ts`
+- `lib/**`
+
+先看：
+- `docs/execution-boundaries.md`
+- `docs/architecture.md`
+
+### 4.5 前台页面或公开交互改动
 通常会涉及：
 - `app/(blog)/**`
 - `components/blog/**`
 - `lib/blog/**`
 
-如果改的是文章、归档、搜索、SEO 等能力，通常还要检查：
-- `tests/integration/**`
-- `tests/browser/**`
+建议先看：
+- `docs/testing-strategy.md`
+- `docs/architecture.md`
 
-### 4.2 改后台页面
+至少验证：
+```bash
+npm run test
+```
+
+如有真实用户交互，再补：
+```bash
+npm run test:browser
+```
+
+### 4.6 搜索 / 备份恢复 / 定时发布 / 运维脚本改动
+通常会涉及：
+- `lib/search/**`
+- `lib/backup/**`
+- `scripts/**`
+- `app/api/internal/**`
+
+先看：
+- `docs/execution-boundaries.md`
+- `docs/testing-strategy.md`
+- `docs/deployment.md`
+
+至少验证：
+```bash
+npm run test
+npm run test:integration
+```
+
+### 4.7 纯文档或 docs site 改动
+通常会涉及：
+- `README.md`
+- `docs/**`
+- `.vitepress/config.ts`
+
+先看：
+- `docs/README.md`
+- `docs/ROADMAP.md`
+
+最低验证：
+```bash
+npm run docs:build
+```
+
+## 5. change type 决策树
+
+如果你不确定该从哪层开始，可以按下面这个顺序判断：
+
+### 场景 A：只是页面读数据展示
+优先检查：page / component / query 层
+
+### 场景 B：后台表单提交或管理操作
+优先检查：server action + `lib/admin/**`
+
+### 场景 C：需要稳定 HTTP 接口给外部系统调用
+优先检查：`app/api/**` + shared service
+
+### 场景 D：需要宿主机 cron 或手动命令入口
+优先检查：`scripts/*.ts` + shared service
+
+### 场景 E：需要新增持久化结构
+优先检查：`lib/db/schema/**` + `docs/schema-and-migrations.md`
+
+### 场景 F：需要新增站点运行时设置
+优先检查：`docs/settings-system.md`，先判断它到底该进 `.env` 还是 `settings`
+
+## 6. 常见开发改动路径
+
+### 6.1 改后台页面
 通常会涉及：
 - `app/(admin)/[adminPath]/**`
 - `components/admin/**`
@@ -121,7 +270,7 @@ npm run docs:preview
 - `docs/deployment.md`
 - `docs/troubleshooting.md`
 
-### 4.3 改 API 路由
+### 6.2 改 API 路由
 通常会涉及：
 - `app/api/**`
 - 对应业务服务层 `lib/**`
@@ -131,19 +280,7 @@ npm run docs:preview
 - `INTERNAL_CRON_SECRET`
 - 文档同步
 
-### 4.4 改数据库 schema
-通常会涉及：
-- `lib/db/schema/**`
-- 生成迁移后新增 `lib/db/migrations/**`
-
-流程固定：
-1. 修改 schema
-2. 运行 `npm run db:generate`
-3. 不手改自动生成迁移
-4. 运行 `npm run db:migrate`
-5. 补测试与文档
-
-### 4.5 改搜索链路
+### 6.3 改搜索链路
 通常会涉及：
 - `lib/search/**`
 - `lib/meilisearch.ts`
@@ -153,7 +290,7 @@ npm run docs:preview
 - CLI 路径不要重新依赖 `server-only` 的应用 DB 入口
 - 搜索恢复链路要考虑 backup/import 之后的 reindex
 
-### 4.6 改备份恢复链路
+### 6.4 改备份恢复链路
 通常会涉及：
 - `lib/backup/export.ts`
 - `lib/backup/import.ts`
@@ -166,7 +303,7 @@ npm run docs:preview
 - 要考虑恢复后搜索重建
 - 文档必须同步更新
 
-## 5. 提交前最低检查
+## 7. 提交前最低检查
 
 至少执行：
 ```bash
@@ -186,9 +323,11 @@ npm run test:browser
 - 部署链路
 - 后台流程
 - 前台公开交互
-- 鉴权/设置/搜索/备份恢复
+- 鉴权 / settings / 搜索 / 备份恢复
 
-## 6. 哪些改动必须同步文档
+更细规则见：`docs/testing-strategy.md`
+
+## 8. 哪些改动必须同步文档
 
 只要涉及以下任一内容，就需要同步改文档：
 - 新增 CLI 命令
@@ -198,6 +337,7 @@ npm run test:browser
 - 修改后台路径、登录、HTTPS、反向代理行为
 - 引入新的公开能力或删除旧能力
 - 新增开发者必须知道的工作流
+- 改变测试建议、执行边界或维护流程
 
 优先检查这些文档：
 - `README.md`
@@ -208,13 +348,14 @@ npm run test:browser
 - `docs/development.md`
 - `docs/environment.md`
 - `docs/release-checklist.md`
+- 对应专项手册
 
-## 7. 常见易忘点
+## 9. 常见易忘点
 
-### 7.1 后台登录依赖 HTTPS
+### 9.1 后台登录依赖 HTTPS
 生产环境后台 cookie 使用 `Secure`，公网正式部署必须启用 HTTPS。
 
-### 7.2 standalone 宿主机部署需要补齐静态资源
+### 9.2 standalone 宿主机部署需要补齐静态资源
 构建后要把：
 - `public`
 - `.next/static`
@@ -224,7 +365,7 @@ npm run test:browser
 - 首页 200
 - 但 CSS / JS 404
 
-### 7.3 搜索索引不是备份内容的一部分
+### 9.3 搜索索引不是备份内容的一部分
 backup/export 不包含 Meilisearch 索引。
 恢复后通常需要：
 ```bash
@@ -235,10 +376,10 @@ npm run search:reindex-posts
 npm run backup:import -- --input ./backup --force --reindex-search
 ```
 
-### 7.4 设置有一部分不在 `.env`
+### 9.4 设置有一部分不在 `.env`
 很多运行期配置来自数据库 `settings` 表，不要误以为所有东西都在 `.env.local`。
 
-## 8. 文档站维护原则
+## 10. 文档站维护原则
 
 当前文档站使用 VitePress + GitHub Pages。
 
@@ -247,7 +388,7 @@ npm run backup:import -- --input ./backup --force --reindex-search
 - 文档站只是展示层，不维护第二份正文
 - 修改 docs 内容时，优先改原始 Markdown，再由文档站重新构建
 
-## 9. 接手开发时的推荐顺序
+## 11. 接手开发时的推荐顺序
 
 如果你已经很久没碰项目，建议按这个顺序恢复上下文：
 
@@ -258,3 +399,4 @@ npm run backup:import -- --input ./backup --force --reindex-search
 5. 本文档 `docs/development.md`
 6. `docs/environment.md`
 7. `docs/release-checklist.md`
+8. 再按改动类型进入专项手册
