@@ -50,7 +50,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5",
-    "vitepress": "^2.0.0-alpha.12",
+    "vitepress": "2.0.0-alpha.17",
     "vitest": "^4.1.1"
   }
 }
