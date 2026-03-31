@@ -320,12 +320,13 @@ npm run search:reindex-posts
 4. [`docs/upgrade-and-rollback.md`](docs/upgrade-and-rollback.md) — 版本升级、失败回滚与恢复顺序
 5. [`docs/operations-reference.md`](docs/operations-reference.md) — CLI、internal API、恢复与验证命令速查
 6. [`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md) — Nginx / Caddy 反向代理与 HTTPS 示例
-7. [`docs/architecture.md`](docs/architecture.md) — 系统分层、执行边界、核心链路
-8. [`docs/development.md`](docs/development.md) — 本地开发流程、按改动类型找入口
-9. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
-10. [`docs/faq.md`](docs/faq.md) — 常见问题
-11. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
-12. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
+7. [`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md) — 监控、日志入口与最小巡检手册
+8. [`docs/architecture.md`](docs/architecture.md) — 系统分层、执行边界、核心链路
+9. [`docs/development.md`](docs/development.md) — 本地开发流程、按改动类型找入口
+10. [`docs/troubleshooting.md`](docs/troubleshooting.md) — 常见部署与运行故障排查
+11. [`docs/faq.md`](docs/faq.md) — 常见问题
+12. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
+13. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
 
 如果你已经确定要改哪类内容，可以直接看：
 
@@ -337,6 +338,7 @@ npm run search:reindex-posts
 - 升级与回滚：[`docs/upgrade-and-rollback.md`](docs/upgrade-and-rollback.md)
 - 运维参考：[`docs/operations-reference.md`](docs/operations-reference.md)
 - 反向代理示例：[`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md)
+- 监控与日志：[`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md)
 
 ## 当前边界与已知非目标
 

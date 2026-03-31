@@ -162,11 +162,12 @@
 - `升级与回滚流程` 已补到 `docs/upgrade-and-rollback.md`
 - `参考命令与日常维护索引` 已补到 `docs/operations-reference.md`
 - `反向代理示例` 已补到 `docs/reverse-proxy-examples.md`
+- `监控与日志说明` 已补到 `docs/monitoring-and-logs.md`
 
 当前这条线更适合继续补：
 - 更细的巡检/排障案例
-- 更系统的监控与日志说明
 - 首次部署后的巡检/验收清单
+- 更明确的发布后值班/回看建议
 
 ### 7.2 公开入口继续打磨
 - 文档首页与上手路径继续打磨
