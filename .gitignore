@@ -18,6 +18,10 @@
 # next.js
 /.next/
 /out/
+/.vitepress/cache/
+/.vitepress/dist/
+/site/.vitepress/cache/
+/site/.vitepress/dist/
 
 # production
 /build

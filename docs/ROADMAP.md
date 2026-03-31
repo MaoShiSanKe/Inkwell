@@ -173,18 +173,22 @@ Docusaurus 也很强，尤其适合：
 当前已经在做这一阶段。
 
 ### 阶段 2：建立 VitePress 文档站骨架
-建议未来单独建一个文档站目录或独立仓库，例如：
+当前建议直接在主仓库内建设轻量文档站展示层：
 
-- `docs-site/`（同仓库）
-- 或独立仓库 `inkwell-docs`
+- 使用 `VitePress`
+- 使用 `GitHub Pages`
+- 仓库 Markdown 继续作为 source of truth
+- 文档站负责导航、搜索与展示
 
-首批迁移内容：
+首批接入内容：
 
 - Quick Start
 - Deployment
 - Backup / Restore
 - Search
 - FAQ
+- Contributing
+- 开发接手文档
 
 ### 阶段 3：形成正式公开文档门户
 目标：
@@ -196,27 +200,40 @@ Docusaurus 也很强，尤其适合：
 - 版本演进策略
 - 对外公开部署说明
 
-## 7. 现在仓库里应优先补的文档项
+## 7. 当前优先事项
 
-在真正开建 docs site 之前，仓库内建议优先继续补：
+在 docs site 基础设施接入后，仓库内建议优先继续补：
 
-1. `docs/deployment.md`
-   - Nginx 示例
-   - certbot / HTTPS 示例
-   - 故障排查
+1. `docs/architecture.md`
+   - 目录结构
+   - 核心链路入口
+   - source of truth 地图
 
-2. `README.md`
-   - 更完整的功能概览
-   - 快速开始
-   - 文档导航
+2. `docs/development.md`
+   - 本地开发流程
+   - 常见改动路径
+   - 提交前检查
 
-3. 新增 FAQ / Troubleshooting
-   - 后台登录问题
-   - standalone 静态资源 404
-   - 低内存构建 OOM
-   - 搜索重建问题
-   - 备份导入常见报错
+3. `docs/environment.md`
+   - 环境变量职责
+   - env 与 settings 表边界
 
+4. `docs/release-checklist.md`
+   - 发布前检查
+   - smoke 验证
+   - 文档同步检查
+
+5. 继续补部署与运维细节
+   - Nginx / Caddy 示例
+   - 升级与回滚流程
+   - 更完整 FAQ / Troubleshooting
+
+6. 完成 GitHub Pages 首次发布与验收
+   - workflow 成功
+   - Pages 地址正常访问
+   - 站内导航与搜索可用
+
+这些内容最直接决定未来的自己和外部贡献者能否快速接手。
 ## 8. 最终建议
 
 如果你的目标是：
@@ -225,9 +242,9 @@ Docusaurus 也很强，尤其适合：
 
 最合理的路线是：
 
-- **现在**：先把仓库内文档做扎实
-- **下一阶段**：采用 **VitePress** 建独立文档站
-- **之后**：将部署、使用、运维与 FAQ 正式迁移为公开门户
+- **现在**：继续完善仓库内文档，并通过 **VitePress + GitHub Pages** 提供独立文档站
+- **下一阶段**：补齐开发接手、参考与发布检查文档
+- **之后**：将部署、使用、运维与 FAQ 演进为更完整的公开门户与参考体系
 
 这条路线能兼顾：
 

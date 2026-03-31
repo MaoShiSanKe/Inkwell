@@ -132,14 +132,22 @@ npm run test:browser
 
 ## 文档站相关贡献建议
 
-当前仓库尚未引入独立 docs site 框架。
+当前仓库已接入独立 docs site 基础设施（VitePress + GitHub Pages）。
 
-如果你准备推动文档站建设，请先阅读：
+如果你准备推动文档体系建设，请先阅读：
 
 - `docs/README.md`
 - `docs/ROADMAP.md`
+- `docs/architecture.md`
+- `docs/development.md`
 
-当前推荐路线是先把仓库内文档做扎实，再建设独立文档站。
+维护原则：
+
+- 仓库中的 Markdown 是 source of truth
+- 文档站负责展示、导航与搜索
+- 不要维护第二份重复正文
+- 修改文档后，至少执行一次 `npm run docs:build`
+- 如需本地预览，使用 `npm run docs:dev` 或 `npm run docs:preview`。
 
 ## 提交风格
 

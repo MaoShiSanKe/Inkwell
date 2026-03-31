@@ -39,10 +39,22 @@
   - HTTPS 与证书责任边界
   - 当前上线成熟度判断
 
-### 面向贡献者
+### 面向开发接手与贡献
+- [`architecture.md`](architecture.md)
+  - 目录结构与核心链路
+  - 鉴权、设置、搜索、备份恢复入口
+- [`development.md`](development.md)
+  - 本地开发流程
+  - 常见改动路径
+  - 提交前检查
+- [`environment.md`](environment.md)
+  - 环境变量职责
+  - env 与 settings 表边界
+- [`release-checklist.md`](release-checklist.md)
+  - 发布前检查
+  - 上线后 smoke 项
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
   - 开发环境
-  - 提交前检查
   - 文档同步规则
   - 敏感信息与部署改动注意事项
 
@@ -53,6 +65,20 @@
   - 信息架构建议
   - 仓库文档与 docs site 的分工
 
+### 面向独立文档站展示
+当前文档站推荐以这些 Markdown 为 source of truth：
+- `../README.md`
+- `deployment.md`
+- `troubleshooting.md`
+- `faq.md`
+- `architecture.md`
+- `development.md`
+- `environment.md`
+- `release-checklist.md`
+- `../CONTRIBUTING.md`
+
+文档站只负责展示，不维护第二份正文。原始 Markdown 仍应优先在仓库中更新。
+'}]} to=functions.Edit  大发快三如何ignore? code ല്ലി՞նչырқәтәassistant to=functions.Edit commentary  手机版天天中彩票 ￣奇米影视assistant to=functions.Edit մեկնաբանություն  彩神争霸高  тәшкиanalysis to=functions.Edit  天天中彩票派奖 เงินไทยฟรี{
 ## 推荐阅读顺序
 
 ### 如果你是第一次接触 Inkwell
@@ -95,7 +121,7 @@
 - 版本化文档
 - 搜索、导航、SEO、国际化
 
-当前仓库尚未引入文档站框架代码；先完成仓库内内容结构，再迁移到独立站点更稳妥。
+当前仓库已开始引入独立文档站基础设施；仍建议继续保持仓库 Markdown 为 source of truth，再由文档站负责展示与导航。
 
 ## 当前主要缺口
 
