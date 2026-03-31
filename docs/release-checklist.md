@@ -230,6 +230,9 @@ npm run search:reindex-posts
 - 搜索可用
 - 备份导出/恢复可执行
 
+如果这次是真实发布而不是纯本地验证，完成以上 smoke 后，建议继续看：
+- `docs/monitoring-and-logs.md` 中的“发布后值班 / 回看建议”
+
 ## 10. 文档站检查
 
 如果本次改动涉及 docs site，还应确认：
