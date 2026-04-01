@@ -198,14 +198,14 @@ npm run backup:import -- --input ./backup --force --reindex-search
 - 仓库 Markdown 仍作为 source of truth
 - 文档站使用 `VitePress`
 - 托管在 `GitHub Pages`
-- README、部署、FAQ、故障排查与开发接手文档已接入展示层
-- 升级与回滚指南已补到 `docs/upgrade-and-rollback.md`
+- README、docs 首页、部署、FAQ、故障排查与开发接手文档已接入展示层
+- README 与 `docs/README.md` 的高频入口已经前移，首次访客与未来维护者更容易找到起点
 
 当前仍在继续完善：
 
-- 文档首页与公开上手路径
+- 文档首页与公开上手路径继续打磨
 - FAQ / Troubleshooting 继续补充
-- 更多维护参考型文档
+- 更多长期维护参考型文档
 
 当前已补：
 - `docs/upgrade-and-rollback.md`
@@ -214,6 +214,7 @@ npm run backup:import -- --input ./backup --force --reindex-search
 - `docs/monitoring-and-logs.md`
 - `docs/first-deployment-checklist.md`
 - `docs/troubleshooting.md` 的细化排障案例
+- 发布后回看建议与索引交叉引用
 
 ## 为什么推荐 VitePress？
 

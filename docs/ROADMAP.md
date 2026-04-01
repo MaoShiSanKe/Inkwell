@@ -151,33 +151,44 @@
 - 测试策略：`docs/testing-strategy.md`
 - docs site 导航已同步暴露这些手册
 
+### 阶段 5：补齐部署与运维的可执行参考页
+已完成：
+- 升级与回滚：`docs/upgrade-and-rollback.md`
+- 运维参考索引：`docs/operations-reference.md`
+- 反向代理示例：`docs/reverse-proxy-examples.md`
+- 监控与日志：`docs/monitoring-and-logs.md`
+- 首次部署验收：`docs/first-deployment-checklist.md`
+- 故障排查案例细化：`docs/troubleshooting.md`
+- 发布后回看建议与 FAQ / 索引交叉引用已补齐
+
 ## 7. 当前优先事项
 
 当前更值得继续补的内容是：
 
-### 7.1 部署与运维继续下沉
+### 7.1 公开入口继续打磨
 说明：
-- `升级与回滚流程` 已补到 `docs/upgrade-and-rollback.md`
-- `参考命令与日常维护索引` 已补到 `docs/operations-reference.md`
-- `反向代理示例` 已补到 `docs/reverse-proxy-examples.md`
-- `监控与日志说明` 已补到 `docs/monitoring-and-logs.md`
-- `首次部署后的巡检/验收清单` 已补到 `docs/first-deployment-checklist.md`
-- `更细的运维排障案例` 已补到 `docs/troubleshooting.md`
+- README 与 `docs/README.md` 已继续前移高频入口
+- 已把部署、部署后验收、开发接手、贡献入口放到更靠前的位置
+- 文档首页与仓库首页之间的阅读路径已经比之前更短
 
 当前这条线更适合继续补：
-- 更明确的发布后值班/回看建议
-- 更细的长期维护参考页
-- internal API / CLI 能力索引式总览与交叉导航
+- 进一步减少“知道文档存在”和“找到正确文档”之间的摩擦
+- 把高频入口与长期维护入口分层得更明显
+- 继续同步 ROADMAP / FAQ / 首页现状，避免状态描述落后于实际文档
 
-### 7.2 公开入口继续打磨
-- 文档首页与上手路径继续打磨
-- README 与 docs 首页继续减少“知道文档存在”和“找到合适文档”之间的摩擦
-
-### 7.3 长期维护参考继续补齐
+### 7.2 长期维护参考继续补齐
 优先考虑未来仍可能缺的参考型文档，例如：
-- 参考命令清单
-- internal API / CLI 能力索引
+- 更细的长期维护参考页
 - 常见维护决策记录
+- 更系统的交叉导航与维护路径说明
+
+### 7.3 不再优先补的运维空白
+这一轮部署与运维基础文档已经基本成型，当前不再优先重复建设：
+- 升级与回滚主文档
+- 首次部署验收主文档
+- 运维命令总览主文档
+- 反向代理基础示例
+- 监控 / 日志基础入口
 
 ## 8. 不再优先做什么
 
