@@ -98,10 +98,10 @@
   - 发布前检查、专项变更检查、上线后 smoke
 - [`maintenance-decisions.md`](maintenance-decisions.md)
   - env vs settings、CLI vs internal API、reindex vs rollback 等高频维护判断
-- [`maintenance-field-template.md`](maintenance-field-template.md)
-  - 排障、迁移、恢复、交接时的最小现场信息记录模板
 - [`handoff-checklist.md`](handoff-checklist.md)
   - 暂停维护、交接前最少需要确认并留下的实例事实与风险
+- [`maintenance-field-template.md`](maintenance-field-template.md)
+  - 排障、迁移、恢复、交接时的最小现场信息记录模板
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
   - 贡献流程、最小验证、文档同步与敏感信息规则
 
