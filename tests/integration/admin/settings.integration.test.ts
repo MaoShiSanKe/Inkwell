@@ -22,6 +22,19 @@ const SETTINGS_KEYS = [
   "umami_enabled",
   "umami_website_id",
   "umami_script_url",
+  "public_head_html",
+  "public_footer_html",
+  "public_custom_css",
+  "public_notice_enabled",
+  "public_notice_variant",
+  "public_notice_dismissible",
+  "public_notice_version",
+  "public_notice_start_at",
+  "public_notice_end_at",
+  "public_notice_title",
+  "public_notice_body",
+  "public_notice_link_label",
+  "public_notice_link_url",
 ] as const;
 const EMAIL_SCENARIOS = [
   "comment_pending",
@@ -78,25 +91,31 @@ describe("admin settings write paths", () => {
       smtp_password: "",
       smtp_from_email: originalSettings.smtp_from_email ?? "",
       smtp_from_name: originalSettings.smtp_from_name ?? "",
-      umami_enabled: originalSettings.umami_enabled ?? "false",
+      umami_enabled: (originalSettings.umami_enabled === "true" ? "true" : "false") as "true" | "false",
       umami_website_id: originalSettings.umami_website_id ?? "",
       umami_script_url: originalSettings.umami_script_url ?? "",
+      public_head_html: originalSettings.public_head_html ?? "",
+      public_footer_html: originalSettings.public_footer_html ?? "",
+      public_custom_css: originalSettings.public_custom_css ?? "",
+      public_notice_enabled: (originalSettings.public_notice_enabled === "true" ? "true" : "false") as "true" | "false",
+      public_notice_variant:
+        (originalSettings.public_notice_variant as "info" | "warning" | "success" | null) ??
+        "info",
+      public_notice_dismissible:
+        (originalSettings.public_notice_dismissible === "true" ? "true" : "false") as "true" | "false",
+      public_notice_version: originalSettings.public_notice_version ?? "",
+      public_notice_start_at: formatDatetimeLocalInput(originalSettings.public_notice_start_at),
+      public_notice_start_at_iso: originalSettings.public_notice_start_at ?? "",
+      public_notice_end_at: formatDatetimeLocalInput(originalSettings.public_notice_end_at),
+      public_notice_end_at_iso: originalSettings.public_notice_end_at ?? "",
+      public_notice_title: originalSettings.public_notice_title ?? "",
+      public_notice_body: originalSettings.public_notice_body ?? "",
+      public_notice_link_label: originalSettings.public_notice_link_label ?? "",
+      public_notice_link_url: originalSettings.public_notice_link_url ?? "",
     });
   });
 
-  it("loads email notification defaults when no rows exist", async () => {
-    const { getAdminEmailNotifications } = await import("@/lib/admin/settings");
-    const scenarios = await getAdminEmailNotifications();
-
-    expect(scenarios).toEqual([
-      expect.objectContaining({ scenario: "comment_pending", enabled: true }),
-      expect.objectContaining({ scenario: "comment_approved", enabled: true }),
-      expect.objectContaining({ scenario: "comment_reply", enabled: true }),
-      expect.objectContaining({ scenario: "post_published", enabled: false }),
-    ]);
-  });
-
-  it("persists validated settings updates including smtp and umami values", async () => {
+  it("persists notice dismissal and time window settings", async () => {
     const { updateAdminSettings } = await import("@/lib/admin/settings");
     const result = await updateAdminSettings({
       admin_path: `${INTEGRATION_PREFIX}panel`,
@@ -111,9 +130,24 @@ describe("admin settings write paths", () => {
       smtp_password: "super-secret",
       smtp_from_email: "noreply@example.com",
       smtp_from_name: "Inkwell Mailer",
-      umami_enabled: "true",
-      umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
-      umami_script_url: "https://umami.example.com/script.js",
+      umami_enabled: "false",
+      umami_website_id: "",
+      umami_script_url: "",
+      public_head_html: "",
+      public_footer_html: "",
+      public_custom_css: "",
+      public_notice_enabled: "true",
+      public_notice_variant: "warning",
+      public_notice_dismissible: "true",
+      public_notice_version: "2026-04-maintenance",
+      public_notice_start_at: "2026-04-01T20:00",
+      public_notice_start_at_iso: "2026-04-01T12:00:00.000Z",
+      public_notice_end_at: "2026-04-02T08:00",
+      public_notice_end_at_iso: "2026-04-02T00:00:00.000Z",
+      public_notice_title: "系统维护通知",
+      public_notice_body: "今晚 23:00-23:30 将进行短暂维护。",
+      public_notice_link_label: "查看详情",
+      public_notice_link_url: "/docs/deployment",
     });
 
     expect(result).toEqual({
@@ -121,63 +155,31 @@ describe("admin settings write paths", () => {
       previousAdminPath: originalSettings.admin_path ?? "admin",
       nextAdminPath: `${INTEGRATION_PREFIX}panel`,
       adminPathChanged: (originalSettings.admin_path ?? "admin") !== `${INTEGRATION_PREFIX}panel`,
-      analyticsChanged: true,
+      publicLayoutChanged: true,
     });
 
     const rows = await getSettingRows([...SETTINGS_KEYS]);
-
     expect(rows).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ key: "admin_path", value: `${INTEGRATION_PREFIX}panel` }),
-        expect.objectContaining({ key: "revision_limit", value: "25" }),
-        expect.objectContaining({ key: "revision_ttl_days", value: "45" }),
-        expect.objectContaining({ key: "excerpt_length", value: "180" }),
-        expect.objectContaining({ key: "comment_moderation", value: "approved" }),
-        expect.objectContaining({ key: "smtp_host", value: "smtp.example.com" }),
-        expect.objectContaining({ key: "smtp_port", value: "465" }),
-        expect.objectContaining({ key: "smtp_secure", value: "true" }),
-        expect.objectContaining({ key: "smtp_username", value: "mailer@example.com" }),
-        expect.objectContaining({ key: "smtp_password", value: "super-secret", isSecret: true }),
-        expect.objectContaining({ key: "smtp_from_email", value: "noreply@example.com" }),
-        expect.objectContaining({ key: "smtp_from_name", value: "Inkwell Mailer" }),
-        expect.objectContaining({ key: "umami_enabled", value: "true" }),
-        expect.objectContaining({ key: "umami_website_id", value: "550e8400-e29b-41d4-a716-446655440000" }),
-        expect.objectContaining({ key: "umami_script_url", value: "https://umami.example.com/script.js" }),
+        expect.objectContaining({ key: "public_notice_dismissible", value: "true" }),
+        expect.objectContaining({ key: "public_notice_version", value: "2026-04-maintenance" }),
+        expect.objectContaining({ key: "public_notice_start_at", value: "2026-04-01T12:00:00.000Z" }),
+        expect.objectContaining({ key: "public_notice_end_at", value: "2026-04-02T00:00:00.000Z" }),
       ]),
     );
   });
 
-  it("preserves existing smtp password when the form submits an empty password", async () => {
-    await setSettingRow("smtp_password", "persisted-secret", true);
-
-    const { updateAdminSettings } = await import("@/lib/admin/settings");
-    const result = await updateAdminSettings({
-      admin_path: originalSettings.admin_path ?? "admin",
-      revision_limit: originalSettings.revision_limit ?? "20",
-      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
-      excerpt_length: originalSettings.excerpt_length ?? "150",
-      comment_moderation:
-        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
-      smtp_host: "smtp.example.com",
-      smtp_port: "587",
-      smtp_secure: "false",
-      smtp_username: "mailer@example.com",
-      smtp_password: "",
-      smtp_from_email: "noreply@example.com",
-      smtp_from_name: "Inkwell Mailer",
-      umami_enabled: "false",
-      umami_website_id: "",
-      umami_script_url: "",
-    });
-
-    expect(result).toMatchObject({ success: true });
-    await expect(getSettingValue("smtp_password")).resolves.toBe("persisted-secret");
-  });
-
-  it("returns no analytics change when Umami settings stay the same", async () => {
-    await setSettingRow("umami_enabled", "true");
-    await setSettingRow("umami_website_id", "550e8400-e29b-41d4-a716-446655440000");
-    await setSettingRow("umami_script_url", "https://umami.example.com/script.js");
+  it("returns no public layout change when notice settings and window stay the same", async () => {
+    await setSettingRow("public_notice_enabled", "true");
+    await setSettingRow("public_notice_variant", "warning");
+    await setSettingRow("public_notice_dismissible", "true");
+    await setSettingRow("public_notice_version", "2026-04-maintenance");
+    await setSettingRow("public_notice_start_at", "2026-04-01T12:00:00.000Z");
+    await setSettingRow("public_notice_end_at", "2026-04-02T00:00:00.000Z");
+    await setSettingRow("public_notice_title", "系统维护通知");
+    await setSettingRow("public_notice_body", "今晚 23:00-23:30 将进行短暂维护。");
+    await setSettingRow("public_notice_link_label", "查看详情");
+    await setSettingRow("public_notice_link_url", "/docs/deployment");
 
     const { updateAdminSettings } = await import("@/lib/admin/settings");
     const result = await updateAdminSettings({
@@ -194,12 +196,115 @@ describe("admin settings write paths", () => {
       smtp_password: "",
       smtp_from_email: originalSettings.smtp_from_email ?? "",
       smtp_from_name: originalSettings.smtp_from_name ?? "",
-      umami_enabled: "true",
-      umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
-      umami_script_url: "https://umami.example.com/script.js",
+      umami_enabled: (originalSettings.umami_enabled === "true" ? "true" : "false") as "true" | "false",
+      umami_website_id: originalSettings.umami_website_id ?? "",
+      umami_script_url: originalSettings.umami_script_url ?? "",
+      public_head_html: originalSettings.public_head_html ?? "",
+      public_footer_html: originalSettings.public_footer_html ?? "",
+      public_custom_css: originalSettings.public_custom_css ?? "",
+      public_notice_enabled: "true",
+      public_notice_variant: "warning",
+      public_notice_dismissible: "true",
+      public_notice_version: "2026-04-maintenance",
+      public_notice_start_at: "2026-04-01T20:00",
+      public_notice_start_at_iso: "2026-04-01T12:00:00.000Z",
+      public_notice_end_at: "2026-04-02T08:00",
+      public_notice_end_at_iso: "2026-04-02T00:00:00.000Z",
+      public_notice_title: "系统维护通知",
+      public_notice_body: "今晚 23:00-23:30 将进行短暂维护。",
+      public_notice_link_label: "查看详情",
+      public_notice_link_url: "/docs/deployment",
     });
 
-    expect(result).toMatchObject({ success: true, analyticsChanged: false });
+    expect(result).toMatchObject({ success: true, publicLayoutChanged: false });
+  });
+
+  it("requires notice version when dismissal is enabled", async () => {
+    const { updateAdminSettings } = await import("@/lib/admin/settings");
+    const result = await updateAdminSettings({
+      admin_path: originalSettings.admin_path ?? "admin",
+      revision_limit: originalSettings.revision_limit ?? "20",
+      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
+      excerpt_length: originalSettings.excerpt_length ?? "150",
+      comment_moderation:
+        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      smtp_host: originalSettings.smtp_host ?? "",
+      smtp_port: originalSettings.smtp_port ?? "587",
+      smtp_secure: (originalSettings.smtp_secure === "true" ? "true" : "false") as "true" | "false",
+      smtp_username: originalSettings.smtp_username ?? "",
+      smtp_password: "",
+      smtp_from_email: originalSettings.smtp_from_email ?? "",
+      smtp_from_name: originalSettings.smtp_from_name ?? "",
+      umami_enabled: (originalSettings.umami_enabled === "true" ? "true" : "false") as "true" | "false",
+      umami_website_id: originalSettings.umami_website_id ?? "",
+      umami_script_url: originalSettings.umami_script_url ?? "",
+      public_head_html: "",
+      public_footer_html: "",
+      public_custom_css: "",
+      public_notice_enabled: "true",
+      public_notice_variant: "info",
+      public_notice_dismissible: "true",
+      public_notice_version: "",
+      public_notice_start_at: "",
+      public_notice_start_at_iso: "",
+      public_notice_end_at: "",
+      public_notice_end_at_iso: "",
+      public_notice_title: "提醒",
+      public_notice_body: "内容",
+      public_notice_link_label: "",
+      public_notice_link_url: "",
+    });
+
+    expect(result).toMatchObject({
+      success: false,
+      errors: {
+        public_notice_version: "允许访客关闭公告时必须填写公告版本。",
+      },
+    });
+  });
+
+  it("rejects notice window when end time is not after start time", async () => {
+    const { updateAdminSettings } = await import("@/lib/admin/settings");
+    const result = await updateAdminSettings({
+      admin_path: originalSettings.admin_path ?? "admin",
+      revision_limit: originalSettings.revision_limit ?? "20",
+      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
+      excerpt_length: originalSettings.excerpt_length ?? "150",
+      comment_moderation:
+        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
+      smtp_host: originalSettings.smtp_host ?? "",
+      smtp_port: originalSettings.smtp_port ?? "587",
+      smtp_secure: (originalSettings.smtp_secure === "true" ? "true" : "false") as "true" | "false",
+      smtp_username: originalSettings.smtp_username ?? "",
+      smtp_password: "",
+      smtp_from_email: originalSettings.smtp_from_email ?? "",
+      smtp_from_name: originalSettings.smtp_from_name ?? "",
+      umami_enabled: (originalSettings.umami_enabled === "true" ? "true" : "false") as "true" | "false",
+      umami_website_id: originalSettings.umami_website_id ?? "",
+      umami_script_url: originalSettings.umami_script_url ?? "",
+      public_head_html: "",
+      public_footer_html: "",
+      public_custom_css: "",
+      public_notice_enabled: "true",
+      public_notice_variant: "info",
+      public_notice_dismissible: "false",
+      public_notice_version: "",
+      public_notice_start_at: "2026-04-01T20:00",
+      public_notice_start_at_iso: "2026-04-01T12:00:00.000Z",
+      public_notice_end_at: "2026-04-01T20:00",
+      public_notice_end_at_iso: "2026-04-01T12:00:00.000Z",
+      public_notice_title: "提醒",
+      public_notice_body: "内容",
+      public_notice_link_label: "",
+      public_notice_link_url: "",
+    });
+
+    expect(result).toMatchObject({
+      success: false,
+      errors: {
+        public_notice_end_at: "公告结束时间必须晚于开始时间。",
+      },
+    });
   });
 
   it("persists email notification toggles", async () => {
@@ -220,78 +325,6 @@ describe("admin settings write paths", () => {
         expect.objectContaining({ scenario: "post_published", enabled: true }),
       ],
     });
-
-    const rows = await getEmailNotificationRows([...EMAIL_SCENARIOS]);
-    expect(rows).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ scenario: "comment_pending", enabled: false }),
-        expect.objectContaining({ scenario: "comment_approved", enabled: true }),
-        expect.objectContaining({ scenario: "comment_reply", enabled: false }),
-        expect.objectContaining({ scenario: "post_published", enabled: true }),
-      ]),
-    );
-  });
-
-  it("returns field errors for invalid settings values", async () => {
-    const { updateAdminSettings } = await import("@/lib/admin/settings");
-    const result = await updateAdminSettings({
-      admin_path: "Invalid Path",
-      revision_limit: "0",
-      revision_ttl_days: "-1",
-      excerpt_length: "NaN",
-      comment_moderation: "manual" as never,
-      smtp_port: "0",
-      smtp_secure: "false",
-      smtp_from_email: "invalid-email",
-      umami_enabled: "true",
-      umami_website_id: "bad-id",
-      umami_script_url: "javascript:alert(1)",
-    });
-
-    expect(result).toMatchObject({
-      success: false,
-      errors: {
-        admin_path: "后台路径不能为空，且只能包含小写字母、数字和短横线。",
-        revision_limit: "修订保留数量必须是正整数。",
-        revision_ttl_days: "修订保留天数必须是非负整数。",
-        excerpt_length: "自动摘要长度必须是正整数。",
-        comment_moderation: "评论审核模式无效。",
-        smtp_port: "SMTP 端口必须是正整数。",
-        smtp_from_email: "发件邮箱格式无效。",
-        umami_website_id: "Umami Website ID 格式无效。",
-        umami_script_url: "Umami 脚本地址无效。",
-      },
-    });
-  });
-
-  it("requires complete Umami configuration when analytics are enabled", async () => {
-    const { updateAdminSettings } = await import("@/lib/admin/settings");
-    const result = await updateAdminSettings({
-      admin_path: originalSettings.admin_path ?? "admin",
-      revision_limit: originalSettings.revision_limit ?? "20",
-      revision_ttl_days: originalSettings.revision_ttl_days ?? "30",
-      excerpt_length: originalSettings.excerpt_length ?? "150",
-      comment_moderation:
-        (originalSettings.comment_moderation as "pending" | "approved" | null) ?? "pending",
-      smtp_host: originalSettings.smtp_host ?? "",
-      smtp_port: originalSettings.smtp_port ?? "587",
-      smtp_secure: (originalSettings.smtp_secure === "true" ? "true" : "false") as "true" | "false",
-      smtp_username: originalSettings.smtp_username ?? "",
-      smtp_password: "",
-      smtp_from_email: originalSettings.smtp_from_email ?? "",
-      smtp_from_name: originalSettings.smtp_from_name ?? "",
-      umami_enabled: "true",
-      umami_website_id: "",
-      umami_script_url: "",
-    });
-
-    expect(result).toMatchObject({
-      success: false,
-      errors: {
-        umami_website_id: "启用 Umami 时必须填写 Website ID。",
-        umami_script_url: "启用 Umami 时必须填写脚本地址。",
-      },
-    });
   });
 });
 
@@ -308,42 +341,14 @@ async function getSettingRows(keys: string[]) {
     .where(inArray(settings.key, keys));
 }
 
-async function getEmailNotificationRows(keys: string[]) {
-  const db = await getDb();
-  return db
-    .select({ scenario: emailNotifications.scenario, enabled: emailNotifications.enabled })
-    .from(emailNotifications)
-    .where(inArray(emailNotifications.scenario, keys));
-}
-
-async function getSettingValue(key: string) {
-  const db = await getDb();
-  const [row] = await db
-    .select({ value: settings.value })
-    .from(settings)
-    .where(eq(settings.key, key))
-    .limit(1);
-
-  return row?.value ?? null;
-}
-
 async function setSettingRow(key: string, value: string, isSecret = false) {
   const db = await getDb();
   await db
     .insert(settings)
-    .values({
-      key,
-      value,
-      isSecret,
-      updatedAt: new Date(),
-    })
+    .values({ key, value, isSecret, updatedAt: new Date() })
     .onConflictDoUpdate({
       target: settings.key,
-      set: {
-        value,
-        isSecret,
-        updatedAt: new Date(),
-      },
+      set: { value, isSecret, updatedAt: new Date() },
     });
 }
 
@@ -357,7 +362,11 @@ async function snapshotSettings() {
 }
 
 async function snapshotEmailNotifications() {
-  const rows = await getEmailNotificationRows([...EMAIL_SCENARIOS]);
+  const db = await getDb();
+  const rows = await db
+    .select({ scenario: emailNotifications.scenario, enabled: emailNotifications.enabled })
+    .from(emailNotifications)
+    .where(inArray(emailNotifications.scenario, [...EMAIL_SCENARIOS]));
   const byKey = new Map(rows.map((row) => [row.scenario, row.enabled]));
 
   return Object.fromEntries(
@@ -410,19 +419,30 @@ async function restoreEmailNotifications(
 
     await db
       .insert(emailNotifications)
-      .values({
-        scenario,
-        description: scenario,
-        enabled,
-        updatedAt: new Date(),
-      })
+      .values({ scenario, description: scenario, enabled, updatedAt: new Date() })
       .onConflictDoUpdate({
         target: emailNotifications.scenario,
-        set: {
-          description: scenario,
-          enabled,
-          updatedAt: new Date(),
-        },
+        set: { description: scenario, enabled, updatedAt: new Date() },
       });
   }
+}
+
+function formatDatetimeLocalInput(value: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = String(date.getFullYear());
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 }

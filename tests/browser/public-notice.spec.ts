@@ -21,7 +21,7 @@ const databaseUrl = getDatabaseUrl();
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("settings browser regression", () => {
-  test("updates public notice and other public settings from admin settings", async ({ page }) => {
+  test("dismisses public notice by version and re-shows it after version changes", async ({ page }) => {
     const fixture = await seedSettingsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
     try {
@@ -33,87 +33,108 @@ test.describe("settings browser regression", () => {
       await page.getByRole("button", { name: "登录后台" }).click();
 
       await expect(page).toHaveURL(new RegExp(`/${fixture.adminPath}/settings$`));
-      await expect(page.getByRole("heading", { name: "后台设置" })).toBeVisible();
 
-      await page.getByLabel("评论审核模式").selectOption("approved");
-      await page.getByLabel("自动摘要长度").fill("210");
-      await page.getByLabel("SMTP Host").fill("smtp.example.com");
-      await page.getByLabel("SMTP 端口").fill("465");
-      await page.getByLabel("SMTP 加密").selectOption("true");
-      await page.getByLabel("SMTP 用户名").fill("mailer@example.com");
-      await page.getByLabel("SMTP 密码").fill("browser-secret");
-      await page.getByLabel("发件邮箱").fill("noreply@example.com");
-      await page.getByLabel("发件人名称").fill("Inkwell Browser Mailer");
-      await page
-        .getByLabel("页头代码（Head）")
-        .fill('<meta name="inkwell-public-head" content="ok" />');
-      await page
-        .getByLabel("页尾代码（Body 结束前）")
-        .fill('<div data-testid="inkwell-public-footer">footer snippet</div>');
-      await page
-        .getByLabel("自定义 CSS")
-        .fill(".inkwell-public-home { color: rgb(255, 0, 0); }");
       await page.locator('select[name="public_notice_enabled"]').selectOption("true");
       await page.locator('select[name="public_notice_variant"]').selectOption("warning");
+      await page.locator('select[name="public_notice_dismissible"]').selectOption("true");
+      await page.locator('input[name="public_notice_version"]').fill("2026-04-maintenance-v1");
+      await page.locator('input[name="public_notice_start_at"]').fill("2000-01-01T00:00");
+      await page.locator('input[name="public_notice_end_at"]').fill("2099-04-02T00:00");
       await page.locator('input[name="public_notice_title"]').fill("系统维护通知");
       await page.locator('textarea[name="public_notice_body"]').fill("今晚 23:00-23:30 将进行短暂维护。");
       await page.locator('input[name="public_notice_link_label"]').fill("查看详情");
       await page.locator('input[name="public_notice_link_url"]').fill("/docs/deployment");
-      await page.getByLabel("Umami 开关").selectOption("true");
-      await page.getByLabel("Website ID").fill("550e8400-e29b-41d4-a716-446655440000");
-      await page.getByLabel("脚本地址").fill("https://umami.example.com/script.js");
       await page.getByRole("button", { name: "保存设置" }).click();
 
-      await expect.poll(() => new URL(page.url()).pathname).toBe(`/${fixture.adminPath}/settings`);
       await expect.poll(() => new URL(page.url()).searchParams.get("saved")).toBe("1");
 
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "系统维护通知" })).toBeVisible();
-      await expect(page.getByText("今晚 23:00-23:30 将进行短暂维护。")).toBeVisible();
-      await expect(page.getByRole("link", { name: "查看详情" })).toHaveAttribute(
-        "href",
-        "/docs/deployment",
-      );
-      await expect(page.locator('head meta[name="inkwell-public-head"]').first()).toHaveAttribute(
-        "content",
-        "ok",
-      );
-      await expect(page.locator('head style[data-inkwell-public-custom-css]').first()).toHaveAttribute(
-        "data-inkwell-public-custom-css",
-        "true",
-      );
-      await expect(page.getByTestId("inkwell-public-footer")).toHaveText("footer snippet");
-      await expect(page.locator('script#umami-script')).toHaveAttribute(
-        "src",
-        "https://umami.example.com/script.js",
-      );
+      await expect(page.getByRole("button", { name: "关闭站点公告" })).toBeVisible();
+      await page.getByRole("button", { name: "关闭站点公告" }).click();
+      await expect(page.getByRole("heading", { name: "系统维护通知" })).toHaveCount(0);
+
+      await page.goto("/search");
+      await expect(page.getByRole("heading", { name: "系统维护通知" })).toHaveCount(0);
 
       await page.goto(`/${fixture.adminPath}/settings`);
-      await expect(page.getByRole("heading", { name: "系统维护通知" })).toHaveCount(0);
-      await expect(page.locator('head meta[name="inkwell-public-head"]')).toHaveCount(0);
-      await expect(page.locator('head style[data-inkwell-public-custom-css]')).toHaveCount(0);
-      await expect(page.getByTestId("inkwell-public-footer")).toHaveCount(0);
+      await page.locator('input[name="public_notice_version"]').fill("2026-04-maintenance-v2");
+      await page.getByRole("button", { name: "保存设置" }).click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("saved")).toBe("1");
 
-      const publicNoticeEnabled = await getSettingValue("public_notice_enabled");
-      const publicNoticeVariant = await getSettingValue("public_notice_variant");
-      const publicNoticeTitle = await getSettingValue("public_notice_title");
-      const publicNoticeBody = await getSettingValue("public_notice_body");
-      const publicNoticeLinkLabel = await getSettingValue("public_notice_link_label");
-      const publicNoticeLinkUrl = await getSettingValue("public_notice_link_url");
+      await page.goto("/");
+      await expect(page.getByRole("heading", { name: "系统维护通知" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "关闭站点公告" })).toBeVisible();
 
-      expect(publicNoticeEnabled).toBe("true");
-      expect(publicNoticeVariant).toBe("warning");
-      expect(publicNoticeTitle).toBe("系统维护通知");
-      expect(publicNoticeBody).toBe("今晚 23:00-23:30 将进行短暂维护。");
-      expect(publicNoticeLinkLabel).toBe("查看详情");
-      expect(publicNoticeLinkUrl).toBe("/docs/deployment");
+      const publicNoticeDismissible = await getSettingValue("public_notice_dismissible");
+      const publicNoticeVersion = await getSettingValue("public_notice_version");
+
+      expect(publicNoticeDismissible).toBe("true");
+      expect(publicNoticeVersion).toBe("2026-04-maintenance-v2");
     } finally {
       await cleanupSettingsFixture(
-        fixture.originalCommentModeration,
-        fixture.originalExcerptLength,
-        fixture.originalPublicCodeSettings,
         fixture.originalPublicNoticeSettings,
-        fixture.originalUmamiSettings,
+        fixture.originalEmailNotifications,
+      );
+    }
+  });
+
+  test("shows notice only during the configured time window", async ({ page }) => {
+    const fixture = await seedSettingsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+
+    try {
+      await page.goto(
+        `/${fixture.adminPath}/login?redirect=${encodeURIComponent(`/${fixture.adminPath}/settings`)}`,
+      );
+      await page.getByLabel("邮箱").fill(fixture.email);
+      await page.getByLabel("密码").fill(fixture.password);
+      await page.getByRole("button", { name: "登录后台" }).click();
+
+      await expect(page).toHaveURL(new RegExp(`/${fixture.adminPath}/settings$`));
+
+      await page.locator('select[name="public_notice_enabled"]').selectOption("true");
+      await page.locator('select[name="public_notice_variant"]').selectOption("warning");
+      await page.locator('select[name="public_notice_dismissible"]').selectOption("false");
+      await page.locator('input[name="public_notice_version"]').fill("");
+      await page.locator('input[name="public_notice_title"]').fill("时间窗口公告");
+      await page.locator('textarea[name="public_notice_body"]').fill("仅在设定时间段内显示。");
+      await page.locator('input[name="public_notice_link_label"]').fill("");
+      await page.locator('input[name="public_notice_link_url"]').fill("");
+
+      await page.locator('input[name="public_notice_start_at"]').fill("2999-01-01T00:00");
+      await page.locator('input[name="public_notice_end_at"]').fill("2999-01-02T00:00");
+      await page.getByRole("button", { name: "保存设置" }).click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("saved")).toBe("1");
+
+      await page.goto("/");
+      await expect(page.getByRole("heading", { name: "时间窗口公告" })).toHaveCount(0);
+
+      await page.goto(`/${fixture.adminPath}/settings`);
+      await page.locator('input[name="public_notice_start_at"]').fill("2000-01-01T00:00");
+      await page.locator('input[name="public_notice_end_at"]').fill("2999-01-02T00:00");
+      await page.getByRole("button", { name: "保存设置" }).click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("saved")).toBe("1");
+
+      await page.goto("/");
+      await expect(page.getByRole("heading", { name: "时间窗口公告" })).toBeVisible();
+
+      await page.goto(`/${fixture.adminPath}/settings`);
+      await page.locator('input[name="public_notice_start_at"]').fill("");
+      await page.locator('input[name="public_notice_end_at"]').fill("2000-01-01T00:00");
+      await page.getByRole("button", { name: "保存设置" }).click();
+      await expect.poll(() => new URL(page.url()).searchParams.get("saved")).toBe("1");
+
+      await page.goto("/");
+      await expect(page.getByRole("heading", { name: "时间窗口公告" })).toHaveCount(0);
+
+      const publicNoticeStartAt = await getSettingValue("public_notice_start_at");
+      const publicNoticeEndAt = await getSettingValue("public_notice_end_at");
+
+      expect(publicNoticeStartAt).not.toBeNull();
+      expect(publicNoticeEndAt).not.toBeNull();
+    } finally {
+      await cleanupSettingsFixture(
+        fixture.originalPublicNoticeSettings,
         fixture.originalEmailNotifications,
       );
     }
@@ -124,25 +145,17 @@ type SettingsFixture = {
   adminPath: string;
   email: string;
   password: string;
-  originalCommentModeration: string | null;
-  originalExcerptLength: string | null;
-  originalPublicCodeSettings: {
-    public_head_html: string | null;
-    public_footer_html: string | null;
-    public_custom_css: string | null;
-  };
   originalPublicNoticeSettings: {
     public_notice_enabled: string | null;
     public_notice_variant: string | null;
+    public_notice_dismissible: string | null;
+    public_notice_version: string | null;
+    public_notice_start_at: string | null;
+    public_notice_end_at: string | null;
     public_notice_title: string | null;
     public_notice_body: string | null;
     public_notice_link_label: string | null;
     public_notice_link_url: string | null;
-  };
-  originalUmamiSettings: {
-    umami_enabled: string | null;
-    umami_website_id: string | null;
-    umami_script_url: string | null;
   };
   originalEmailNotifications: Record<string, boolean | null>;
 };
@@ -154,25 +167,17 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
   const password = `pw-${seed}-${randomUUID().slice(0, 8)}`;
 
   await cleanupSettingsFixture(
-    null,
-    null,
-    {
-      public_head_html: null,
-      public_footer_html: null,
-      public_custom_css: null,
-    },
     {
       public_notice_enabled: null,
       public_notice_variant: null,
+      public_notice_dismissible: null,
+      public_notice_version: null,
+      public_notice_start_at: null,
+      public_notice_end_at: null,
       public_notice_title: null,
       public_notice_body: null,
       public_notice_link_label: null,
       public_notice_link_url: null,
-    },
-    {
-      umami_enabled: null,
-      umami_website_id: null,
-      umami_script_url: null,
     },
     {
       comment_pending: null,
@@ -182,25 +187,17 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
     },
   );
 
-  const originalCommentModeration = await getSettingValue("comment_moderation");
-  const originalExcerptLength = await getSettingValue("excerpt_length");
-  const originalPublicCodeSettings = {
-    public_head_html: await getSettingValue("public_head_html"),
-    public_footer_html: await getSettingValue("public_footer_html"),
-    public_custom_css: await getSettingValue("public_custom_css"),
-  };
   const originalPublicNoticeSettings = {
     public_notice_enabled: await getSettingValue("public_notice_enabled"),
     public_notice_variant: await getSettingValue("public_notice_variant"),
+    public_notice_dismissible: await getSettingValue("public_notice_dismissible"),
+    public_notice_version: await getSettingValue("public_notice_version"),
+    public_notice_start_at: await getSettingValue("public_notice_start_at"),
+    public_notice_end_at: await getSettingValue("public_notice_end_at"),
     public_notice_title: await getSettingValue("public_notice_title"),
     public_notice_body: await getSettingValue("public_notice_body"),
     public_notice_link_label: await getSettingValue("public_notice_link_label"),
     public_notice_link_url: await getSettingValue("public_notice_link_url"),
-  };
-  const originalUmamiSettings = {
-    umami_enabled: await getSettingValue("umami_enabled"),
-    umami_website_id: await getSettingValue("umami_website_id"),
-    umami_script_url: await getSettingValue("umami_script_url"),
   };
   const originalEmailNotifications = {
     comment_pending: await getEmailNotificationEnabled("comment_pending"),
@@ -213,7 +210,7 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
     await db.insert(users).values({
       email,
       username,
-      displayName: "Browser Settings Editor",
+      displayName: "Browser Notice Editor",
       passwordHash: hashPasswordValue(password),
       role: "editor",
     });
@@ -223,36 +220,13 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
     adminPath,
     email,
     password,
-    originalCommentModeration,
-    originalExcerptLength,
-    originalPublicCodeSettings,
     originalPublicNoticeSettings,
-    originalUmamiSettings,
     originalEmailNotifications,
   };
 }
 
 async function cleanupSettingsFixture(
-  originalCommentModeration: string | null,
-  originalExcerptLength: string | null,
-  originalPublicCodeSettings: {
-    public_head_html: string | null;
-    public_footer_html: string | null;
-    public_custom_css: string | null;
-  },
-  originalPublicNoticeSettings: {
-    public_notice_enabled: string | null;
-    public_notice_variant: string | null;
-    public_notice_title: string | null;
-    public_notice_body: string | null;
-    public_notice_link_label: string | null;
-    public_notice_link_url: string | null;
-  },
-  originalUmamiSettings: {
-    umami_enabled: string | null;
-    umami_website_id: string | null;
-    umami_script_url: string | null;
-  },
+  originalPublicNoticeSettings: SettingsFixture["originalPublicNoticeSettings"],
   originalEmailNotifications: Record<string, boolean | null>,
 ) {
   await withDb(async (db) => {
@@ -270,20 +244,16 @@ async function cleanupSettingsFixture(
       );
     }
 
-    await restoreSetting(db, "comment_moderation", originalCommentModeration);
-    await restoreSetting(db, "excerpt_length", originalExcerptLength);
-    await restoreSetting(db, "public_head_html", originalPublicCodeSettings.public_head_html);
-    await restoreSetting(db, "public_footer_html", originalPublicCodeSettings.public_footer_html);
-    await restoreSetting(db, "public_custom_css", originalPublicCodeSettings.public_custom_css);
     await restoreSetting(db, "public_notice_enabled", originalPublicNoticeSettings.public_notice_enabled);
     await restoreSetting(db, "public_notice_variant", originalPublicNoticeSettings.public_notice_variant);
+    await restoreSetting(db, "public_notice_dismissible", originalPublicNoticeSettings.public_notice_dismissible);
+    await restoreSetting(db, "public_notice_version", originalPublicNoticeSettings.public_notice_version);
+    await restoreSetting(db, "public_notice_start_at", originalPublicNoticeSettings.public_notice_start_at);
+    await restoreSetting(db, "public_notice_end_at", originalPublicNoticeSettings.public_notice_end_at);
     await restoreSetting(db, "public_notice_title", originalPublicNoticeSettings.public_notice_title);
     await restoreSetting(db, "public_notice_body", originalPublicNoticeSettings.public_notice_body);
     await restoreSetting(db, "public_notice_link_label", originalPublicNoticeSettings.public_notice_link_label);
     await restoreSetting(db, "public_notice_link_url", originalPublicNoticeSettings.public_notice_link_url);
-    await restoreSetting(db, "umami_enabled", originalUmamiSettings.umami_enabled);
-    await restoreSetting(db, "umami_website_id", originalUmamiSettings.umami_website_id);
-    await restoreSetting(db, "umami_script_url", originalUmamiSettings.umami_script_url);
     await restoreEmailNotification(db, "comment_pending", originalEmailNotifications.comment_pending);
     await restoreEmailNotification(db, "comment_approved", originalEmailNotifications.comment_approved);
     await restoreEmailNotification(db, "comment_reply", originalEmailNotifications.comment_reply);
@@ -294,20 +264,16 @@ async function cleanupSettingsFixture(
 async function restoreSetting(
   db: ReturnType<typeof drizzle>,
   key:
-    | "comment_moderation"
-    | "excerpt_length"
-    | "public_head_html"
-    | "public_footer_html"
-    | "public_custom_css"
     | "public_notice_enabled"
     | "public_notice_variant"
+    | "public_notice_dismissible"
+    | "public_notice_version"
+    | "public_notice_start_at"
+    | "public_notice_end_at"
     | "public_notice_title"
     | "public_notice_body"
     | "public_notice_link_label"
-    | "public_notice_link_url"
-    | "umami_enabled"
-    | "umami_website_id"
-    | "umami_script_url",
+    | "public_notice_link_url",
   value: string | null,
 ) {
   if (value === null) {

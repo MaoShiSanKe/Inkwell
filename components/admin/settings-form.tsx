@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo, useState } from "react";
 
 import {
   saveEmailNotificationsAction,
   saveSettingsAction,
 } from "@/app/(admin)/[adminPath]/(protected)/settings/actions";
+import { toScheduledAtIso } from "@/lib/admin/post-form";
 import {
   createEmailNotificationsFormState,
   createSettingsFormState,
@@ -30,6 +31,18 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
     saveEmailNotificationsAction,
     initialEmailState,
   );
+  const [publicNoticeStartAtDraft, setPublicNoticeStartAtDraft] = useState<string | null>(null);
+  const [publicNoticeEndAtDraft, setPublicNoticeEndAtDraft] = useState<string | null>(null);
+  const publicNoticeStartAtValue = publicNoticeStartAtDraft ?? state.values.public_notice_start_at;
+  const publicNoticeEndAtValue = publicNoticeEndAtDraft ?? state.values.public_notice_end_at;
+  const publicNoticeStartAtIso = useMemo(
+    () => toScheduledAtIso(publicNoticeStartAtValue),
+    [publicNoticeStartAtValue],
+  );
+  const publicNoticeEndAtIso = useMemo(
+    () => toScheduledAtIso(publicNoticeEndAtValue),
+    [publicNoticeEndAtValue],
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -38,6 +51,8 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
         className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800"
       >
         <input type="hidden" name="adminPath" value={adminPath} />
+        <input type="hidden" name="public_notice_start_at_iso" value={publicNoticeStartAtIso} />
+        <input type="hidden" name="public_notice_end_at_iso" value={publicNoticeEndAtIso} />
 
         {state.errors.form ? (
           <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
@@ -338,6 +353,246 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
             </label>
           </div>
         </section>
+
+        <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              公开站点代码与样式
+            </h2>
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+              仅对公开前台页面生效，可用于站点验证标签、统计脚本、客服组件与轻量样式覆盖。后台页面不会注入这些内容。
+            </p>
+          </div>
+
+          <div className="grid gap-6">
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              页头代码（Head）
+              <textarea
+                className="min-h-40 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_head_html"
+                defaultValue={state.values.public_head_html}
+                spellCheck={false}
+                placeholder={'<meta name="example-verification" content="..." />'}
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                内容会插入公开站点页面的 head。适合验证标签、统计初始化片段或自定义 style / script 标签。不要粘贴密钥、私有令牌或不受信任的第三方脚本。
+              </span>
+              {state.errors.public_head_html ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_head_html}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              页尾代码（Body 结束前）
+              <textarea
+                className="min-h-40 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_footer_html"
+                defaultValue={state.values.public_footer_html}
+                spellCheck={false}
+                placeholder={'<div data-widget="example">widget</div>'}
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                内容会插入公开站点页面底部，适合客服组件、埋点容器或需要在 body 尾部加载的脚本。后台页面与后台登录页不会注入这些代码。
+              </span>
+              {state.errors.public_footer_html ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_footer_html}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              自定义 CSS
+              <textarea
+                className="min-h-40 rounded-lg border border-slate-300 bg-white px-3 py-2 font-mono text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_custom_css"
+                defaultValue={state.values.public_custom_css}
+                spellCheck={false}
+                placeholder={'.site-title { letter-spacing: 0.08em; }'}
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                内容会以内联 style 注入公开站点 head，适合做小范围样式覆盖与主题微调。优先用于展示层调整，不要在这里堆积大量样式体系。
+              </span>
+              {state.errors.public_custom_css ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_custom_css}</span>
+              ) : null}
+            </label>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              全站公开公告
+            </h2>
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+              仅在公开前台显示，适合发布维护通知、活动说明、迁移提醒或其他需要所有访客立即看到的站点级公告。
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              公告开关
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_notice_enabled"
+                defaultValue={state.values.public_notice_enabled}
+              >
+                <option value="false">关闭</option>
+                <option value="true">启用</option>
+              </select>
+              {state.errors.public_notice_enabled ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_enabled}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              公告样式
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_notice_variant"
+                defaultValue={state.values.public_notice_variant}
+              >
+                <option value="info">信息</option>
+                <option value="warning">提醒</option>
+                <option value="success">成功</option>
+              </select>
+              {state.errors.public_notice_variant ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_variant}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              允许访客关闭
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_notice_dismissible"
+                defaultValue={state.values.public_notice_dismissible}
+              >
+                <option value="false">不允许</option>
+                <option value="true">允许</option>
+              </select>
+              {state.errors.public_notice_dismissible ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_dismissible}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              公告版本
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="public_notice_version"
+                defaultValue={state.values.public_notice_version}
+                placeholder="例如：2026-04-maintenance"
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                仅在允许关闭时必填。修改版本后，之前关闭过旧版本公告的访客会重新看到新公告。
+              </span>
+              {state.errors.public_notice_version ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_version}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              开始时间
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="datetime-local"
+                name="public_notice_start_at"
+                value={publicNoticeStartAtValue}
+                onChange={(event) => setPublicNoticeStartAtDraft(event.target.value)}
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                留空表示不限制开始时间。按你当前浏览器时区输入。
+              </span>
+              {state.errors.public_notice_start_at ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_start_at}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              结束时间
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="datetime-local"
+                name="public_notice_end_at"
+                value={publicNoticeEndAtValue}
+                onChange={(event) => setPublicNoticeEndAtDraft(event.target.value)}
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                留空表示不限制结束时间。结束时间必须晚于开始时间。
+              </span>
+              {state.errors.public_notice_end_at ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_end_at}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              公告标题
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="public_notice_title"
+                defaultValue={state.values.public_notice_title}
+                placeholder="例如：系统维护通知"
+              />
+              {state.errors.public_notice_title ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_title}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              公告内容
+              <textarea
+                className="min-h-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_notice_body"
+                defaultValue={state.values.public_notice_body}
+                spellCheck={false}
+                placeholder="填写所有访客需要看到的公告内容。"
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                启用公告时必须填写内容。建议保持简短明确，适合横跨所有公开页面展示。
+              </span>
+              {state.errors.public_notice_body ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_body}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              按钮文案
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="public_notice_link_label"
+                defaultValue={state.values.public_notice_link_label}
+                placeholder="例如：查看详情"
+              />
+              {state.errors.public_notice_link_label ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_link_label}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              按钮链接
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="public_notice_link_url"
+                defaultValue={state.values.public_notice_link_url}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="/docs/deployment 或 https://example.com"
+              />
+              <span className="text-xs font-normal leading-6 text-slate-500 dark:text-slate-400">
+                按钮文案和链接必须同时填写。支持站内根相对路径和完整 http(s) 地址。
+              </span>
+              {state.errors.public_notice_link_url ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_notice_link_url}</span>
+              ) : null}
+            </label>
+          </div>
+        </section>
+
         <div className="flex items-center gap-3">
           <button
             className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
@@ -360,7 +615,7 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
             邮件通知场景
           </h2>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
-            配置各场景是否触发真实邮件通知；若 SMTP 未完整配置，启用的场景也会自动跳过发送。
+            控制不同业务事件是否触发邮件通知。仅在 SMTP 配置完整时生效。
           </p>
         </div>
 
@@ -374,20 +629,17 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
           {emailState.scenarios.map((scenario) => (
             <label
               key={scenario.scenario}
-              className="flex items-start gap-3 rounded-xl border border-slate-200 px-4 py-3 dark:border-slate-800"
+              className="flex items-start gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-200"
             >
               <input
-                aria-label={scenario.scenario}
-                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 dark:border-slate-700 dark:bg-slate-950"
                 type="checkbox"
                 name={scenario.scenario}
                 defaultChecked={scenario.enabled}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
               />
               <span className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {scenario.scenario}
-                </span>
-                <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                <span className="font-medium">{scenario.scenario}</span>
+                <span className="text-xs leading-5 text-slate-500 dark:text-slate-400">
                   {scenario.description}
                 </span>
               </span>

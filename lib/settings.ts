@@ -10,6 +10,8 @@ import {
   parseSettingValue,
   serializeSettingValue,
   settingDefinitions,
+  type PublicCodeSettings,
+  type PublicNoticeSettings,
   type SettingKey,
   type SettingValues,
   type SmtpSettings,
@@ -145,6 +147,33 @@ export async function getUmamiSettings(): Promise<UmamiSettings> {
     umami_enabled: values.umami_enabled,
     umami_website_id: values.umami_website_id,
     umami_script_url: values.umami_script_url,
+  };
+}
+
+export async function getPublicCodeSettings(): Promise<PublicCodeSettings> {
+  const values = await getSettings();
+
+  return {
+    public_head_html: values.public_head_html,
+    public_footer_html: values.public_footer_html,
+    public_custom_css: values.public_custom_css,
+  };
+}
+
+export async function getPublicNoticeSettings(): Promise<PublicNoticeSettings> {
+  const values = await getSettings();
+
+  return {
+    public_notice_enabled: values.public_notice_enabled,
+    public_notice_variant: values.public_notice_variant,
+    public_notice_dismissible: values.public_notice_dismissible,
+    public_notice_version: values.public_notice_version,
+    public_notice_start_at: values.public_notice_start_at,
+    public_notice_end_at: values.public_notice_end_at,
+    public_notice_title: values.public_notice_title,
+    public_notice_body: values.public_notice_body,
+    public_notice_link_label: values.public_notice_link_label,
+    public_notice_link_url: values.public_notice_link_url,
   };
 }
 

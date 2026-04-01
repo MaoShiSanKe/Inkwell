@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { toScheduledAtIso } from "@/lib/admin/post-form";
 import {
   getAdminEmailNotifications,
   updateAdminEmailNotifications,
@@ -18,7 +19,7 @@ import { DEFAULT_EMAIL_NOTIFICATION_SCENARIOS } from "@/lib/settings-config";
 import { getAdminSession } from "@/lib/auth";
 import { getAdminPath } from "@/lib/settings";
 
-function revalidatePublicAnalyticsPaths() {
+function revalidatePublicLayoutPaths() {
   revalidatePath("/", "layout");
 }
 
@@ -57,6 +58,15 @@ export async function saveSettingsAction(
   const effectiveAdminPath = await requireAuthenticatedAdmin(
     String(formData.get("adminPath") ?? ""),
   );
+  const publicNoticeStartAt = String(formData.get("public_notice_start_at") ?? "");
+  const publicNoticeStartAtIso =
+    String(formData.get("public_notice_start_at_iso") ?? "") ||
+    toScheduledAtIso(publicNoticeStartAt);
+  const publicNoticeEndAt = String(formData.get("public_notice_end_at") ?? "");
+  const publicNoticeEndAtIso =
+    String(formData.get("public_notice_end_at_iso") ?? "") ||
+    toScheduledAtIso(publicNoticeEndAt);
+
   const result = await updateAdminSettings({
     admin_path: String(formData.get("admin_path") ?? ""),
     revision_limit: String(formData.get("revision_limit") ?? ""),
@@ -76,6 +86,28 @@ export async function saveSettingsAction(
     umami_enabled: String(formData.get("umami_enabled") ?? "false") as "true" | "false",
     umami_website_id: String(formData.get("umami_website_id") ?? ""),
     umami_script_url: String(formData.get("umami_script_url") ?? ""),
+    public_head_html: String(formData.get("public_head_html") ?? ""),
+    public_footer_html: String(formData.get("public_footer_html") ?? ""),
+    public_custom_css: String(formData.get("public_custom_css") ?? ""),
+    public_notice_enabled: String(formData.get("public_notice_enabled") ?? "false") as
+      | "true"
+      | "false",
+    public_notice_variant: String(formData.get("public_notice_variant") ?? "info") as
+      | "info"
+      | "warning"
+      | "success",
+    public_notice_dismissible: String(formData.get("public_notice_dismissible") ?? "false") as
+      | "true"
+      | "false",
+    public_notice_version: String(formData.get("public_notice_version") ?? ""),
+    public_notice_start_at: publicNoticeStartAt,
+    public_notice_start_at_iso: publicNoticeStartAtIso,
+    public_notice_end_at: publicNoticeEndAt,
+    public_notice_end_at_iso: publicNoticeEndAtIso,
+    public_notice_title: String(formData.get("public_notice_title") ?? ""),
+    public_notice_body: String(formData.get("public_notice_body") ?? ""),
+    public_notice_link_label: String(formData.get("public_notice_link_label") ?? ""),
+    public_notice_link_url: String(formData.get("public_notice_link_url") ?? ""),
   });
 
   if (!result.success) {
@@ -84,8 +116,8 @@ export async function saveSettingsAction(
 
   revalidateSettingsPaths(effectiveAdminPath, result.nextAdminPath);
 
-  if (result.analyticsChanged) {
-    revalidatePublicAnalyticsPaths();
+  if (result.publicLayoutChanged) {
+    revalidatePublicLayoutPaths();
   }
 
   redirect(

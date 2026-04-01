@@ -106,7 +106,7 @@ describe("admin settings actions", () => {
     expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 
-  it("passes SMTP and Umami fields through settings save payload", async () => {
+  it("passes SMTP, public layout, and notice window fields through settings save payload", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminSettingsMock.mockResolvedValue({
       success: false,
@@ -129,6 +129,21 @@ describe("admin settings actions", () => {
         umami_enabled: "true",
         umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
         umami_script_url: "https://umami.example.com/script.js",
+        public_head_html: '<meta name="inkwell-public-head" content="ok" />',
+        public_footer_html: '<div data-testid="inkwell-public-footer">footer snippet</div>',
+        public_custom_css: ".inkwell-public-home { color: rgb(255, 0, 0); }",
+        public_notice_enabled: "true",
+        public_notice_variant: "warning",
+        public_notice_dismissible: "true",
+        public_notice_version: "2026-04-maintenance",
+        public_notice_start_at: "2026-04-01T20:00",
+        public_notice_start_at_iso: "2026-04-01T12:00:00.000Z",
+        public_notice_end_at: "2026-04-02T08:00",
+        public_notice_end_at_iso: "2026-04-02T00:00:00.000Z",
+        public_notice_title: "系统维护通知",
+        public_notice_body: "今晚 23:00-23:30 将进行短暂维护。",
+        public_notice_link_label: "查看详情",
+        public_notice_link_url: "/docs/deployment",
       }),
     );
   });
@@ -140,7 +155,7 @@ describe("admin settings actions", () => {
       nextAdminPath: "dashboard",
       previousAdminPath: "admin",
       adminPathChanged: true,
-      analyticsChanged: false,
+      publicLayoutChanged: false,
     });
 
     const { saveSettingsAction } = await import("./actions");
@@ -157,14 +172,14 @@ describe("admin settings actions", () => {
     expect(revalidatePathMock).toHaveBeenNthCalledWith(4, "/dashboard/settings");
   });
 
-  it("revalidates the public layout when analytics settings change", async () => {
+  it("revalidates the public layout when public layout settings change", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminSettingsMock.mockResolvedValue({
       success: true,
       nextAdminPath: "admin",
       previousAdminPath: "admin",
       adminPathChanged: false,
-      analyticsChanged: true,
+      publicLayoutChanged: true,
     });
 
     const { saveSettingsAction } = await import("./actions");
@@ -185,7 +200,7 @@ describe("admin settings actions", () => {
       nextAdminPath: "admin",
       previousAdminPath: "admin",
       adminPathChanged: false,
-      analyticsChanged: false,
+      publicLayoutChanged: false,
     });
 
     const { saveSettingsAction } = await import("./actions");
@@ -293,6 +308,21 @@ function createFormData(
     umami_enabled: string;
     umami_website_id: string;
     umami_script_url: string;
+    public_head_html: string;
+    public_footer_html: string;
+    public_custom_css: string;
+    public_notice_enabled: string;
+    public_notice_variant: string;
+    public_notice_dismissible: string;
+    public_notice_version: string;
+    public_notice_start_at: string;
+    public_notice_start_at_iso: string;
+    public_notice_end_at: string;
+    public_notice_end_at_iso: string;
+    public_notice_title: string;
+    public_notice_body: string;
+    public_notice_link_label: string;
+    public_notice_link_url: string;
   }> = {},
 ) {
   const values = {
@@ -312,6 +342,21 @@ function createFormData(
     umami_enabled: "true",
     umami_website_id: "550e8400-e29b-41d4-a716-446655440000",
     umami_script_url: "https://umami.example.com/script.js",
+    public_head_html: '<meta name="inkwell-public-head" content="ok" />',
+    public_footer_html: '<div data-testid="inkwell-public-footer">footer snippet</div>',
+    public_custom_css: ".inkwell-public-home { color: rgb(255, 0, 0); }",
+    public_notice_enabled: "true",
+    public_notice_variant: "warning",
+    public_notice_dismissible: "true",
+    public_notice_version: "2026-04-maintenance",
+    public_notice_start_at: "2026-04-01T20:00",
+    public_notice_start_at_iso: "2026-04-01T12:00:00.000Z",
+    public_notice_end_at: "2026-04-02T08:00",
+    public_notice_end_at_iso: "2026-04-02T00:00:00.000Z",
+    public_notice_title: "系统维护通知",
+    public_notice_body: "今晚 23:00-23:30 将进行短暂维护。",
+    public_notice_link_label: "查看详情",
+    public_notice_link_url: "/docs/deployment",
     ...overrides,
   };
 
@@ -332,6 +377,21 @@ function createFormData(
   formData.set("umami_enabled", values.umami_enabled);
   formData.set("umami_website_id", values.umami_website_id);
   formData.set("umami_script_url", values.umami_script_url);
+  formData.set("public_head_html", values.public_head_html);
+  formData.set("public_footer_html", values.public_footer_html);
+  formData.set("public_custom_css", values.public_custom_css);
+  formData.set("public_notice_enabled", values.public_notice_enabled);
+  formData.set("public_notice_variant", values.public_notice_variant);
+  formData.set("public_notice_dismissible", values.public_notice_dismissible);
+  formData.set("public_notice_version", values.public_notice_version);
+  formData.set("public_notice_start_at", values.public_notice_start_at);
+  formData.set("public_notice_start_at_iso", values.public_notice_start_at_iso);
+  formData.set("public_notice_end_at", values.public_notice_end_at);
+  formData.set("public_notice_end_at_iso", values.public_notice_end_at_iso);
+  formData.set("public_notice_title", values.public_notice_title);
+  formData.set("public_notice_body", values.public_notice_body);
+  formData.set("public_notice_link_label", values.public_notice_link_label);
+  formData.set("public_notice_link_url", values.public_notice_link_url);
   return formData;
 }
 

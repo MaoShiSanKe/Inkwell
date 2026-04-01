@@ -36,6 +36,7 @@
 - `excerpt_length`
 - SMTP 设置
 - Umami 设置
+- 全站公开公告（含可关闭与版本控制）
 
 ## 2. 当前设置系统的结构
 
@@ -69,25 +70,43 @@ Inkwell 的 DB-backed settings 不是零散读取，而是有统一定义。
 - `components/admin/settings-form.tsx`
 - `app/(admin)/[adminPath]/(protected)/settings/actions.ts`
 
-## 3. 新增一个 setting 的完整链路
+## 3.1 公开站点公告这类 setting 该怎么设计
 
-新增一个 DB-backed setting 时，不要只改一个地方。当前仓库模式至少要检查以下层。
+如果你要新增的是“访客能直接看到”的公开站点级配置，优先参考当前全站公告这条实现链路，而不是直接给管理员一个原始 HTML 输入框。
 
-### 3.1 在 `lib/settings-config.ts` 中定义 setting
-你需要补：
-- key
-- defaultValue
-- isSecret
-- parse
-- serialize
+当前公告相关 setting 包括：
+- `public_notice_enabled`
+- `public_notice_variant`
+- `public_notice_dismissible`
+- `public_notice_version`
+- `public_notice_start_at`
+- `public_notice_end_at`
+- `public_notice_title`
+- `public_notice_body`
+- `public_notice_link_label`
+- `public_notice_link_url`
 
-参考：
-- `admin_path`：`lib/settings-config.ts:138-144`
-- `smtp_password`：`lib/settings-config.ts:193-198`
-- `umami_script_url`：`lib/settings-config.ts:223-228`
+设计原则：
+- 优先结构化字段，而不是一整个 JSON blob 或富文本对象
+- 优先 typed parse / serialize，而不是把所有校验推迟到页面层
+- 当配置会影响公开布局时，应继续复用 `publicLayoutChanged` + `revalidatePath("/", "layout")`
+- 当配置需要浏览器端记忆行为（例如关闭公告）时，版本号应由 settings 显式控制，而不是隐式依赖标题/正文 hash
 
-### 3.2 让默认值进入 `DEFAULT_SETTINGS`
-如果忘了这里，seed 与读取默认值会不完整。
+这类 setting 的好处是：
+- 更安全
+- 更容易测试
+- 更容易被未来维护者理解
+- 不会把公开运营功能变成第二套“任意代码注入系统”
+
+另外，当一个公开站点 setting 依赖访客浏览器端状态时（例如“可关闭公告”），建议同步设计：
+- 一个显式的布尔开关，例如 `public_notice_dismissible`
+- 一个显式版本字段，例如 `public_notice_version`
+
+如果公告需要按时间窗口生效，继续沿用仓库里已有的“浏览器本地 `datetime-local` 输入 + 提交为 ISO 绝对时间”的模式：
+- 后台表单用 `datetime-local`
+- action / service 层保存 ISO 时间字符串
+- 运行时按 `start_at <= now < end_at` 判断是否显示
+- `start_at` / `end_at` 任一为空时表示该边界不受限制
 
 ### 3.3 如果需要，给 `lib/settings.ts` 增加 getter
 如果上层会频繁读取，建议补一个明确的 accessor，而不是在页面中硬取底层 key。

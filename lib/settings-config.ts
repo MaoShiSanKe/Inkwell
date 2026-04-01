@@ -1,4 +1,5 @@
 export type CommentModerationMode = "pending" | "approved";
+export type PublicNoticeVariant = "info" | "warning" | "success";
 
 export type EmailNotificationScenario = {
   scenario: string;
@@ -111,6 +112,22 @@ function parseOptionalScriptUrl(value: string, key: string) {
   }
 }
 
+function parseOptionalIsoDatetime(value: string, key: string) {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  const date = new Date(normalized);
+
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`${key} must be a valid datetime.`);
+  }
+
+  return date.toISOString();
+}
+
 function validateAdminPath(value: string): string {
   const normalized = value.trim();
 
@@ -130,6 +147,14 @@ function validateAdminPath(value: string): string {
 function parseCommentModeration(value: string): CommentModerationMode {
   if (value !== "pending" && value !== "approved") {
     throw new Error("comment_moderation must be either 'pending' or 'approved'.");
+  }
+
+  return value;
+}
+
+function parsePublicNoticeVariant(value: string): PublicNoticeVariant {
+  if (value !== "info" && value !== "warning" && value !== "success") {
+    throw new Error("public_notice_variant must be one of info, warning, or success.");
   }
 
   return value;
@@ -226,6 +251,84 @@ export const settingDefinitions = {
     parse: (value: string) => parseOptionalScriptUrl(value, "umami_script_url"),
     serialize: (value: string) => parseOptionalScriptUrl(value, "umami_script_url"),
   }),
+  public_head_html: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_footer_html: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_custom_css: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_notice_enabled: defineSetting({
+    defaultValue: false,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "public_notice_enabled"),
+    serialize: (value: boolean) => String(value),
+  }),
+  public_notice_variant: defineSetting({
+    defaultValue: "info" as PublicNoticeVariant,
+    isSecret: false,
+    parse: (value: string) => parsePublicNoticeVariant(value),
+    serialize: (value: PublicNoticeVariant) => parsePublicNoticeVariant(value),
+  }),
+  public_notice_dismissible: defineSetting({
+    defaultValue: false,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "public_notice_dismissible"),
+    serialize: (value: boolean) => String(value),
+  }),
+  public_notice_version: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_notice_start_at: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalIsoDatetime(value, "public_notice_start_at"),
+    serialize: (value: string) => parseOptionalIsoDatetime(value, "public_notice_start_at"),
+  }),
+  public_notice_end_at: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalIsoDatetime(value, "public_notice_end_at"),
+    serialize: (value: string) => parseOptionalIsoDatetime(value, "public_notice_end_at"),
+  }),
+  public_notice_title: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_notice_body: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_notice_link_label: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_notice_link_url: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalScriptUrl(value, "public_notice_link_url"),
+    serialize: (value: string) => parseOptionalScriptUrl(value, "public_notice_link_url"),
+  }),
 };
 
 export type SettingKey = keyof typeof settingDefinitions;
@@ -256,6 +359,27 @@ export type UmamiSettings = Pick<
   | "umami_script_url"
 >;
 
+export type PublicCodeSettings = Pick<
+  SettingValues,
+  | "public_head_html"
+  | "public_footer_html"
+  | "public_custom_css"
+>;
+
+export type PublicNoticeSettings = Pick<
+  SettingValues,
+  | "public_notice_enabled"
+  | "public_notice_variant"
+  | "public_notice_dismissible"
+  | "public_notice_version"
+  | "public_notice_start_at"
+  | "public_notice_end_at"
+  | "public_notice_title"
+  | "public_notice_body"
+  | "public_notice_link_label"
+  | "public_notice_link_url"
+>;
+
 export const SETTING_KEYS = Object.keys(settingDefinitions) as SettingKey[];
 
 export const DEFAULT_SETTINGS: SettingValues = {
@@ -274,6 +398,19 @@ export const DEFAULT_SETTINGS: SettingValues = {
   umami_enabled: settingDefinitions.umami_enabled.defaultValue,
   umami_website_id: settingDefinitions.umami_website_id.defaultValue,
   umami_script_url: settingDefinitions.umami_script_url.defaultValue,
+  public_head_html: settingDefinitions.public_head_html.defaultValue,
+  public_footer_html: settingDefinitions.public_footer_html.defaultValue,
+  public_custom_css: settingDefinitions.public_custom_css.defaultValue,
+  public_notice_enabled: settingDefinitions.public_notice_enabled.defaultValue,
+  public_notice_variant: settingDefinitions.public_notice_variant.defaultValue,
+  public_notice_dismissible: settingDefinitions.public_notice_dismissible.defaultValue,
+  public_notice_version: settingDefinitions.public_notice_version.defaultValue,
+  public_notice_start_at: settingDefinitions.public_notice_start_at.defaultValue,
+  public_notice_end_at: settingDefinitions.public_notice_end_at.defaultValue,
+  public_notice_title: settingDefinitions.public_notice_title.defaultValue,
+  public_notice_body: settingDefinitions.public_notice_body.defaultValue,
+  public_notice_link_label: settingDefinitions.public_notice_link_label.defaultValue,
+  public_notice_link_url: settingDefinitions.public_notice_link_url.defaultValue,
 };
 
 export const DEFAULT_EMAIL_NOTIFICATION_SCENARIOS: EmailNotificationScenario[] = [
