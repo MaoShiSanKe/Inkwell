@@ -135,23 +135,45 @@
 | 改搜索、备份恢复、定时发布 | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | [`testing-strategy.md`](testing-strategy.md)、[`deployment.md`](deployment.md) |
 | 改文档站导航或仓库文档结构 | 本文档 | [`ROADMAP.md`](ROADMAP.md) | `npm run docs:build` |
 
-## 5. 维护时的最小原则
+## 5. 维护文档怎么选
 
-### 5.1 先看总览，再看专项手册
+如果你经常在这些文档之间来回跳，先用下面这张表判断“你现在到底属于哪一类问题”。
+
+| 你现在要解决什么 | 优先看哪份文档 | 这份文档主要回答什么 | 不适合拿它解决什么 |
+| --- | --- | --- | --- |
+| 刚部署完，想判断能不能 go / no-go | [`first-deployment-checklist.md`](first-deployment-checklist.md) | 首次上线、新环境迁移、恢复后是否已达到可用标准 | 长期周期性维护、日常低频回看 |
+| 准备发布、升级、迁移，想确认这次改动是否已准备好 | [`release-checklist.md`](release-checklist.md) | 发布前验证范围、专项变更检查、上线后 smoke | 线上故障排查、长期例行维护 |
+| 线上已经异常，想先看日志和最小巡检 | [`monitoring-and-logs.md`](monitoring-and-logs.md) | 先看哪些日志、先做哪些探活、发布后回看什么 | env/settings 归属判断、回滚策略选择 |
+| 想做长期维护、周期性回看、搁置后重新接手 | [`long-term-maintenance.md`](long-term-maintenance.md) | 长期维护节奏、低频高风险链路、重新接手顺序 | 一次性首次验收、具体排障步骤 |
+| 已经知道问题类型，但拿不准该选哪条维护路径 | [`maintenance-decisions.md`](maintenance-decisions.md) | env vs settings、CLI vs internal API、reindex vs rollback 等高频判断 | 具体命令速查、日志查看步骤 |
+| 只想快速找到命令、internal API、恢复入口 | [`operations-reference.md`](operations-reference.md) | CLI / internal API / 公开验证入口速查 | 高层维护决策、长期维护节奏 |
+| 已经出现具体故障，想按症状定位根因 | [`troubleshooting.md`](troubleshooting.md) | 首页无样式、登录异常、搜索异常、恢复异常等具体问题的处理步骤 | 发布前检查、长期维护计划 |
+
+### 5.1 一个最短判断顺序
+1. **刚部署完？** 先看 [`first-deployment-checklist.md`](first-deployment-checklist.md)
+2. **还没发，只是在判断这次能不能发？** 先看 [`release-checklist.md`](release-checklist.md)
+3. **线上正在坏？** 先看 [`monitoring-and-logs.md`](monitoring-and-logs.md) 与 [`troubleshooting.md`](troubleshooting.md)
+4. **站点没明显坏，但担心长期链路悄悄失效？** 先看 [`long-term-maintenance.md`](long-term-maintenance.md)
+5. **问题不是“怎么执行”，而是“该怎么判断方向”？** 先看 [`maintenance-decisions.md`](maintenance-decisions.md)
+6. **只是忘了命令或入口？** 先看 [`operations-reference.md`](operations-reference.md)
+
+## 6. 维护时的最小原则
+
+### 6.1 先看总览，再看专项手册
 高层文档负责告诉你“去哪改、影响到哪里”；详细手册负责告诉你“具体怎么改”。
 
-### 5.2 仓库 Markdown 是 source of truth
+### 6.2 仓库 Markdown 是 source of truth
 不要在 docs site 再维护第二份正文。
 
-### 5.3 改代码时同步改文档
+### 6.3 改代码时同步改文档
 只要行为、入口、配置、验证方式发生变化，就应该同步更新对应文档。
 
-### 5.4 不确定验证范围时，先看测试策略与发布检查
+### 6.4 不确定验证范围时，先看测试策略与发布检查
 优先参考：
 - [`testing-strategy.md`](testing-strategy.md)
 - [`release-checklist.md`](release-checklist.md)
 
-## 6. 文档站与仓库文档的分工
+## 7. 文档站与仓库文档的分工
 
 当前采用两层结构：
 
@@ -170,7 +192,7 @@
 结论：
 > **先更新仓库 Markdown，再让 docs site 展示它。**
 
-## 7. 当前推荐阅读顺序
+## 8. 当前推荐阅读顺序
 
 如果你现在就要继续维护 Inkwell，推荐按顺序读：
 
