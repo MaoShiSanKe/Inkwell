@@ -1,5 +1,10 @@
 export type CommentModerationMode = "pending" | "approved";
 export type PublicNoticeVariant = "info" | "warning" | "success";
+export type HomePostsVariant = "comfortable" | "compact";
+export type PublicLayoutWidth = "narrow" | "default" | "wide";
+export type PublicSurfaceVariant = "soft" | "solid";
+export type PublicAccentTheme = "slate" | "blue" | "emerald" | "amber";
+export type PublicThemeDefaultMode = "system" | "light" | "dark";
 
 export type EmailNotificationScenario = {
   scenario: string;
@@ -112,6 +117,34 @@ function parseOptionalScriptUrl(value: string, key: string) {
   }
 }
 
+function parseOptionalUrl(value: string, key: string) {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.startsWith("/")) {
+    if (normalized.startsWith("//")) {
+      throw new Error(`${key} must be a safe URL.`);
+    }
+
+    return normalized;
+  }
+
+  try {
+    const url = new URL(normalized);
+
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error(`${key} must use http or https.`);
+    }
+
+    return normalized;
+  } catch {
+    throw new Error(`${key} must be a valid URL.`);
+  }
+}
+
 function parseOptionalIsoDatetime(value: string, key: string) {
   const normalized = value.trim();
 
@@ -155,6 +188,46 @@ function parseCommentModeration(value: string): CommentModerationMode {
 function parsePublicNoticeVariant(value: string): PublicNoticeVariant {
   if (value !== "info" && value !== "warning" && value !== "success") {
     throw new Error("public_notice_variant must be one of info, warning, or success.");
+  }
+
+  return value;
+}
+
+function parseHomePostsVariant(value: string): HomePostsVariant {
+  if (value !== "comfortable" && value !== "compact") {
+    throw new Error("home_posts_variant must be either comfortable or compact.");
+  }
+
+  return value;
+}
+
+function parsePublicLayoutWidth(value: string): PublicLayoutWidth {
+  if (value !== "narrow" && value !== "default" && value !== "wide") {
+    throw new Error("public_layout_width must be one of narrow, default, or wide.");
+  }
+
+  return value;
+}
+
+function parsePublicSurfaceVariant(value: string): PublicSurfaceVariant {
+  if (value !== "soft" && value !== "solid") {
+    throw new Error("public_surface_variant must be either soft or solid.");
+  }
+
+  return value;
+}
+
+function parsePublicAccentTheme(value: string): PublicAccentTheme {
+  if (value !== "slate" && value !== "blue" && value !== "emerald" && value !== "amber") {
+    throw new Error("public_accent_theme must be one of slate, blue, emerald, or amber.");
+  }
+
+  return value;
+}
+
+function parsePublicThemeDefaultMode(value: string): PublicThemeDefaultMode {
+  if (value !== "system" && value !== "light" && value !== "dark") {
+    throw new Error("public_theme_default_mode must be one of system, light, or dark.");
   }
 
   return value;
@@ -269,6 +342,114 @@ export const settingDefinitions = {
     parse: (value: string) => parseOptionalText(value),
     serialize: (value: string) => parseOptionalText(value),
   }),
+  site_brand_name: defineSetting({
+    defaultValue: "Inkwell",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  site_tagline: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_hero_title: defineSetting({
+    defaultValue: "最新文章",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_hero_description: defineSetting({
+    defaultValue: "浏览站点中已经发布的文章与公开归档。",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_primary_cta_label: defineSetting({
+    defaultValue: "订阅新文章",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_primary_cta_url: defineSetting({
+    defaultValue: "/subscribe",
+    isSecret: false,
+    parse: (value: string) => parseOptionalUrl(value, "home_primary_cta_url"),
+    serialize: (value: string) => parseOptionalUrl(value, "home_primary_cta_url"),
+  }),
+  home_posts_variant: defineSetting({
+    defaultValue: "comfortable" as HomePostsVariant,
+    isSecret: false,
+    parse: (value: string) => parseHomePostsVariant(value),
+    serialize: (value: HomePostsVariant) => parseHomePostsVariant(value),
+  }),
+  home_show_post_excerpt: defineSetting({
+    defaultValue: true,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "home_show_post_excerpt"),
+    serialize: (value: boolean) => String(value),
+  }),
+  home_show_post_author: defineSetting({
+    defaultValue: true,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "home_show_post_author"),
+    serialize: (value: boolean) => String(value),
+  }),
+  home_show_post_category: defineSetting({
+    defaultValue: true,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "home_show_post_category"),
+    serialize: (value: boolean) => String(value),
+  }),
+  home_show_post_date: defineSetting({
+    defaultValue: true,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "home_show_post_date"),
+    serialize: (value: boolean) => String(value),
+  }),
+  public_layout_width: defineSetting({
+    defaultValue: "default" as PublicLayoutWidth,
+    isSecret: false,
+    parse: (value: string) => parsePublicLayoutWidth(value),
+    serialize: (value: PublicLayoutWidth) => parsePublicLayoutWidth(value),
+  }),
+  public_surface_variant: defineSetting({
+    defaultValue: "soft" as PublicSurfaceVariant,
+    isSecret: false,
+    parse: (value: string) => parsePublicSurfaceVariant(value),
+    serialize: (value: PublicSurfaceVariant) => parsePublicSurfaceVariant(value),
+  }),
+  public_accent_theme: defineSetting({
+    defaultValue: "slate" as PublicAccentTheme,
+    isSecret: false,
+    parse: (value: string) => parsePublicAccentTheme(value),
+    serialize: (value: PublicAccentTheme) => parsePublicAccentTheme(value),
+  }),
+  public_header_show_tagline: defineSetting({
+    defaultValue: true,
+    isSecret: false,
+    parse: (value: string) => parseBooleanString(value, "public_header_show_tagline"),
+    serialize: (value: boolean) => String(value),
+  }),
+  public_footer_blurb: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_footer_copyright: defineSetting({
+    defaultValue: "",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  public_theme_default_mode: defineSetting({
+    defaultValue: "system" as PublicThemeDefaultMode,
+    isSecret: false,
+    parse: (value: string) => parsePublicThemeDefaultMode(value),
+    serialize: (value: PublicThemeDefaultMode) => parsePublicThemeDefaultMode(value),
+  }),
   public_notice_enabled: defineSetting({
     defaultValue: false,
     isSecret: false,
@@ -366,6 +547,28 @@ export type PublicCodeSettings = Pick<
   | "public_custom_css"
 >;
 
+export type ThemeFrameworkSettings = Pick<
+  SettingValues,
+  | "site_brand_name"
+  | "site_tagline"
+  | "home_hero_title"
+  | "home_hero_description"
+  | "home_primary_cta_label"
+  | "home_primary_cta_url"
+  | "home_posts_variant"
+  | "home_show_post_excerpt"
+  | "home_show_post_author"
+  | "home_show_post_category"
+  | "home_show_post_date"
+  | "public_layout_width"
+  | "public_surface_variant"
+  | "public_accent_theme"
+  | "public_header_show_tagline"
+  | "public_footer_blurb"
+  | "public_footer_copyright"
+  | "public_theme_default_mode"
+>;
+
 export type PublicNoticeSettings = Pick<
   SettingValues,
   | "public_notice_enabled"
@@ -401,6 +604,24 @@ export const DEFAULT_SETTINGS: SettingValues = {
   public_head_html: settingDefinitions.public_head_html.defaultValue,
   public_footer_html: settingDefinitions.public_footer_html.defaultValue,
   public_custom_css: settingDefinitions.public_custom_css.defaultValue,
+  site_brand_name: settingDefinitions.site_brand_name.defaultValue,
+  site_tagline: settingDefinitions.site_tagline.defaultValue,
+  home_hero_title: settingDefinitions.home_hero_title.defaultValue,
+  home_hero_description: settingDefinitions.home_hero_description.defaultValue,
+  home_primary_cta_label: settingDefinitions.home_primary_cta_label.defaultValue,
+  home_primary_cta_url: settingDefinitions.home_primary_cta_url.defaultValue,
+  home_posts_variant: settingDefinitions.home_posts_variant.defaultValue,
+  home_show_post_excerpt: settingDefinitions.home_show_post_excerpt.defaultValue,
+  home_show_post_author: settingDefinitions.home_show_post_author.defaultValue,
+  home_show_post_category: settingDefinitions.home_show_post_category.defaultValue,
+  home_show_post_date: settingDefinitions.home_show_post_date.defaultValue,
+  public_layout_width: settingDefinitions.public_layout_width.defaultValue,
+  public_surface_variant: settingDefinitions.public_surface_variant.defaultValue,
+  public_accent_theme: settingDefinitions.public_accent_theme.defaultValue,
+  public_header_show_tagline: settingDefinitions.public_header_show_tagline.defaultValue,
+  public_footer_blurb: settingDefinitions.public_footer_blurb.defaultValue,
+  public_footer_copyright: settingDefinitions.public_footer_copyright.defaultValue,
+  public_theme_default_mode: settingDefinitions.public_theme_default_mode.defaultValue,
   public_notice_enabled: settingDefinitions.public_notice_enabled.defaultValue,
   public_notice_variant: settingDefinitions.public_notice_variant.defaultValue,
   public_notice_dismissible: settingDefinitions.public_notice_dismissible.defaultValue,

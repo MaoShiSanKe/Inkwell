@@ -105,12 +105,14 @@ Inkwell 更适合“希望自己掌控内容系统与部署链路”的用户，
 - RSS / Sitemap / SEO 元信息 / 结构化数据
 - 评论系统
 - 点赞、浏览量、主题切换等公开交互能力
+- Theme Framework v1：品牌、首页 Hero、首页列表展示变体、公开布局壳层、默认主题模式
 
 ### 后台能力
 - 后台登录与路径配置
 - 文章管理、评论管理、媒体库、分类/标签/系列管理
 - IP 黑名单
 - 邮件通知开关与站点设置管理
+- Theme Framework v1 后台配置页（品牌、首页 Hero、首页列表与公开布局设置）
 - 订阅者管理
 
 ### 运维能力
@@ -140,6 +142,7 @@ Inkwell 更适合“希望自己掌控内容系统与部署链路”的用户，
 - 独立文档站
 - 部署文档 / FAQ / Troubleshooting
 - 架构总览 / 开发指南 / 环境说明 / 发布检查清单
+- Theme Framework v1 专项说明：[`docs/theme-framework.md`](docs/theme-framework.md)
 
 ## 技术栈
 
@@ -348,6 +351,7 @@ npm run search:reindex-posts
 ### 如果你已经知道要改哪类内容
 - 后台模块扩展：[`docs/admin-extension-workflow.md`](docs/admin-extension-workflow.md)
 - 设置系统：[`docs/settings-system.md`](docs/settings-system.md)
+- Theme Framework v1：[`docs/theme-framework.md`](docs/theme-framework.md)
 - Schema 与迁移：[`docs/schema-and-migrations.md`](docs/schema-and-migrations.md)
 - 执行边界：[`docs/execution-boundaries.md`](docs/execution-boundaries.md)
 - 测试策略：[`docs/testing-strategy.md`](docs/testing-strategy.md)

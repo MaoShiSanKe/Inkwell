@@ -110,6 +110,8 @@
   - 如何新增/改造后台模块
 - [`settings-system.md`](settings-system.md)
   - 如何新增 DB-backed setting，哪些配置不该进 `settings`
+- [`theme-framework.md`](theme-framework.md)
+  - Theme Framework v1 的能力边界、优先级规则与后续扩展建议
 - [`schema-and-migrations.md`](schema-and-migrations.md)
   - schema 改动的 blast radius、迁移流程、连带影响
 - [`execution-boundaries.md`](execution-boundaries.md)
@@ -127,6 +129,7 @@
 | --- | --- | --- | --- |
 | 新增后台模块、扩展后台 CRUD | [`development.md`](development.md) | [`admin-extension-workflow.md`](admin-extension-workflow.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
 | 新增站点设置、调整后台设置页 | [`environment.md`](environment.md) | [`settings-system.md`](settings-system.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
+| 改首页 Hero、公开布局壳层、主题模式或首页列表展示 | [`development.md`](development.md) | [`theme-framework.md`](theme-framework.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
 | 改 schema / relation / migration | [`development.md`](development.md) | [`schema-and-migrations.md`](schema-and-migrations.md) | [`testing-strategy.md`](testing-strategy.md)、[`release-checklist.md`](release-checklist.md) |
 | 判断该用 server action、API 还是 CLI | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | 对应入口层文档与测试 |
 | 不确定该跑什么测试 | [`development.md`](development.md) | [`testing-strategy.md`](testing-strategy.md) | [`release-checklist.md`](release-checklist.md) |

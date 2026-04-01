@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   getPublicCodeSettingsMock,
   getPublicNoticeSettingsMock,
+  getThemeFrameworkSettingsMock,
   getUmamiSettingsMock,
   useServerInsertedHTMLMock,
 } = vi.hoisted(() => ({
   getPublicCodeSettingsMock: vi.fn(),
   getPublicNoticeSettingsMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
   getUmamiSettingsMock: vi.fn(),
   useServerInsertedHTMLMock: vi.fn(),
 }));
@@ -16,11 +18,12 @@ const {
 vi.mock("@/lib/settings", () => ({
   getPublicCodeSettings: getPublicCodeSettingsMock,
   getPublicNoticeSettings: getPublicNoticeSettingsMock,
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
   getUmamiSettings: getUmamiSettingsMock,
 }));
 
 vi.mock("@/components/theme-toggle", () => ({
-  ThemeToggle: () => <div>theme-toggle</div>,
+  ThemeToggle: ({ defaultMode }: { defaultMode?: string }) => <div>{`theme-toggle:${defaultMode ?? "system"}`}</div>,
 }));
 
 vi.mock("next/script", () => ({
@@ -58,6 +61,26 @@ describe("blog layout", () => {
       public_notice_link_label: "",
       public_notice_link_url: "",
     });
+    getThemeFrameworkSettingsMock.mockResolvedValue({
+      site_brand_name: "Inkwell Daily",
+      site_tagline: "A configurable publishing shell.",
+      home_hero_title: "最新文章",
+      home_hero_description: "浏览站点中已经发布的文章与公开归档。",
+      home_primary_cta_label: "订阅新文章",
+      home_primary_cta_url: "/subscribe",
+      home_posts_variant: "comfortable",
+      home_show_post_excerpt: true,
+      home_show_post_author: true,
+      home_show_post_category: true,
+      home_show_post_date: true,
+      public_layout_width: "wide",
+      public_surface_variant: "solid",
+      public_accent_theme: "blue",
+      public_header_show_tagline: true,
+      public_footer_blurb: "独立写作，持续发布。",
+      public_footer_copyright: "© Inkwell",
+      public_theme_default_mode: "dark",
+    });
     getUmamiSettingsMock.mockResolvedValue({
       umami_enabled: false,
       umami_website_id: "",
@@ -87,6 +110,22 @@ describe("blog layout", () => {
     expect(markup).toContain("今晚 23:00-23:30 将进行短暂维护。");
     expect(markup).toContain("查看详情");
     expect(markup).toContain('href="/docs/deployment"');
+  });
+
+  it("renders theme framework shell with configured header, footer, and default mode", async () => {
+    const { default: BlogLayout } = await import("./layout");
+    const element = await BlogLayout({ children: <div>Visible public content</div> });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("Inkwell Daily");
+    expect(markup).toContain("A configurable publishing shell.");
+    expect(markup).toContain("独立写作，持续发布。");
+    expect(markup).toContain("© Inkwell");
+    expect(markup).toContain("theme-toggle:dark");
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("text-blue-700");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("Visible public content");
   });
 
   it("renders public notice when only the start boundary has passed", async () => {

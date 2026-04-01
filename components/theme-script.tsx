@@ -2,26 +2,25 @@
 
 import { useEffect } from "react";
 
-const STORAGE_KEY = "inkwell-theme";
+import type { PublicThemeDefaultMode } from "@/lib/settings-config";
+import { THEME_STORAGE_KEY, type ThemeMode, resolveThemeMode } from "@/lib/theme";
 
-type ThemeMode = "light" | "dark";
-
-function resolveTheme(): ThemeMode {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") {
-    return stored;
-  }
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+function applyTheme(theme: ThemeMode) {
+  const root = document.documentElement;
+  root.dataset.theme = theme;
+  root.classList.toggle("dark", theme === "dark");
 }
 
-export function ThemeScript() {
+export function ThemeScript({ defaultMode = "system" }: { defaultMode?: PublicThemeDefaultMode }) {
   useEffect(() => {
-    const theme = resolveTheme();
-    const root = document.documentElement;
-    root.dataset.theme = theme;
-    root.classList.toggle("dark", theme === "dark");
-  }, []);
+    applyTheme(
+      resolveThemeMode({
+        storedMode: window.localStorage.getItem(THEME_STORAGE_KEY),
+        defaultMode,
+        systemPrefersDark: window.matchMedia("(prefers-color-scheme: dark)").matches,
+      }),
+    );
+  }, [defaultMode]);
 
   return null;
 }

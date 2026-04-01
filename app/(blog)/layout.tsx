@@ -4,30 +4,42 @@ import {
   PublicHeadHtml,
 } from "@/components/blog/public-code-injection";
 import { DismissiblePublicNotice } from "@/components/blog/dismissible-public-notice";
+import { SiteFooter } from "@/components/blog/site-footer";
+import { SiteHeader } from "@/components/blog/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UmamiTracker } from "@/components/blog/umami-tracker";
-import { getPublicCodeSettings, getPublicNoticeSettings } from "@/lib/settings";
+import {
+  getPublicCodeSettings,
+  getPublicNoticeSettings,
+  getThemeFrameworkSettings,
+} from "@/lib/settings";
+import { resolveContentWidthClass } from "@/lib/theme";
 
 type BlogLayoutProps = {
   children: React.ReactNode;
 };
 
 export default async function BlogLayout({ children }: BlogLayoutProps) {
-  const [tracker, publicCodeSettings, publicNoticeSettings] = await Promise.all([
-    UmamiTracker(),
-    getPublicCodeSettings(),
-    getPublicNoticeSettings(),
-  ]);
+  const [tracker, publicCodeSettings, publicNoticeSettings, themeFrameworkSettings] =
+    await Promise.all([
+      UmamiTracker(),
+      getPublicCodeSettings(),
+      getPublicNoticeSettings(),
+      getThemeFrameworkSettings(),
+    ]);
+  const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
 
   return (
     <>
       <PublicHeadHtml html={publicCodeSettings.public_head_html} />
       <PublicCustomCss css={publicCodeSettings.public_custom_css} />
-      <div className="mx-auto flex w-full max-w-4xl justify-end px-6 pt-6">
-        <ThemeToggle />
+      <SiteHeader settings={themeFrameworkSettings} />
+      <div className={`mx-auto flex w-full ${widthClass} justify-end px-6 pt-4`}>
+        <ThemeToggle defaultMode={themeFrameworkSettings.public_theme_default_mode} />
       </div>
       <DismissiblePublicNotice settings={publicNoticeSettings} />
       {children}
+      <SiteFooter settings={themeFrameworkSettings} />
       {tracker}
       <PublicFooterHtml html={publicCodeSettings.public_footer_html} />
     </>

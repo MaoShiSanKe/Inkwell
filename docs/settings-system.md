@@ -36,7 +36,8 @@
 - `excerpt_length`
 - SMTP 设置
 - Umami 设置
-- 全站公开公告（含可关闭与版本控制）
+- Theme Framework v1（站点品牌、首页 hero、首页展示变体、公开布局外壳、默认主题模式）
+- 全站公开公告（含可关闭、版本控制与时间窗口）
 
 ## 2. 当前设置系统的结构
 
@@ -70,7 +71,36 @@ Inkwell 的 DB-backed settings 不是零散读取，而是有统一定义。
 - `components/admin/settings-form.tsx`
 - `app/(admin)/[adminPath]/(protected)/settings/actions.ts`
 
-## 3.1 公开站点公告这类 setting 该怎么设计
+## 3.1 Theme Framework v1 这类展示 setting 该怎么设计
+
+如果你要新增的是“公开站点展示层”的主题化配置，优先沿用当前 settings 链路，而不是直接引入主题市场、页面搭建器或任意 token 编辑器。
+
+Theme Framework v1 当前建议采用：
+- 品牌名称 / 副标题
+- 首页标题 / 简介 / 主 CTA
+- 首页列表展示模式与元信息开关
+- 公开布局宽度 / 表面风格 / 强调色
+- 默认主题模式（`system | light | dark`）
+
+当前 v1 已落地的表现包括：
+- 公开页头品牌区与结构化页脚
+- 首页 Hero 文案与主按钮
+- 首页列表 `comfortable | compact` 变体
+- 首页摘要 / 作者 / 分类 / 发布时间开关
+- public/admin 主题切换遵循 `localStorage > backend default > system`
+
+设计原则：
+- 优先有限枚举与结构化字段，而不是任意 JSON blob
+- 优先“单主题、多变体”，而不是多主题注册系统
+- 优先复用 `publicLayoutChanged` + `revalidatePath("/", "layout")`
+- 保留 `public_custom_css` 作为 escape hatch，但不要让它反客为主
+
+这类设置适合第一阶段解决：
+- 首页和公开外壳的硬编码问题
+- 浏览器后台可配置的品牌与展示能力
+- 类似 WordPress 主题设置页的可维护体验
+
+## 3.2 公开站点公告这类 setting 该怎么设计
 
 如果你要新增的是“访客能直接看到”的公开站点级配置，优先参考当前全站公告这条实现链路，而不是直接给管理员一个原始 HTML 输入框。
 
@@ -114,6 +144,7 @@ Inkwell 的 DB-backed settings 不是零散读取，而是有统一定义。
 例如：
 - `getAdminPath()` 用于后台路径解析
 - `getSiteOrigin()` 用于站点 origin 逻辑
+- `getThemeFrameworkSettings()` 用于首页与公开布局主题配置
 
 ### 3.4 更新后台设置服务
 如果这个 setting 需要由后台修改，还要更新：
@@ -145,6 +176,16 @@ Inkwell 的 DB-backed settings 不是零散读取，而是有统一定义。
 - `docs/development.md`
 - `docs/release-checklist.md`
 - 必要时 `README.md` / `docs/deployment.md`
+
+### 3.8 当前最适合延后的内容
+即便开始做 Theme Framework，也不建议当前阶段直接引入：
+- 多主题安装 / 激活系统
+- 菜单树配置系统
+- section builder
+- page builder
+- 插件式扩展接口
+
+这些更适合 Theme Framework v2 之后再判断。
 
 ## 4. Secret setting 与普通 setting 的区别
 
@@ -283,3 +324,16 @@ Inkwell 的 DB-backed settings 不是零散读取，而是有统一定义。
 5. `lib/settings-config.ts`
 6. `lib/settings.ts`
 7. `docs/testing-strategy.md`
+
+## 12. 对 Theme Framework v1 的结论
+
+当前 Inkwell 最合适的主题化方向不是：
+- 插件化主题生态
+- 主题市场
+- 页面搭建器
+
+而是：
+
+> **先把首页与公开布局的核心展示参数，纳入结构化 settings 系统，形成单主题、多变体、后台可配置的 Theme Framework v1。**
+
+这也是当前项目阶段性最合适、最稳的演进方式。

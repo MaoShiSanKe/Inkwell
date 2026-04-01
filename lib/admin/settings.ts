@@ -91,6 +91,49 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
     public_head_html: input.public_head_html?.trim() ?? "",
     public_footer_html: input.public_footer_html?.trim() ?? "",
     public_custom_css: input.public_custom_css?.trim() ?? "",
+    site_brand_name: input.site_brand_name?.trim() ?? "Inkwell",
+    site_tagline: input.site_tagline?.trim() ?? "",
+    home_hero_title: input.home_hero_title?.trim() ?? "最新文章",
+    home_hero_description:
+      input.home_hero_description?.trim() ?? "浏览站点中已经发布的文章与公开归档。",
+    home_primary_cta_label: input.home_primary_cta_label?.trim() ?? "订阅新文章",
+    home_primary_cta_url: input.home_primary_cta_url?.trim() ?? "/subscribe",
+    home_posts_variant:
+      input.home_posts_variant?.trim() === "compact" ? "compact" : "comfortable",
+    home_show_post_excerpt:
+      input.home_show_post_excerpt?.trim() === "false" ? "false" : "true",
+    home_show_post_author:
+      input.home_show_post_author?.trim() === "false" ? "false" : "true",
+    home_show_post_category:
+      input.home_show_post_category?.trim() === "false" ? "false" : "true",
+    home_show_post_date:
+      input.home_show_post_date?.trim() === "false" ? "false" : "true",
+    public_layout_width:
+      input.public_layout_width?.trim() === "narrow"
+        ? "narrow"
+        : input.public_layout_width?.trim() === "wide"
+          ? "wide"
+          : "default",
+    public_surface_variant:
+      input.public_surface_variant?.trim() === "solid" ? "solid" : "soft",
+    public_accent_theme:
+      input.public_accent_theme?.trim() === "blue"
+        ? "blue"
+        : input.public_accent_theme?.trim() === "emerald"
+          ? "emerald"
+          : input.public_accent_theme?.trim() === "amber"
+            ? "amber"
+            : "slate",
+    public_header_show_tagline:
+      input.public_header_show_tagline?.trim() === "false" ? "false" : "true",
+    public_footer_blurb: input.public_footer_blurb?.trim() ?? "",
+    public_footer_copyright: input.public_footer_copyright?.trim() ?? "",
+    public_theme_default_mode:
+      input.public_theme_default_mode?.trim() === "light"
+        ? "light"
+        : input.public_theme_default_mode?.trim() === "dark"
+          ? "dark"
+          : "system",
     public_notice_enabled:
       input.public_notice_enabled?.trim() === "true"
         ? "true"
@@ -121,7 +164,6 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
   };
 }
 
-
 function toFormValues(values: SettingValues): SettingsFormValues {
   return {
     admin_path: values.admin_path,
@@ -142,6 +184,24 @@ function toFormValues(values: SettingValues): SettingsFormValues {
     public_head_html: values.public_head_html,
     public_footer_html: values.public_footer_html,
     public_custom_css: values.public_custom_css,
+    site_brand_name: values.site_brand_name,
+    site_tagline: values.site_tagline,
+    home_hero_title: values.home_hero_title,
+    home_hero_description: values.home_hero_description,
+    home_primary_cta_label: values.home_primary_cta_label,
+    home_primary_cta_url: values.home_primary_cta_url,
+    home_posts_variant: values.home_posts_variant,
+    home_show_post_excerpt: values.home_show_post_excerpt ? "true" : "false",
+    home_show_post_author: values.home_show_post_author ? "true" : "false",
+    home_show_post_category: values.home_show_post_category ? "true" : "false",
+    home_show_post_date: values.home_show_post_date ? "true" : "false",
+    public_layout_width: values.public_layout_width,
+    public_surface_variant: values.public_surface_variant,
+    public_accent_theme: values.public_accent_theme,
+    public_header_show_tagline: values.public_header_show_tagline ? "true" : "false",
+    public_footer_blurb: values.public_footer_blurb,
+    public_footer_copyright: values.public_footer_copyright,
+    public_theme_default_mode: values.public_theme_default_mode,
     public_notice_enabled: values.public_notice_enabled ? "true" : "false",
     public_notice_variant: values.public_notice_variant,
     public_notice_dismissible: values.public_notice_dismissible ? "true" : "false",
@@ -195,6 +255,42 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
       return "页尾代码格式无效。";
     case "public_custom_css":
       return "公开站点 CSS 格式无效。";
+    case "site_brand_name":
+      return "站点品牌名称格式无效。";
+    case "site_tagline":
+      return "站点副标题格式无效。";
+    case "home_hero_title":
+      return "首页标题格式无效。";
+    case "home_hero_description":
+      return "首页说明格式无效。";
+    case "home_primary_cta_label":
+      return "首页主按钮文案格式无效。";
+    case "home_primary_cta_url":
+      return "首页主按钮链接无效。";
+    case "home_posts_variant":
+      return "首页文章展示模式无效。";
+    case "home_show_post_excerpt":
+      return "首页摘要开关无效。";
+    case "home_show_post_author":
+      return "首页作者开关无效。";
+    case "home_show_post_category":
+      return "首页分类开关无效。";
+    case "home_show_post_date":
+      return "首页发布时间开关无效。";
+    case "public_layout_width":
+      return "公开布局宽度配置无效。";
+    case "public_surface_variant":
+      return "公开布局表面样式无效。";
+    case "public_accent_theme":
+      return "公开站点强调色主题无效。";
+    case "public_header_show_tagline":
+      return "页头副标题开关无效。";
+    case "public_footer_blurb":
+      return "页脚说明格式无效。";
+    case "public_footer_copyright":
+      return "页脚版权文案格式无效。";
+    case "public_theme_default_mode":
+      return "默认主题模式无效。";
     case "public_notice_enabled":
       return "公告开关无效。";
     case "public_notice_variant":
@@ -255,6 +351,24 @@ function validateSettingsInput(values: SettingsFormValues):
     public_head_html: values.public_head_html,
     public_footer_html: values.public_footer_html,
     public_custom_css: values.public_custom_css,
+    site_brand_name: values.site_brand_name,
+    site_tagline: values.site_tagline,
+    home_hero_title: values.home_hero_title,
+    home_hero_description: values.home_hero_description,
+    home_primary_cta_label: values.home_primary_cta_label,
+    home_primary_cta_url: values.home_primary_cta_url,
+    home_posts_variant: values.home_posts_variant,
+    home_show_post_excerpt: values.home_show_post_excerpt,
+    home_show_post_author: values.home_show_post_author,
+    home_show_post_category: values.home_show_post_category,
+    home_show_post_date: values.home_show_post_date,
+    public_layout_width: values.public_layout_width,
+    public_surface_variant: values.public_surface_variant,
+    public_accent_theme: values.public_accent_theme,
+    public_header_show_tagline: values.public_header_show_tagline,
+    public_footer_blurb: values.public_footer_blurb,
+    public_footer_copyright: values.public_footer_copyright,
+    public_theme_default_mode: values.public_theme_default_mode,
     public_notice_enabled: values.public_notice_enabled,
     public_notice_variant: values.public_notice_variant,
     public_notice_dismissible: values.public_notice_dismissible,
@@ -283,6 +397,22 @@ function validateSettingsInput(values: SettingsFormValues):
     if (!parsed.umami_script_url) {
       errors.umami_script_url = "启用 Umami 时必须填写脚本地址。";
     }
+  }
+
+  if (!parsed.site_brand_name) {
+    errors.site_brand_name = "站点品牌名称不能为空。";
+  }
+
+  if (!parsed.home_hero_title) {
+    errors.home_hero_title = "首页标题不能为空。";
+  }
+
+  if (!parsed.home_primary_cta_label) {
+    errors.home_primary_cta_label = "首页主按钮文案不能为空。";
+  }
+
+  if (!parsed.home_primary_cta_url) {
+    errors.home_primary_cta_url = "首页主按钮链接不能为空。";
   }
 
   if (
@@ -462,6 +592,24 @@ export async function updateAdminSettings(
         nextSettings.public_head_html !== currentSettings.public_head_html ||
         nextSettings.public_footer_html !== currentSettings.public_footer_html ||
         nextSettings.public_custom_css !== currentSettings.public_custom_css ||
+        nextSettings.site_brand_name !== currentSettings.site_brand_name ||
+        nextSettings.site_tagline !== currentSettings.site_tagline ||
+        nextSettings.home_hero_title !== currentSettings.home_hero_title ||
+        nextSettings.home_hero_description !== currentSettings.home_hero_description ||
+        nextSettings.home_primary_cta_label !== currentSettings.home_primary_cta_label ||
+        nextSettings.home_primary_cta_url !== currentSettings.home_primary_cta_url ||
+        nextSettings.home_posts_variant !== currentSettings.home_posts_variant ||
+        nextSettings.home_show_post_excerpt !== currentSettings.home_show_post_excerpt ||
+        nextSettings.home_show_post_author !== currentSettings.home_show_post_author ||
+        nextSettings.home_show_post_category !== currentSettings.home_show_post_category ||
+        nextSettings.home_show_post_date !== currentSettings.home_show_post_date ||
+        nextSettings.public_layout_width !== currentSettings.public_layout_width ||
+        nextSettings.public_surface_variant !== currentSettings.public_surface_variant ||
+        nextSettings.public_accent_theme !== currentSettings.public_accent_theme ||
+        nextSettings.public_header_show_tagline !== currentSettings.public_header_show_tagline ||
+        nextSettings.public_footer_blurb !== currentSettings.public_footer_blurb ||
+        nextSettings.public_footer_copyright !== currentSettings.public_footer_copyright ||
+        nextSettings.public_theme_default_mode !== currentSettings.public_theme_default_mode ||
         nextSettings.public_notice_enabled !== currentSettings.public_notice_enabled ||
         nextSettings.public_notice_variant !== currentSettings.public_notice_variant ||
         nextSettings.public_notice_dismissible !== currentSettings.public_notice_dismissible ||

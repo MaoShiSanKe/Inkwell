@@ -184,19 +184,41 @@ npm run test
 - `components/blog/**`
 - `lib/blog/**`
 
+如果改动涉及首页 Hero、公开布局壳层、主题模式或前台展示变体，先补读：
+- `docs/theme-framework.md`
+
 建议先看：
 - `docs/testing-strategy.md`
 - `docs/architecture.md`
+- `docs/theme-framework.md`
 
-至少验证：
+Theme Framework v1 当前已经覆盖：
+- 页头品牌区 / 页脚说明区
+- 首页 Hero 与主 CTA
+- 首页文章列表 `comfortable | compact` 变体
+- 首页摘要 / 作者 / 分类 / 发布时间开关
+- `localStorage > backend default > system` 的默认主题模式优先级
+
+这类改动通常不只是单个 `page.tsx` 文案变化，而是会同时影响 settings、公开布局和浏览器端主题状态。
+
+建议至少验证：
 ```bash
 npm run test
-```
-
-如有真实用户交互，再补：
-```bash
 npm run test:browser
 ```
+
+如改动同时触及 settings 保存链路，再补：
+```bash
+npm run test:integration
+```
+
+建议优先参考：
+- `app/(blog)/page.test.tsx`
+- `app/(blog)/layout.test.tsx`
+- `tests/browser/settings.spec.ts`
+- `tests/browser/theme-toggle.spec.ts`
+
+若只是纯文档同步，再按 4.7 执行。
 
 ### 4.6 搜索 / 备份恢复 / 定时发布 / 运维脚本改动
 通常会涉及：
@@ -400,3 +422,35 @@ npm run backup:import -- --input ./backup --force --reindex-search
 6. `docs/environment.md`
 7. `docs/release-checklist.md`
 8. 再按改动类型进入专项手册
+
+如果要改首页/公开布局，再重点读：
+- `docs/theme-framework.md`
+- `app/(blog)/layout.tsx`
+- `app/(blog)/page.tsx`
+- `lib/theme.ts`
+- `tests/browser/settings.spec.ts`
+- `tests/browser/theme-toggle.spec.ts`
+
+如果要改设置页与保存链路，再重点读：
+- `docs/settings-system.md`
+- `components/admin/settings-form.tsx`
+- `lib/admin/settings.ts`
+- `app/(admin)/[adminPath]/(protected)/settings/actions.ts`
+- `tests/integration/admin/settings.integration.test.ts`
+- `tests/browser/settings.spec.ts`
+
+文档同步时，优先维护仓库文档，不要把行为说明散落到本地说明或临时笔记里。
+
+更多见：
+- `docs/README.md`
+- `docs/theme-framework.md`
+- `docs/testing-strategy.md`
+
+## 12. 本地协作约束
+
+- 提交或推送前，先检查是否包含 `.env.local`、secrets、token、凭据、私钥或本地机器路径
+- 删除文件前如果边界不确定，优先移动到 `E:/otherP/Inkwell/needdel`
+- 修改范围仅限 `E:/otherP/Inkwell` 及其子目录
+- 下载或补齐依赖时，优先局限在当前项目目录内，避免全局污染
+
+这些规则与项目本地 `CLAUDE.md` 保持一致。

@@ -15,6 +15,7 @@ import {
   type SettingKey,
   type SettingValues,
   type SmtpSettings,
+  type ThemeFrameworkSettings,
   type UmamiSettings,
 } from "./settings-config";
 
@@ -157,6 +158,31 @@ export async function getPublicCodeSettings(): Promise<PublicCodeSettings> {
     public_head_html: values.public_head_html,
     public_footer_html: values.public_footer_html,
     public_custom_css: values.public_custom_css,
+  };
+}
+
+export async function getThemeFrameworkSettings(): Promise<ThemeFrameworkSettings> {
+  const values = await getSettings();
+
+  return {
+    site_brand_name: values.site_brand_name,
+    site_tagline: values.site_tagline,
+    home_hero_title: values.home_hero_title,
+    home_hero_description: values.home_hero_description,
+    home_primary_cta_label: values.home_primary_cta_label,
+    home_primary_cta_url: values.home_primary_cta_url,
+    home_posts_variant: values.home_posts_variant,
+    home_show_post_excerpt: values.home_show_post_excerpt,
+    home_show_post_author: values.home_show_post_author,
+    home_show_post_category: values.home_show_post_category,
+    home_show_post_date: values.home_show_post_date,
+    public_layout_width: values.public_layout_width,
+    public_surface_variant: values.public_surface_variant,
+    public_accent_theme: values.public_accent_theme,
+    public_header_show_tagline: values.public_header_show_tagline,
+    public_footer_blurb: values.public_footer_blurb,
+    public_footer_copyright: values.public_footer_copyright,
+    public_theme_default_mode: values.public_theme_default_mode,
   };
 }
 

@@ -53,6 +53,16 @@ test.describe("settings browser regression", () => {
       await page
         .getByLabel("自定义 CSS")
         .fill(".inkwell-public-home { color: rgb(255, 0, 0); }");
+      await page.getByLabel("站点品牌名称").fill("Inkwell Daily");
+      await page.getByLabel("首页标题").fill("最新文章与精选内容");
+      await page.getByLabel("首页说明").fill("浏览主题框架驱动的首页内容。\n支持可配置的 Hero 与列表视图。");
+      await page.getByLabel("首页主按钮文案").fill("查看订阅");
+      await page.getByLabel("首页主按钮链接").fill("/newsletter");
+      await page.getByLabel("首页文章展示模式").selectOption("compact");
+      await page.getByLabel("首页显示摘要").selectOption("false");
+      await page.getByLabel("首页显示作者").selectOption("false");
+      await page.getByLabel("首页显示分类").selectOption("false");
+      await page.getByLabel("首页显示发布时间").selectOption("false");
       await page.locator('select[name="public_notice_enabled"]').selectOption("true");
       await page.locator('select[name="public_notice_variant"]').selectOption("warning");
       await page.locator('input[name="public_notice_title"]').fill("系统维护通知");
@@ -87,6 +97,13 @@ test.describe("settings browser regression", () => {
         "src",
         "https://umami.example.com/script.js",
       );
+      await expect(page.getByRole("main").getByText("Inkwell Daily")).toBeVisible();
+      await expect(page.getByRole("heading", { name: "最新文章与精选内容" })).toBeVisible();
+      await expect(page.getByText("浏览主题框架驱动的首页内容。 支持可配置的 Hero 与列表视图。")).toBeVisible();
+      await expect(page.getByRole("link", { name: "查看订阅" })).toHaveAttribute("href", "/newsletter");
+      await expect(page.getByText("Published excerpt")).toHaveCount(0);
+      await expect(page.getByText("作者：Author Name")).toHaveCount(0);
+      await expect(page.getByText("分类：Published Category")).toHaveCount(0);
 
       await page.goto(`/${fixture.adminPath}/settings`);
       await expect(page.getByRole("heading", { name: "系统维护通知" })).toHaveCount(0);
@@ -94,6 +111,16 @@ test.describe("settings browser regression", () => {
       await expect(page.locator('head style[data-inkwell-public-custom-css]')).toHaveCount(0);
       await expect(page.getByTestId("inkwell-public-footer")).toHaveCount(0);
 
+      const siteBrandName = await getSettingValue("site_brand_name");
+      const homeHeroTitle = await getSettingValue("home_hero_title");
+      const homeHeroDescription = await getSettingValue("home_hero_description");
+      const homePrimaryCtaLabel = await getSettingValue("home_primary_cta_label");
+      const homePrimaryCtaUrl = await getSettingValue("home_primary_cta_url");
+      const homePostsVariant = await getSettingValue("home_posts_variant");
+      const homeShowPostExcerpt = await getSettingValue("home_show_post_excerpt");
+      const homeShowPostAuthor = await getSettingValue("home_show_post_author");
+      const homeShowPostCategory = await getSettingValue("home_show_post_category");
+      const homeShowPostDate = await getSettingValue("home_show_post_date");
       const publicNoticeEnabled = await getSettingValue("public_notice_enabled");
       const publicNoticeVariant = await getSettingValue("public_notice_variant");
       const publicNoticeTitle = await getSettingValue("public_notice_title");
@@ -101,6 +128,18 @@ test.describe("settings browser regression", () => {
       const publicNoticeLinkLabel = await getSettingValue("public_notice_link_label");
       const publicNoticeLinkUrl = await getSettingValue("public_notice_link_url");
 
+      expect(siteBrandName).toBe("Inkwell Daily");
+      expect(homeHeroTitle).toBe("最新文章与精选内容");
+      expect(homeHeroDescription?.replaceAll("\r\n", "\n")).toBe(
+        "浏览主题框架驱动的首页内容。\n支持可配置的 Hero 与列表视图。",
+      );
+      expect(homePrimaryCtaLabel).toBe("查看订阅");
+      expect(homePrimaryCtaUrl).toBe("/newsletter");
+      expect(homePostsVariant).toBe("compact");
+      expect(homeShowPostExcerpt).toBe("false");
+      expect(homeShowPostAuthor).toBe("false");
+      expect(homeShowPostCategory).toBe("false");
+      expect(homeShowPostDate).toBe("false");
       expect(publicNoticeEnabled).toBe("true");
       expect(publicNoticeVariant).toBe("warning");
       expect(publicNoticeTitle).toBe("系统维护通知");
@@ -112,6 +151,7 @@ test.describe("settings browser regression", () => {
         fixture.originalCommentModeration,
         fixture.originalExcerptLength,
         fixture.originalPublicCodeSettings,
+        fixture.originalThemeFrameworkSettings,
         fixture.originalPublicNoticeSettings,
         fixture.originalUmamiSettings,
         fixture.originalEmailNotifications,
@@ -130,6 +170,19 @@ type SettingsFixture = {
     public_head_html: string | null;
     public_footer_html: string | null;
     public_custom_css: string | null;
+  };
+  originalThemeFrameworkSettings: {
+    site_brand_name: string | null;
+    site_tagline: string | null;
+    home_hero_title: string | null;
+    home_hero_description: string | null;
+    home_primary_cta_label: string | null;
+    home_primary_cta_url: string | null;
+    home_posts_variant: string | null;
+    home_show_post_excerpt: string | null;
+    home_show_post_author: string | null;
+    home_show_post_category: string | null;
+    home_show_post_date: string | null;
   };
   originalPublicNoticeSettings: {
     public_notice_enabled: string | null;
@@ -162,6 +215,19 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
       public_custom_css: null,
     },
     {
+      site_brand_name: null,
+      site_tagline: null,
+      home_hero_title: null,
+      home_hero_description: null,
+      home_primary_cta_label: null,
+      home_primary_cta_url: null,
+      home_posts_variant: null,
+      home_show_post_excerpt: null,
+      home_show_post_author: null,
+      home_show_post_category: null,
+      home_show_post_date: null,
+    },
+    {
       public_notice_enabled: null,
       public_notice_variant: null,
       public_notice_title: null,
@@ -188,6 +254,19 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
     public_head_html: await getSettingValue("public_head_html"),
     public_footer_html: await getSettingValue("public_footer_html"),
     public_custom_css: await getSettingValue("public_custom_css"),
+  };
+  const originalThemeFrameworkSettings = {
+    site_brand_name: await getSettingValue("site_brand_name"),
+    site_tagline: await getSettingValue("site_tagline"),
+    home_hero_title: await getSettingValue("home_hero_title"),
+    home_hero_description: await getSettingValue("home_hero_description"),
+    home_primary_cta_label: await getSettingValue("home_primary_cta_label"),
+    home_primary_cta_url: await getSettingValue("home_primary_cta_url"),
+    home_posts_variant: await getSettingValue("home_posts_variant"),
+    home_show_post_excerpt: await getSettingValue("home_show_post_excerpt"),
+    home_show_post_author: await getSettingValue("home_show_post_author"),
+    home_show_post_category: await getSettingValue("home_show_post_category"),
+    home_show_post_date: await getSettingValue("home_show_post_date"),
   };
   const originalPublicNoticeSettings = {
     public_notice_enabled: await getSettingValue("public_notice_enabled"),
@@ -226,6 +305,7 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
     originalCommentModeration,
     originalExcerptLength,
     originalPublicCodeSettings,
+    originalThemeFrameworkSettings,
     originalPublicNoticeSettings,
     originalUmamiSettings,
     originalEmailNotifications,
@@ -239,6 +319,19 @@ async function cleanupSettingsFixture(
     public_head_html: string | null;
     public_footer_html: string | null;
     public_custom_css: string | null;
+  },
+  originalThemeFrameworkSettings: {
+    site_brand_name: string | null;
+    site_tagline: string | null;
+    home_hero_title: string | null;
+    home_hero_description: string | null;
+    home_primary_cta_label: string | null;
+    home_primary_cta_url: string | null;
+    home_posts_variant: string | null;
+    home_show_post_excerpt: string | null;
+    home_show_post_author: string | null;
+    home_show_post_category: string | null;
+    home_show_post_date: string | null;
   },
   originalPublicNoticeSettings: {
     public_notice_enabled: string | null;
@@ -275,6 +368,17 @@ async function cleanupSettingsFixture(
     await restoreSetting(db, "public_head_html", originalPublicCodeSettings.public_head_html);
     await restoreSetting(db, "public_footer_html", originalPublicCodeSettings.public_footer_html);
     await restoreSetting(db, "public_custom_css", originalPublicCodeSettings.public_custom_css);
+    await restoreSetting(db, "site_brand_name", originalThemeFrameworkSettings.site_brand_name);
+    await restoreSetting(db, "site_tagline", originalThemeFrameworkSettings.site_tagline);
+    await restoreSetting(db, "home_hero_title", originalThemeFrameworkSettings.home_hero_title);
+    await restoreSetting(db, "home_hero_description", originalThemeFrameworkSettings.home_hero_description);
+    await restoreSetting(db, "home_primary_cta_label", originalThemeFrameworkSettings.home_primary_cta_label);
+    await restoreSetting(db, "home_primary_cta_url", originalThemeFrameworkSettings.home_primary_cta_url);
+    await restoreSetting(db, "home_posts_variant", originalThemeFrameworkSettings.home_posts_variant);
+    await restoreSetting(db, "home_show_post_excerpt", originalThemeFrameworkSettings.home_show_post_excerpt);
+    await restoreSetting(db, "home_show_post_author", originalThemeFrameworkSettings.home_show_post_author);
+    await restoreSetting(db, "home_show_post_category", originalThemeFrameworkSettings.home_show_post_category);
+    await restoreSetting(db, "home_show_post_date", originalThemeFrameworkSettings.home_show_post_date);
     await restoreSetting(db, "public_notice_enabled", originalPublicNoticeSettings.public_notice_enabled);
     await restoreSetting(db, "public_notice_variant", originalPublicNoticeSettings.public_notice_variant);
     await restoreSetting(db, "public_notice_title", originalPublicNoticeSettings.public_notice_title);
@@ -299,6 +403,17 @@ async function restoreSetting(
     | "public_head_html"
     | "public_footer_html"
     | "public_custom_css"
+    | "site_brand_name"
+    | "site_tagline"
+    | "home_hero_title"
+    | "home_hero_description"
+    | "home_primary_cta_label"
+    | "home_primary_cta_url"
+    | "home_posts_variant"
+    | "home_show_post_excerpt"
+    | "home_show_post_author"
+    | "home_show_post_category"
+    | "home_show_post_date"
     | "public_notice_enabled"
     | "public_notice_variant"
     | "public_notice_title"

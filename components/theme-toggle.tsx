@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-const STORAGE_KEY = "inkwell-theme";
-
-type ThemeMode = "light" | "dark";
+import type { PublicThemeDefaultMode } from "@/lib/settings-config";
+import { THEME_STORAGE_KEY, type ThemeMode, resolveThemeMode } from "@/lib/theme";
 
 function applyTheme(theme: ThemeMode) {
   const root = document.documentElement;
@@ -12,26 +11,30 @@ function applyTheme(theme: ThemeMode) {
   root.classList.toggle("dark", theme === "dark");
 }
 
-function resolveInitialTheme(): ThemeMode {
-  if (typeof window === "undefined") {
-    return "light";
-  }
-
-  const stored = window.localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark") {
-    return stored;
-  }
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+function resolveInitialTheme(defaultMode: PublicThemeDefaultMode): ThemeMode {
+  return defaultMode === "dark" ? "dark" : "light";
 }
 
-export function ThemeToggle() {
-  const initialTheme = useMemo(() => resolveInitialTheme(), []);
-  const [theme, setTheme] = useState<ThemeMode>(initialTheme);
+export function ThemeToggle({ defaultMode = "system" }: { defaultMode?: PublicThemeDefaultMode }) {
+  const [theme, setTheme] = useState<ThemeMode>(resolveInitialTheme(defaultMode));
 
-  if (typeof document !== "undefined") {
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    setTheme(
+      resolveThemeMode({
+        storedMode: window.localStorage.getItem(THEME_STORAGE_KEY),
+        defaultMode,
+        systemPrefersDark: window.matchMedia("(prefers-color-scheme: dark)").matches,
+      }),
+    );
+  }, [defaultMode]);
+
+  useEffect(() => {
     applyTheme(theme);
-  }
+  }, [theme]);
 
   return (
     <button
@@ -42,7 +45,7 @@ export function ThemeToggle() {
         const nextTheme: ThemeMode = theme === "dark" ? "light" : "dark";
         setTheme(nextTheme);
         applyTheme(nextTheme);
-        window.localStorage.setItem(STORAGE_KEY, nextTheme);
+        window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
       }}
     >
       {theme === "dark" ? "浅色模式" : "深色模式"}

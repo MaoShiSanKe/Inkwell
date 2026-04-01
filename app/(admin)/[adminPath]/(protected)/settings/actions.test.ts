@@ -106,7 +106,7 @@ describe("admin settings actions", () => {
     expect(revalidatePathMock).not.toHaveBeenCalled();
   });
 
-  it("passes SMTP, public layout, and notice window fields through settings save payload", async () => {
+  it("passes SMTP, theme framework, public layout, and notice window fields through settings save payload", async () => {
     getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
     updateAdminSettingsMock.mockResolvedValue({
       success: false,
@@ -132,6 +132,24 @@ describe("admin settings actions", () => {
         public_head_html: '<meta name="inkwell-public-head" content="ok" />',
         public_footer_html: '<div data-testid="inkwell-public-footer">footer snippet</div>',
         public_custom_css: ".inkwell-public-home { color: rgb(255, 0, 0); }",
+        site_brand_name: "Inkwell Daily",
+        site_tagline: "静态前端，动态内容。",
+        home_hero_title: "最新文章与精选内容",
+        home_hero_description: "浏览站点中已经发布的文章、专题与长期归档。",
+        home_primary_cta_label: "立即订阅",
+        home_primary_cta_url: "/subscribe",
+        home_posts_variant: "compact",
+        home_show_post_excerpt: "false",
+        home_show_post_author: "true",
+        home_show_post_category: "true",
+        home_show_post_date: "false",
+        public_layout_width: "wide",
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+        public_header_show_tagline: "true",
+        public_footer_blurb: "面向长期维护的内容站点。",
+        public_footer_copyright: "© Inkwell",
+        public_theme_default_mode: "dark",
         public_notice_enabled: "true",
         public_notice_variant: "warning",
         public_notice_dismissible: "true",
@@ -311,6 +329,24 @@ function createFormData(
     public_head_html: string;
     public_footer_html: string;
     public_custom_css: string;
+    site_brand_name: string;
+    site_tagline: string;
+    home_hero_title: string;
+    home_hero_description: string;
+    home_primary_cta_label: string;
+    home_primary_cta_url: string;
+    home_posts_variant: string;
+    home_show_post_excerpt: string;
+    home_show_post_author: string;
+    home_show_post_category: string;
+    home_show_post_date: string;
+    public_layout_width: string;
+    public_surface_variant: string;
+    public_accent_theme: string;
+    public_header_show_tagline: string;
+    public_footer_blurb: string;
+    public_footer_copyright: string;
+    public_theme_default_mode: string;
     public_notice_enabled: string;
     public_notice_variant: string;
     public_notice_dismissible: string;
@@ -345,6 +381,24 @@ function createFormData(
     public_head_html: '<meta name="inkwell-public-head" content="ok" />',
     public_footer_html: '<div data-testid="inkwell-public-footer">footer snippet</div>',
     public_custom_css: ".inkwell-public-home { color: rgb(255, 0, 0); }",
+    site_brand_name: "Inkwell Daily",
+    site_tagline: "静态前端，动态内容。",
+    home_hero_title: "最新文章与精选内容",
+    home_hero_description: "浏览站点中已经发布的文章、专题与长期归档。",
+    home_primary_cta_label: "立即订阅",
+    home_primary_cta_url: "/subscribe",
+    home_posts_variant: "compact",
+    home_show_post_excerpt: "false",
+    home_show_post_author: "true",
+    home_show_post_category: "true",
+    home_show_post_date: "false",
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    public_header_show_tagline: "true",
+    public_footer_blurb: "面向长期维护的内容站点。",
+    public_footer_copyright: "© Inkwell",
+    public_theme_default_mode: "dark",
     public_notice_enabled: "true",
     public_notice_variant: "warning",
     public_notice_dismissible: "true",
@@ -380,6 +434,24 @@ function createFormData(
   formData.set("public_head_html", values.public_head_html);
   formData.set("public_footer_html", values.public_footer_html);
   formData.set("public_custom_css", values.public_custom_css);
+  formData.set("site_brand_name", values.site_brand_name);
+  formData.set("site_tagline", values.site_tagline);
+  formData.set("home_hero_title", values.home_hero_title);
+  formData.set("home_hero_description", values.home_hero_description);
+  formData.set("home_primary_cta_label", values.home_primary_cta_label);
+  formData.set("home_primary_cta_url", values.home_primary_cta_url);
+  formData.set("home_posts_variant", values.home_posts_variant);
+  formData.set("home_show_post_excerpt", values.home_show_post_excerpt);
+  formData.set("home_show_post_author", values.home_show_post_author);
+  formData.set("home_show_post_category", values.home_show_post_category);
+  formData.set("home_show_post_date", values.home_show_post_date);
+  formData.set("public_layout_width", values.public_layout_width);
+  formData.set("public_surface_variant", values.public_surface_variant);
+  formData.set("public_accent_theme", values.public_accent_theme);
+  formData.set("public_header_show_tagline", values.public_header_show_tagline);
+  formData.set("public_footer_blurb", values.public_footer_blurb);
+  formData.set("public_footer_copyright", values.public_footer_copyright);
+  formData.set("public_theme_default_mode", values.public_theme_default_mode);
   formData.set("public_notice_enabled", values.public_notice_enabled);
   formData.set("public_notice_variant", values.public_notice_variant);
   formData.set("public_notice_dismissible", values.public_notice_dismissible);

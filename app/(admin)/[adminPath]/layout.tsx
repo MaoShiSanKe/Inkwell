@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { ThemeToggle } from "@/components/theme-toggle";
-import { getAdminPath } from "@/lib/settings";
+import { getAdminPath, getThemeFrameworkSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Admin",
@@ -23,9 +23,10 @@ export default async function AdminLayout({
   children,
   params,
 }: AdminLayoutProps) {
-  const [{ adminPath }, configuredAdminPath] = await Promise.all([
+  const [{ adminPath }, configuredAdminPath, themeFrameworkSettings] = await Promise.all([
     params,
     getAdminPath(),
+    getThemeFrameworkSettings(),
   ]);
 
   if (adminPath !== configuredAdminPath) {
@@ -35,7 +36,7 @@ export default async function AdminLayout({
   return (
     <>
       <div className="mx-auto flex w-full max-w-4xl justify-end px-6 pt-6">
-        <ThemeToggle />
+        <ThemeToggle defaultMode={themeFrameworkSettings.public_theme_default_mode} />
       </div>
       {children}
     </>

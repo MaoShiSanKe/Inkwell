@@ -1,6 +1,11 @@
 import type {
   EmailNotificationScenario,
+  HomePostsVariant,
+  PublicAccentTheme,
+  PublicLayoutWidth,
   PublicNoticeVariant,
+  PublicSurfaceVariant,
+  PublicThemeDefaultMode,
 } from "@/lib/settings-config";
 
 export type SettingsFormValues = {
@@ -22,6 +27,24 @@ export type SettingsFormValues = {
   public_head_html: string;
   public_footer_html: string;
   public_custom_css: string;
+  site_brand_name: string;
+  site_tagline: string;
+  home_hero_title: string;
+  home_hero_description: string;
+  home_primary_cta_label: string;
+  home_primary_cta_url: string;
+  home_posts_variant: HomePostsVariant;
+  home_show_post_excerpt: "true" | "false";
+  home_show_post_author: "true" | "false";
+  home_show_post_category: "true" | "false";
+  home_show_post_date: "true" | "false";
+  public_layout_width: PublicLayoutWidth;
+  public_surface_variant: PublicSurfaceVariant;
+  public_accent_theme: PublicAccentTheme;
+  public_header_show_tagline: "true" | "false";
+  public_footer_blurb: string;
+  public_footer_copyright: string;
+  public_theme_default_mode: PublicThemeDefaultMode;
   public_notice_enabled: "true" | "false";
   public_notice_variant: PublicNoticeVariant;
   public_notice_dismissible: "true" | "false";
@@ -69,6 +92,24 @@ export const initialSettingsFormValues: SettingsFormValues = {
   public_head_html: "",
   public_footer_html: "",
   public_custom_css: "",
+  site_brand_name: "Inkwell",
+  site_tagline: "",
+  home_hero_title: "最新文章",
+  home_hero_description: "浏览站点中已经发布的文章与公开归档。",
+  home_primary_cta_label: "订阅新文章",
+  home_primary_cta_url: "/subscribe",
+  home_posts_variant: "comfortable",
+  home_show_post_excerpt: "true",
+  home_show_post_author: "true",
+  home_show_post_category: "true",
+  home_show_post_date: "true",
+  public_layout_width: "default",
+  public_surface_variant: "soft",
+  public_accent_theme: "slate",
+  public_header_show_tagline: "true",
+  public_footer_blurb: "",
+  public_footer_copyright: "",
+  public_theme_default_mode: "system",
   public_notice_enabled: "false",
   public_notice_variant: "info",
   public_notice_dismissible: "false",

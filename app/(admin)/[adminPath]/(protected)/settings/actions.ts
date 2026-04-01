@@ -89,6 +89,48 @@ export async function saveSettingsAction(
     public_head_html: String(formData.get("public_head_html") ?? ""),
     public_footer_html: String(formData.get("public_footer_html") ?? ""),
     public_custom_css: String(formData.get("public_custom_css") ?? ""),
+    site_brand_name: String(formData.get("site_brand_name") ?? ""),
+    site_tagline: String(formData.get("site_tagline") ?? ""),
+    home_hero_title: String(formData.get("home_hero_title") ?? ""),
+    home_hero_description: String(formData.get("home_hero_description") ?? ""),
+    home_primary_cta_label: String(formData.get("home_primary_cta_label") ?? ""),
+    home_primary_cta_url: String(formData.get("home_primary_cta_url") ?? ""),
+    home_posts_variant: String(formData.get("home_posts_variant") ?? "comfortable") as
+      | "comfortable"
+      | "compact",
+    home_show_post_excerpt: String(formData.get("home_show_post_excerpt") ?? "true") as
+      | "true"
+      | "false",
+    home_show_post_author: String(formData.get("home_show_post_author") ?? "true") as
+      | "true"
+      | "false",
+    home_show_post_category: String(formData.get("home_show_post_category") ?? "true") as
+      | "true"
+      | "false",
+    home_show_post_date: String(formData.get("home_show_post_date") ?? "true") as
+      | "true"
+      | "false",
+    public_layout_width: String(formData.get("public_layout_width") ?? "default") as
+      | "narrow"
+      | "default"
+      | "wide",
+    public_surface_variant: String(formData.get("public_surface_variant") ?? "soft") as
+      | "soft"
+      | "solid",
+    public_accent_theme: String(formData.get("public_accent_theme") ?? "slate") as
+      | "slate"
+      | "blue"
+      | "emerald"
+      | "amber",
+    public_header_show_tagline: String(formData.get("public_header_show_tagline") ?? "true") as
+      | "true"
+      | "false",
+    public_footer_blurb: String(formData.get("public_footer_blurb") ?? ""),
+    public_footer_copyright: String(formData.get("public_footer_copyright") ?? ""),
+    public_theme_default_mode: String(formData.get("public_theme_default_mode") ?? "system") as
+      | "system"
+      | "light"
+      | "dark",
     public_notice_enabled: String(formData.get("public_notice_enabled") ?? "false") as
       | "true"
       | "false",

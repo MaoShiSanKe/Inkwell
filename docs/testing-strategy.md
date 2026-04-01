@@ -89,6 +89,17 @@ npm run test:browser
 - 评论交互
 - 点赞/浏览量
 - 公开布局
+- Theme Framework v1（品牌、首页 Hero、首页列表变体、默认主题模式）
+
+如果改动属于 Theme Framework v1，建议最少覆盖：
+- 单元 / Vitest：`app/(blog)/page.test.tsx`、`app/(blog)/layout.test.tsx`、`app/(admin)/[adminPath]/layout.test.tsx`、`lib/theme.test.ts`
+- Browser：`tests/browser/settings.spec.ts`、`tests/browser/theme-toggle.spec.ts`
+
+因为这类改动往往同时影响：
+- 后台 settings 表单
+- 公开首页渲染
+- 公开布局壳层
+- localStorage 与 backend default 的主题优先级
 
 ### 3.4 后台页面 / 后台表单 / server action 改动
 至少：

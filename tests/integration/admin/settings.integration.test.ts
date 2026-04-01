@@ -25,6 +25,24 @@ const SETTINGS_KEYS = [
   "public_head_html",
   "public_footer_html",
   "public_custom_css",
+  "site_brand_name",
+  "site_tagline",
+  "home_hero_title",
+  "home_hero_description",
+  "home_primary_cta_label",
+  "home_primary_cta_url",
+  "home_posts_variant",
+  "home_show_post_excerpt",
+  "home_show_post_author",
+  "home_show_post_category",
+  "home_show_post_date",
+  "public_layout_width",
+  "public_surface_variant",
+  "public_accent_theme",
+  "public_header_show_tagline",
+  "public_footer_blurb",
+  "public_footer_copyright",
+  "public_theme_default_mode",
   "public_notice_enabled",
   "public_notice_variant",
   "public_notice_dismissible",
@@ -97,6 +115,39 @@ describe("admin settings write paths", () => {
       public_head_html: originalSettings.public_head_html ?? "",
       public_footer_html: originalSettings.public_footer_html ?? "",
       public_custom_css: originalSettings.public_custom_css ?? "",
+      site_brand_name: originalSettings.site_brand_name ?? "Inkwell",
+      site_tagline: originalSettings.site_tagline ?? "",
+      home_hero_title: originalSettings.home_hero_title ?? "最新文章",
+      home_hero_description:
+        originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
+      home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
+      home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_posts_variant:
+        (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ??
+        "comfortable",
+      home_show_post_excerpt:
+        (originalSettings.home_show_post_excerpt === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_author:
+        (originalSettings.home_show_post_author === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_category:
+        (originalSettings.home_show_post_category === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_date:
+        (originalSettings.home_show_post_date === "false" ? "false" : "true") as "true" | "false",
+      public_layout_width:
+        (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ??
+        "default",
+      public_surface_variant:
+        (originalSettings.public_surface_variant as "soft" | "solid" | null) ?? "soft",
+      public_accent_theme:
+        (originalSettings.public_accent_theme as "slate" | "blue" | "emerald" | "amber" | null) ??
+        "slate",
+      public_header_show_tagline:
+        (originalSettings.public_header_show_tagline === "false" ? "false" : "true") as "true" | "false",
+      public_footer_blurb: originalSettings.public_footer_blurb ?? "",
+      public_footer_copyright: originalSettings.public_footer_copyright ?? "",
+      public_theme_default_mode:
+        (originalSettings.public_theme_default_mode as "system" | "light" | "dark" | null) ??
+        "system",
       public_notice_enabled: (originalSettings.public_notice_enabled === "true" ? "true" : "false") as "true" | "false",
       public_notice_variant:
         (originalSettings.public_notice_variant as "info" | "warning" | "success" | null) ??
@@ -113,6 +164,79 @@ describe("admin settings write paths", () => {
       public_notice_link_label: originalSettings.public_notice_link_label ?? "",
       public_notice_link_url: originalSettings.public_notice_link_url ?? "",
     });
+  });
+
+  it("persists theme framework settings", async () => {
+    const { updateAdminSettings } = await import("@/lib/admin/settings");
+    const result = await updateAdminSettings({
+      admin_path: `${INTEGRATION_PREFIX}panel`,
+      revision_limit: "25",
+      revision_ttl_days: "45",
+      excerpt_length: "180",
+      comment_moderation: "approved",
+      smtp_host: "smtp.example.com",
+      smtp_port: "465",
+      smtp_secure: "true",
+      smtp_username: "mailer@example.com",
+      smtp_password: "super-secret",
+      smtp_from_email: "noreply@example.com",
+      smtp_from_name: "Inkwell Mailer",
+      umami_enabled: "false",
+      umami_website_id: "",
+      umami_script_url: "",
+      public_head_html: "",
+      public_footer_html: "",
+      public_custom_css: "",
+      site_brand_name: "Inkwell Daily",
+      site_tagline: "静态前端，动态内容。",
+      home_hero_title: "最新文章与精选内容",
+      home_hero_description: "浏览站点中已经发布的文章、专题与长期归档。",
+      home_primary_cta_label: "立即订阅",
+      home_primary_cta_url: "/subscribe",
+      home_posts_variant: "compact",
+      home_show_post_excerpt: "false",
+      home_show_post_author: "true",
+      home_show_post_category: "true",
+      home_show_post_date: "false",
+      public_layout_width: "wide",
+      public_surface_variant: "solid",
+      public_accent_theme: "blue",
+      public_header_show_tagline: "true",
+      public_footer_blurb: "面向长期维护的内容站点。",
+      public_footer_copyright: "© Inkwell",
+      public_theme_default_mode: "dark",
+      public_notice_enabled: "false",
+      public_notice_variant: "info",
+      public_notice_dismissible: "false",
+      public_notice_version: "",
+      public_notice_start_at: "",
+      public_notice_start_at_iso: "",
+      public_notice_end_at: "",
+      public_notice_end_at_iso: "",
+      public_notice_title: "",
+      public_notice_body: "",
+      public_notice_link_label: "",
+      public_notice_link_url: "",
+    });
+
+    expect(result).toEqual({
+      success: true,
+      previousAdminPath: originalSettings.admin_path ?? "admin",
+      nextAdminPath: `${INTEGRATION_PREFIX}panel`,
+      adminPathChanged: (originalSettings.admin_path ?? "admin") !== `${INTEGRATION_PREFIX}panel`,
+      publicLayoutChanged: true,
+    });
+
+    const rows = await getSettingRows([...SETTINGS_KEYS]);
+    expect(rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: "site_brand_name", value: "Inkwell Daily" }),
+        expect.objectContaining({ key: "home_hero_title", value: "最新文章与精选内容" }),
+        expect.objectContaining({ key: "home_posts_variant", value: "compact" }),
+        expect.objectContaining({ key: "public_layout_width", value: "wide" }),
+        expect.objectContaining({ key: "public_theme_default_mode", value: "dark" }),
+      ]),
+    );
   });
 
   it("persists notice dismissal and time window settings", async () => {
@@ -136,6 +260,35 @@ describe("admin settings write paths", () => {
       public_head_html: "",
       public_footer_html: "",
       public_custom_css: "",
+      site_brand_name: originalSettings.site_brand_name ?? "Inkwell",
+      site_tagline: originalSettings.site_tagline ?? "",
+      home_hero_title: originalSettings.home_hero_title ?? "最新文章",
+      home_hero_description:
+        originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
+      home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
+      home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_posts_variant:
+        (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
+      home_show_post_excerpt:
+        (originalSettings.home_show_post_excerpt === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_author:
+        (originalSettings.home_show_post_author === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_category:
+        (originalSettings.home_show_post_category === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_date:
+        (originalSettings.home_show_post_date === "false" ? "false" : "true") as "true" | "false",
+      public_layout_width:
+        (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ?? "default",
+      public_surface_variant:
+        (originalSettings.public_surface_variant as "soft" | "solid" | null) ?? "soft",
+      public_accent_theme:
+        (originalSettings.public_accent_theme as "slate" | "blue" | "emerald" | "amber" | null) ?? "slate",
+      public_header_show_tagline:
+        (originalSettings.public_header_show_tagline === "false" ? "false" : "true") as "true" | "false",
+      public_footer_blurb: originalSettings.public_footer_blurb ?? "",
+      public_footer_copyright: originalSettings.public_footer_copyright ?? "",
+      public_theme_default_mode:
+        (originalSettings.public_theme_default_mode as "system" | "light" | "dark" | null) ?? "system",
       public_notice_enabled: "true",
       public_notice_variant: "warning",
       public_notice_dismissible: "true",
@@ -169,7 +322,7 @@ describe("admin settings write paths", () => {
     );
   });
 
-  it("returns no public layout change when notice settings and window stay the same", async () => {
+  it("returns no public layout change when theme and notice settings stay the same", async () => {
     await setSettingRow("public_notice_enabled", "true");
     await setSettingRow("public_notice_variant", "warning");
     await setSettingRow("public_notice_dismissible", "true");
@@ -180,6 +333,9 @@ describe("admin settings write paths", () => {
     await setSettingRow("public_notice_body", "今晚 23:00-23:30 将进行短暂维护。");
     await setSettingRow("public_notice_link_label", "查看详情");
     await setSettingRow("public_notice_link_url", "/docs/deployment");
+    await setSettingRow("site_brand_name", "Inkwell Daily");
+    await setSettingRow("home_hero_title", "最新文章与精选内容");
+    await setSettingRow("public_layout_width", "wide");
 
     const { updateAdminSettings } = await import("@/lib/admin/settings");
     const result = await updateAdminSettings({
@@ -202,6 +358,34 @@ describe("admin settings write paths", () => {
       public_head_html: originalSettings.public_head_html ?? "",
       public_footer_html: originalSettings.public_footer_html ?? "",
       public_custom_css: originalSettings.public_custom_css ?? "",
+      site_brand_name: "Inkwell Daily",
+      site_tagline: originalSettings.site_tagline ?? "",
+      home_hero_title: "最新文章与精选内容",
+      home_hero_description:
+        originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
+      home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
+      home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_posts_variant:
+        (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
+      home_show_post_excerpt:
+        (originalSettings.home_show_post_excerpt === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_author:
+        (originalSettings.home_show_post_author === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_category:
+        (originalSettings.home_show_post_category === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_date:
+        (originalSettings.home_show_post_date === "false" ? "false" : "true") as "true" | "false",
+      public_layout_width: "wide",
+      public_surface_variant:
+        (originalSettings.public_surface_variant as "soft" | "solid" | null) ?? "soft",
+      public_accent_theme:
+        (originalSettings.public_accent_theme as "slate" | "blue" | "emerald" | "amber" | null) ?? "slate",
+      public_header_show_tagline:
+        (originalSettings.public_header_show_tagline === "false" ? "false" : "true") as "true" | "false",
+      public_footer_blurb: originalSettings.public_footer_blurb ?? "",
+      public_footer_copyright: originalSettings.public_footer_copyright ?? "",
+      public_theme_default_mode:
+        (originalSettings.public_theme_default_mode as "system" | "light" | "dark" | null) ?? "system",
       public_notice_enabled: "true",
       public_notice_variant: "warning",
       public_notice_dismissible: "true",
@@ -241,6 +425,35 @@ describe("admin settings write paths", () => {
       public_head_html: "",
       public_footer_html: "",
       public_custom_css: "",
+      site_brand_name: originalSettings.site_brand_name ?? "Inkwell",
+      site_tagline: originalSettings.site_tagline ?? "",
+      home_hero_title: originalSettings.home_hero_title ?? "最新文章",
+      home_hero_description:
+        originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
+      home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
+      home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_posts_variant:
+        (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
+      home_show_post_excerpt:
+        (originalSettings.home_show_post_excerpt === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_author:
+        (originalSettings.home_show_post_author === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_category:
+        (originalSettings.home_show_post_category === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_date:
+        (originalSettings.home_show_post_date === "false" ? "false" : "true") as "true" | "false",
+      public_layout_width:
+        (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ?? "default",
+      public_surface_variant:
+        (originalSettings.public_surface_variant as "soft" | "solid" | null) ?? "soft",
+      public_accent_theme:
+        (originalSettings.public_accent_theme as "slate" | "blue" | "emerald" | "amber" | null) ?? "slate",
+      public_header_show_tagline:
+        (originalSettings.public_header_show_tagline === "false" ? "false" : "true") as "true" | "false",
+      public_footer_blurb: originalSettings.public_footer_blurb ?? "",
+      public_footer_copyright: originalSettings.public_footer_copyright ?? "",
+      public_theme_default_mode:
+        (originalSettings.public_theme_default_mode as "system" | "light" | "dark" | null) ?? "system",
       public_notice_enabled: "true",
       public_notice_variant: "info",
       public_notice_dismissible: "true",
@@ -285,6 +498,35 @@ describe("admin settings write paths", () => {
       public_head_html: "",
       public_footer_html: "",
       public_custom_css: "",
+      site_brand_name: originalSettings.site_brand_name ?? "Inkwell",
+      site_tagline: originalSettings.site_tagline ?? "",
+      home_hero_title: originalSettings.home_hero_title ?? "最新文章",
+      home_hero_description:
+        originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
+      home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
+      home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_posts_variant:
+        (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
+      home_show_post_excerpt:
+        (originalSettings.home_show_post_excerpt === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_author:
+        (originalSettings.home_show_post_author === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_category:
+        (originalSettings.home_show_post_category === "false" ? "false" : "true") as "true" | "false",
+      home_show_post_date:
+        (originalSettings.home_show_post_date === "false" ? "false" : "true") as "true" | "false",
+      public_layout_width:
+        (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ?? "default",
+      public_surface_variant:
+        (originalSettings.public_surface_variant as "soft" | "solid" | null) ?? "soft",
+      public_accent_theme:
+        (originalSettings.public_accent_theme as "slate" | "blue" | "emerald" | "amber" | null) ?? "slate",
+      public_header_show_tagline:
+        (originalSettings.public_header_show_tagline === "false" ? "false" : "true") as "true" | "false",
+      public_footer_blurb: originalSettings.public_footer_blurb ?? "",
+      public_footer_copyright: originalSettings.public_footer_copyright ?? "",
+      public_theme_default_mode:
+        (originalSettings.public_theme_default_mode as "system" | "light" | "dark" | null) ?? "system",
       public_notice_enabled: "true",
       public_notice_variant: "info",
       public_notice_dismissible: "false",

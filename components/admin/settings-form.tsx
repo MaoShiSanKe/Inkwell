@@ -421,6 +421,288 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
         <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
           <div className="flex flex-col gap-2">
             <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              主题框架 v1
+            </h2>
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+              管理站点品牌、首页 hero、文章列表展示和公开布局基础风格。保持结构化配置，不把主题系统做成页面搭建器。
+            </p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              站点品牌名称
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="site_brand_name"
+                defaultValue={state.values.site_brand_name}
+                placeholder="例如：Inkwell"
+              />
+              {state.errors.site_brand_name ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.site_brand_name}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              站点副标题
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="site_tagline"
+                defaultValue={state.values.site_tagline}
+                placeholder="例如：静态前端，动态内容。"
+              />
+              {state.errors.site_tagline ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.site_tagline}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              首页标题
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="home_hero_title"
+                defaultValue={state.values.home_hero_title}
+                placeholder="例如：最新文章"
+              />
+              {state.errors.home_hero_title ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_hero_title}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              首页说明
+              <textarea
+                className="min-h-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_hero_description"
+                defaultValue={state.values.home_hero_description}
+                spellCheck={false}
+                placeholder="例如：浏览站点中已经发布的文章与公开归档。"
+              />
+              {state.errors.home_hero_description ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_hero_description}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页主按钮文案
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="home_primary_cta_label"
+                defaultValue={state.values.home_primary_cta_label}
+                placeholder="例如：订阅新文章"
+              />
+              {state.errors.home_primary_cta_label ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_primary_cta_label}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页主按钮链接
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="home_primary_cta_url"
+                defaultValue={state.values.home_primary_cta_url}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                placeholder="/subscribe 或 https://example.com"
+              />
+              {state.errors.home_primary_cta_url ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_primary_cta_url}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页文章展示模式
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_posts_variant"
+                defaultValue={state.values.home_posts_variant}
+              >
+                <option value="comfortable">舒展</option>
+                <option value="compact">紧凑</option>
+              </select>
+              {state.errors.home_posts_variant ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_posts_variant}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              默认主题模式
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_theme_default_mode"
+                defaultValue={state.values.public_theme_default_mode}
+              >
+                <option value="system">跟随系统</option>
+                <option value="light">浅色</option>
+                <option value="dark">深色</option>
+              </select>
+              {state.errors.public_theme_default_mode ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_theme_default_mode}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              公开布局宽度
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_layout_width"
+                defaultValue={state.values.public_layout_width}
+              >
+                <option value="narrow">窄</option>
+                <option value="default">默认</option>
+                <option value="wide">宽</option>
+              </select>
+              {state.errors.public_layout_width ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_layout_width}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              布局表面样式
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_surface_variant"
+                defaultValue={state.values.public_surface_variant}
+              >
+                <option value="soft">柔和</option>
+                <option value="solid">实心</option>
+              </select>
+              {state.errors.public_surface_variant ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_surface_variant}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              强调色主题
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_accent_theme"
+                defaultValue={state.values.public_accent_theme}
+              >
+                <option value="slate">Slate</option>
+                <option value="blue">Blue</option>
+                <option value="emerald">Emerald</option>
+                <option value="amber">Amber</option>
+              </select>
+              {state.errors.public_accent_theme ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_accent_theme}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              页头显示副标题
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_header_show_tagline"
+                defaultValue={state.values.public_header_show_tagline}
+              >
+                <option value="true">显示</option>
+                <option value="false">隐藏</option>
+              </select>
+              {state.errors.public_header_show_tagline ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_header_show_tagline}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页显示摘要
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_show_post_excerpt"
+                defaultValue={state.values.home_show_post_excerpt}
+              >
+                <option value="true">显示</option>
+                <option value="false">隐藏</option>
+              </select>
+              {state.errors.home_show_post_excerpt ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_show_post_excerpt}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页显示作者
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_show_post_author"
+                defaultValue={state.values.home_show_post_author}
+              >
+                <option value="true">显示</option>
+                <option value="false">隐藏</option>
+              </select>
+              {state.errors.home_show_post_author ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_show_post_author}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页显示分类
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_show_post_category"
+                defaultValue={state.values.home_show_post_category}
+              >
+                <option value="true">显示</option>
+                <option value="false">隐藏</option>
+              </select>
+              {state.errors.home_show_post_category ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_show_post_category}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页显示发布时间
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_show_post_date"
+                defaultValue={state.values.home_show_post_date}
+              >
+                <option value="true">显示</option>
+                <option value="false">隐藏</option>
+              </select>
+              {state.errors.home_show_post_date ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_show_post_date}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              页脚说明
+              <textarea
+                className="min-h-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="public_footer_blurb"
+                defaultValue={state.values.public_footer_blurb}
+                spellCheck={false}
+                placeholder="例如：面向长期维护的内容站点。"
+              />
+              {state.errors.public_footer_blurb ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_footer_blurb}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              页脚版权文案
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="public_footer_copyright"
+                defaultValue={state.values.public_footer_copyright}
+                placeholder="例如：© Inkwell"
+              />
+              {state.errors.public_footer_copyright ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.public_footer_copyright}</span>
+              ) : null}
+            </label>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-4 rounded-2xl border border-slate-200 p-5 dark:border-slate-800">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               全站公开公告
             </h2>
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">

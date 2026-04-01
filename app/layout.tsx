@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { ThemeScript } from "@/components/theme-script";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,11 +26,13 @@ export const metadata: Metadata = {
   description: "一个面向内容管理、评论互动与 SEO 优化的自建博客框架。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const themeFrameworkSettings = await getThemeFrameworkSettings();
+
   return (
     <html
       lang="zh-CN"
@@ -38,7 +40,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col bg-background text-foreground">
-        <ThemeScript />
+        <ThemeScript defaultMode={themeFrameworkSettings.public_theme_default_mode} />
         {children}
       </body>
     </html>
