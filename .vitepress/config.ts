@@ -69,6 +69,7 @@ export default defineConfig({
           { text: "发布检查", link: "/docs/release-checklist" },
           { text: "维护决策参考", link: "/docs/maintenance-decisions" },
           { text: "现场信息模板", link: "/docs/maintenance-field-template" },
+          { text: "交接前检查清单", link: "/docs/handoff-checklist" },
           { text: "贡献指南", link: "/community/contributing" },
         ],
       },

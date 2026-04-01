@@ -100,6 +100,8 @@
   - env vs settings、CLI vs internal API、reindex vs rollback 等高频维护判断
 - [`maintenance-field-template.md`](maintenance-field-template.md)
   - 排障、迁移、恢复、交接时的最小现场信息记录模板
+- [`handoff-checklist.md`](handoff-checklist.md)
+  - 暂停维护、交接前最少需要确认并留下的实例事实与风险
 - [`../CONTRIBUTING.md`](../CONTRIBUTING.md)
   - 贡献流程、最小验证、文档同步与敏感信息规则
 
@@ -133,6 +135,7 @@
 | 查 CLI、internal API、公开验证入口、恢复命令 | [`deployment.md`](deployment.md) | [`operations-reference.md`](operations-reference.md) | [`release-checklist.md`](release-checklist.md) |
 | 做 env / settings / 回滚 / reindex 等维护判断 | [`environment.md`](environment.md) | [`maintenance-decisions.md`](maintenance-decisions.md) | [`operations-reference.md`](operations-reference.md)、[`upgrade-and-rollback.md`](upgrade-and-rollback.md) |
 | 需要记录现场信息、迁移事实、恢复证据或交接上下文 | [`long-term-maintenance.md`](long-term-maintenance.md) | [`maintenance-field-template.md`](maintenance-field-template.md) | [`monitoring-and-logs.md`](monitoring-and-logs.md)、[`upgrade-and-rollback.md`](upgrade-and-rollback.md) |
+| 准备暂停维护或交接给下一位维护者 | [`long-term-maintenance.md`](long-term-maintenance.md) | [`handoff-checklist.md`](handoff-checklist.md) | [`maintenance-field-template.md`](maintenance-field-template.md)、[`maintenance-decisions.md`](maintenance-decisions.md) |
 | 查监控、日志、运行态巡检 | [`deployment.md`](deployment.md) | [`monitoring-and-logs.md`](monitoring-and-logs.md) | [`troubleshooting.md`](troubleshooting.md)、[`release-checklist.md`](release-checklist.md) |
 | 做长期维护、周期性回看、搁置后重新接手 | [`deployment.md`](deployment.md) | [`long-term-maintenance.md`](long-term-maintenance.md) | [`monitoring-and-logs.md`](monitoring-and-logs.md)、[`release-checklist.md`](release-checklist.md) |
 | 改搜索、备份恢复、定时发布 | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | [`testing-strategy.md`](testing-strategy.md)、[`deployment.md`](deployment.md) |

@@ -355,6 +355,7 @@ npm run search:reindex-posts
 - 运维入口总览：[`docs/operations-reference.md`](docs/operations-reference.md)
 - 维护决策参考：[`docs/maintenance-decisions.md`](docs/maintenance-decisions.md)
 - 现场信息模板：[`docs/maintenance-field-template.md`](docs/maintenance-field-template.md)
+- 交接前检查清单：[`docs/handoff-checklist.md`](docs/handoff-checklist.md)
 - 反向代理示例：[`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md)
 - 监控与日志：[`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md)
 - 长期维护参考：[`docs/long-term-maintenance.md`](docs/long-term-maintenance.md)
