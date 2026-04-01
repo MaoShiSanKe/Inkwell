@@ -320,8 +320,15 @@ npm run search:reindex-posts
 
 ## 文档导航
 
-当前仓库内推荐阅读顺序：
+### 如果你现在最关心的是
+- **先看一遍维护入口，而不是逐篇翻文档**：看 [`docs/README.md`](docs/README.md)
+- **准备部署站点**：看 [`docs/deployment.md`](docs/deployment.md)
+- **刚部署完，想确认站点真的可用**：看 [`docs/first-deployment-checklist.md`](docs/first-deployment-checklist.md)
+- **线上已经异常，想先判断该看日志还是该排障**：看 [`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md) 与 [`docs/troubleshooting.md`](docs/troubleshooting.md)
+- **想做长期维护、周期性回看或重新接手项目**：看 [`docs/long-term-maintenance.md`](docs/long-term-maintenance.md)
+- **知道问题类型，但拿不准该怎么选维护路径**：看 [`docs/maintenance-decisions.md`](docs/maintenance-decisions.md)
 
+### 仓库内推荐阅读顺序
 1. [`README.md`](README.md) — 项目定位、快速开始、主要入口
 2. [`docs/README.md`](docs/README.md) — 仓库文档索引、维护入口与 change type 导航
 3. [`docs/deployment.md`](docs/deployment.md) — 部署、HTTPS、运维、恢复
@@ -338,8 +345,7 @@ npm run search:reindex-posts
 14. [`CONTRIBUTING.md`](CONTRIBUTING.md) — 贡献指南
 15. [`docs/ROADMAP.md`](docs/ROADMAP.md) — 文档体系后续演进方向
 
-如果你已经确定要改哪类内容，可以直接看：
-
+### 如果你已经知道要改哪类内容
 - 后台模块扩展：[`docs/admin-extension-workflow.md`](docs/admin-extension-workflow.md)
 - 设置系统：[`docs/settings-system.md`](docs/settings-system.md)
 - Schema 与迁移：[`docs/schema-and-migrations.md`](docs/schema-and-migrations.md)
