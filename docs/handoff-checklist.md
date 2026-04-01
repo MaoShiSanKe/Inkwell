@@ -13,6 +13,7 @@
 - 维护方向判断：看 `docs/maintenance-decisions.md`
 - 故障排查步骤：看 `docs/troubleshooting.md`
 - 升级 / 回滚 / 恢复：看 `docs/upgrade-and-rollback.md`
+- 先确认当前实例是否已经达到 go / no-go：看 `docs/first-deployment-checklist.md`
 
 ## 1. 什么时候应该做交接检查
 

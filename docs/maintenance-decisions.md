@@ -11,6 +11,8 @@
 - 执行边界：看 `docs/execution-boundaries.md`
 - 升级 / 回滚 / 恢复：看 `docs/upgrade-and-rollback.md`
 - 运行态巡检与日志：看 `docs/monitoring-and-logs.md`
+- 先记录现场事实再做判断：看 `docs/maintenance-field-template.md`
+- 准备交接给下一位维护者：看 `docs/handoff-checklist.md`
 
 ## 1. 先理解：这份文档解决什么问题
 

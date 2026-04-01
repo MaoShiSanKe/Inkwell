@@ -14,6 +14,8 @@
 - 运行中站点的日志与最小巡检：看 `docs/monitoring-and-logs.md`
 - 升级 / 回滚 / 恢复：看 `docs/upgrade-and-rollback.md`
 - 常用运维命令入口：看 `docs/operations-reference.md`
+- 记录当前实例事实与风险：看 `docs/maintenance-field-template.md`
+- 准备把当前状态交给下一位维护者：看 `docs/handoff-checklist.md`
 
 ## 1. 什么时候该打开这份文档
 

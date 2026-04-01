@@ -18,6 +18,7 @@
 - 升级与回滚：看 `docs/upgrade-and-rollback.md`
 - 首次上线验收：看 `docs/first-deployment-checklist.md`
 - 长期维护节奏：看 `docs/long-term-maintenance.md`
+- 交接前最少要留下什么：看 `docs/handoff-checklist.md`
 
 ## 1. 什么时候应该使用这份模板
 
