@@ -51,10 +51,11 @@
 1. [`../README.md`](../README.md)
 2. [`deployment.md`](deployment.md)
 3. [`first-deployment-checklist.md`](first-deployment-checklist.md)
-4. [`troubleshooting.md`](troubleshooting.md)
-5. [`architecture.md`](architecture.md)
-6. [`development.md`](development.md)
-7. [`release-checklist.md`](release-checklist.md)
+4. [`long-term-maintenance.md`](long-term-maintenance.md)
+5. [`troubleshooting.md`](troubleshooting.md)
+6. [`architecture.md`](architecture.md)
+7. [`development.md`](development.md)
+8. [`release-checklist.md`](release-checklist.md)
 
 ### 2.4 准备扩展功能或提交 PR
 1. [`development.md`](development.md)
@@ -77,6 +78,8 @@
   - Nginx / Caddy 反向代理与 HTTPS 示例
 - [`monitoring-and-logs.md`](monitoring-and-logs.md)
   - 监控、日志入口、最小巡检与运行态排查顺序
+- [`long-term-maintenance.md`](long-term-maintenance.md)
+  - 长期维护、周期性检查与低频高风险链路回看
 - [`first-deployment-checklist.md`](first-deployment-checklist.md)
   - 首次上线、新环境迁移或恢复后的 go / no-go 验收顺序
 - [`troubleshooting.md`](troubleshooting.md)
@@ -125,6 +128,7 @@
 | 做版本升级、失败回滚、恢复站点 | [`deployment.md`](deployment.md) | [`upgrade-and-rollback.md`](upgrade-and-rollback.md) | [`release-checklist.md`](release-checklist.md)、[`troubleshooting.md`](troubleshooting.md) |
 | 查 CLI、internal API、公开验证入口、恢复命令 | [`deployment.md`](deployment.md) | [`operations-reference.md`](operations-reference.md) | [`release-checklist.md`](release-checklist.md) |
 | 查监控、日志、运行态巡检 | [`deployment.md`](deployment.md) | [`monitoring-and-logs.md`](monitoring-and-logs.md) | [`troubleshooting.md`](troubleshooting.md)、[`release-checklist.md`](release-checklist.md) |
+| 做长期维护、周期性回看、搁置后重新接手 | [`deployment.md`](deployment.md) | [`long-term-maintenance.md`](long-term-maintenance.md) | [`monitoring-and-logs.md`](monitoring-and-logs.md)、[`release-checklist.md`](release-checklist.md) |
 | 改搜索、备份恢复、定时发布 | [`architecture.md`](architecture.md) | [`execution-boundaries.md`](execution-boundaries.md) | [`testing-strategy.md`](testing-strategy.md)、[`deployment.md`](deployment.md) |
 | 改文档站导航或仓库文档结构 | 本文档 | [`ROADMAP.md`](ROADMAP.md) | `npm run docs:build` |
 
@@ -170,7 +174,8 @@
 1. [`../README.md`](../README.md)
 2. [`deployment.md`](deployment.md)
 3. [`first-deployment-checklist.md`](first-deployment-checklist.md)
-4. [`architecture.md`](architecture.md)
-5. [`development.md`](development.md)
-6. 按改动类型进入对应详细手册
-7. 发版前回到 [`release-checklist.md`](release-checklist.md)
+4. [`long-term-maintenance.md`](long-term-maintenance.md)
+5. [`architecture.md`](architecture.md)
+6. [`development.md`](development.md)
+7. 按改动类型进入对应详细手册
+8. 发版前回到 [`release-checklist.md`](release-checklist.md)
