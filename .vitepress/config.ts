@@ -67,6 +67,7 @@ export default defineConfig({
           { text: "环境配置", link: "/docs/environment" },
           { text: "测试策略", link: "/docs/testing-strategy" },
           { text: "发布检查", link: "/docs/release-checklist" },
+          { text: "维护决策参考", link: "/docs/maintenance-decisions" },
           { text: "贡献指南", link: "/community/contributing" },
         ],
       },

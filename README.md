@@ -347,6 +347,7 @@ npm run search:reindex-posts
 - 测试策略：[`docs/testing-strategy.md`](docs/testing-strategy.md)
 - 升级与回滚：[`docs/upgrade-and-rollback.md`](docs/upgrade-and-rollback.md)
 - 运维入口总览：[`docs/operations-reference.md`](docs/operations-reference.md)
+- 维护决策参考：[`docs/maintenance-decisions.md`](docs/maintenance-decisions.md)
 - 反向代理示例：[`docs/reverse-proxy-examples.md`](docs/reverse-proxy-examples.md)
 - 监控与日志：[`docs/monitoring-and-logs.md`](docs/monitoring-and-logs.md)
 - 长期维护参考：[`docs/long-term-maintenance.md`](docs/long-term-maintenance.md)
