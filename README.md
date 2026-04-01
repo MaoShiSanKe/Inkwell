@@ -6,6 +6,13 @@ Inkwell 是一个面向自托管场景的博客 CMS / Publishing System，基于
 
 ## 快速入口
 
+### 如果你现在最关心的是
+- **先了解项目定位**：看 [在线文档](https://maoshisanke.github.io/Inkwell/) 或本页下方能力概览
+- **尽快把站点部署起来**：先看 [`docs/deployment.md`](docs/deployment.md)
+- **部署后确认站点真的可用**：看 [`docs/first-deployment-checklist.md`](docs/first-deployment-checklist.md)
+- **准备接手开发或二次扩展**：看 [`docs/development.md`](docs/development.md) + [`docs/architecture.md`](docs/architecture.md)
+- **想参与贡献**：看 [`CONTRIBUTING.md`](CONTRIBUTING.md)
+
 | 入口 | 说明 |
 | --- | --- |
 | [在线文档](https://maoshisanke.github.io/Inkwell/) | 面向公开访客的独立文档站 |

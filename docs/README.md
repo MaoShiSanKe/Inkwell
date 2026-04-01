@@ -15,6 +15,14 @@
 
 ## 1. 建议怎么使用这份索引
 
+### 1.1 先判断你现在属于哪种场景
+- **第一次了解项目**：先看 [`../README.md`](../README.md)
+- **准备部署实例**：先看 [`deployment.md`](deployment.md)
+- **部署后要做验收**：先看 [`first-deployment-checklist.md`](first-deployment-checklist.md)
+- **准备接手开发或扩展功能**：先看 [`development.md`](development.md) 与 [`architecture.md`](architecture.md)
+- **已经遇到运行问题**：先看 [`troubleshooting.md`](troubleshooting.md) 与 [`monitoring-and-logs.md`](monitoring-and-logs.md)
+
+### 1.2 这份索引适合什么时候打开
 如果你只是第一次来到仓库，先从：
 1. [`../README.md`](../README.md)
 2. [`deployment.md`](deployment.md)
@@ -31,11 +39,13 @@
 1. [`../README.md`](../README.md)
 2. [`faq.md`](faq.md)
 3. [`deployment.md`](deployment.md)
+4. [`first-deployment-checklist.md`](first-deployment-checklist.md)
 
 ### 2.2 准备本地开发
 1. [`development.md`](development.md)
-2. [`environment.md`](environment.md)
-3. [`architecture.md`](architecture.md)
+2. [`architecture.md`](architecture.md)
+3. [`environment.md`](environment.md)
+4. 按 change type 继续看下方入口表
 
 ### 2.3 长时间搁置后重新接手
 1. [`../README.md`](../README.md)
@@ -159,7 +169,8 @@
 
 1. [`../README.md`](../README.md)
 2. [`deployment.md`](deployment.md)
-3. [`architecture.md`](architecture.md)
-4. [`development.md`](development.md)
-5. 按改动类型进入对应详细手册
-6. 发版前回到 [`release-checklist.md`](release-checklist.md)
+3. [`first-deployment-checklist.md`](first-deployment-checklist.md)
+4. [`architecture.md`](architecture.md)
+5. [`development.md`](development.md)
+6. 按改动类型进入对应详细手册
+7. 发版前回到 [`release-checklist.md`](release-checklist.md)
