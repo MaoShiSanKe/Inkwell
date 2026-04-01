@@ -172,6 +172,94 @@ npm run search:reindex-posts
 npm run backup:import -- --input ./backup --force --reindex-search
 ```
 
+## 为什么接手项目时建议先记录现场事实，再开始排障？
+
+因为很多“排障效率低”的根因，不是不会查日志，而是**一开始没有把当前现场的关键事实固定下来**。
+
+最容易丢的通常是：
+- 当前代码版本 / commit
+- 当前部署方式（VPS / Compose）
+- 当前后台真实入口路径
+- 当前症状与影响范围
+- 已执行过的命令与已排除的方向
+
+如果这些不先记下来，后面很容易出现：
+- 同一条命令被重复执行
+- 同一个方向被重复排查
+- 下一个维护者根本无法知道你已经确认过什么
+
+更适合先看的文档：
+- `docs/maintenance-field-template.md`
+- `docs/monitoring-and-logs.md`
+- `docs/troubleshooting.md`
+
+## 为什么搜索异常时通常先 reindex，而不是先回滚？
+
+因为在 Inkwell 里：
+- PostgreSQL 才是 canonical source of truth
+- Meilisearch 索引不是备份主体
+- 搜索结果为空，通常不等于业务数据已经损坏
+
+因此如果现象是：
+- 搜索页能打开
+- 文章页本身正常
+- 只是搜索结果为空或索引异常
+
+优先动作通常是：
+
+```bash
+npm run search:reindex-posts
+```
+
+只有当你同时看到：
+- schema / 数据结构已经变化
+- 页面结构与业务行为整体异常
+- 新版本已经写入错误数据
+
+才更应该进一步考虑回滚。
+
+更完整判断见：
+- `docs/maintenance-decisions.md`
+- `docs/upgrade-and-rollback.md`
+
+## 为什么我接手后不应该直接先看代码？
+
+因为接手一个已经部署过、运行过、甚至可能经历过恢复或迁移的实例时，真正最先缺的通常不是“代码细节”，而是：
+- 当前实例怎么部署的
+- 当前入口在哪里
+- 当前哪条链路已经验证过
+- 当前哪条链路还没验证
+- 当前风险点是什么
+
+如果一开始直接扎进代码，你很可能会：
+- 忽略部署层问题
+- 忽略环境变量或代理层问题
+- 对当前真实运行状态做出错误假设
+
+更推荐的恢复顺序通常是：
+1. `README.md`
+2. `docs/README.md`
+3. `docs/deployment.md`
+4. `docs/first-deployment-checklist.md`
+5. `docs/long-term-maintenance.md`
+6. 再进入 `docs/architecture.md` / `docs/development.md`
+
+## 交接前最少应该给下一位维护者留下什么？
+
+至少别漏掉这几类信息：
+- 当前部署方式
+- 当前域名 / 访问入口
+- 当前后台真实入口路径
+- 当前代码版本 / commit
+- 首页 / `api/health` / 后台登录 / 搜索 的当前状态
+- 当前 scheduled publish 主要入口
+- 当前未解决风险
+- 下一位维护者最先该看的文档
+
+如果你时间很少，优先参考：
+- `docs/handoff-checklist.md`
+- `docs/maintenance-field-template.md`
+
 ## 为什么发布后还要继续回看 24~48 小时？
 
 因为很多问题不会在“刚发布完的 5 分钟内”立刻暴露，例如：
