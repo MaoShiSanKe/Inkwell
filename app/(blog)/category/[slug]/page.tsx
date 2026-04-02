@@ -78,6 +78,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const emptyStateClass =
+    themeFrameworkSettings.public_surface_variant === "solid"
+      ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
+      : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
 
   return (
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
@@ -92,8 +96,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       </div>
 
       {posts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:text-slate-300">
-          <p className="text-lg font-medium">这个分类下还没有已发布文章</p>
+        <div className={emptyStateClass}>
+          <p className={`text-lg font-medium ${accentClass}`}>这个分类下还没有已发布文章</p>
           <p className="mt-2 text-sm">文章发布后，会自动出现在这个分类归档页。</p>
         </div>
       ) : (

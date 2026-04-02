@@ -4,11 +4,11 @@ import { basename, resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
-import { and, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { categories, postSeries, postTags, posts, series, tags, users } from "../../lib/db/schema";
+import { categories, postSeries, postTags, posts, series, settings, tags, users } from "../../lib/db/schema";
 
 const testEnvPath = resolveTestEnvPath();
 
@@ -19,11 +19,24 @@ const databaseUrl = getDatabaseUrl();
 
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
+type ThemeSettingsSnapshot = {
+  public_layout_width: string | null;
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
+
 test.describe("public archive pages", () => {
-  test("show published posts, author links, and hide drafts across homepage, category, tag, and series routes", async ({ page }) => {
+  test("show published posts, author links, themed empty states, and hide drafts across homepage, category, tag, and series routes", async ({ page }) => {
     const fixture = await seedArchiveFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_layout_width: "wide",
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "最新文章" })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
@@ -72,6 +85,37 @@ test.describe("public archive pages", () => {
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
 
+      await cleanupArchivePublishedPosts();
+
+      await page.goto(`/category/${fixture.categorySlug}`);
+      await expect(page.getByRole("heading", { name: fixture.categoryName })).toBeVisible();
+      await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
+      await expect(page.getByText("Category", { exact: true })).toHaveClass(/text-blue-700/);
+      const categoryEmptyHeading = page.getByText("这个分类下还没有已发布文章");
+      await expect(categoryEmptyHeading).toHaveClass(/text-blue-700/);
+      await expect(categoryEmptyHeading.locator("xpath=..")) .toHaveClass(/bg-slate-100\/70/);
+
+      await page.goto(`/tag/${fixture.tagSlug}`);
+      await expect(page.getByRole("heading", { name: fixture.tagName })).toBeVisible();
+      await expect(page.getByText("Tag", { exact: true })).toHaveClass(/text-blue-700/);
+      const tagEmptyHeading = page.getByText("这个标签下还没有已发布文章");
+      await expect(tagEmptyHeading).toHaveClass(/text-blue-700/);
+      await expect(tagEmptyHeading.locator("xpath=..")) .toHaveClass(/bg-slate-100\/70/);
+
+      await page.goto(`/author/${fixture.authorSlug}`);
+      await expect(page.getByRole("heading", { name: fixture.authorName })).toBeVisible();
+      await expect(page.getByText("Author", { exact: true })).toHaveClass(/text-blue-700/);
+      const authorEmptyHeading = page.getByText("这个作者下还没有已发布文章");
+      await expect(authorEmptyHeading).toHaveClass(/text-blue-700/);
+      await expect(authorEmptyHeading.locator("xpath=..")) .toHaveClass(/bg-slate-100\/70/);
+
+      await page.goto(`/series/${fixture.seriesSlug}`);
+      await expect(page.getByRole("heading", { name: fixture.seriesName })).toBeVisible();
+      await expect(page.getByText("Series", { exact: true })).toHaveClass(/text-blue-700/);
+      const seriesEmptyHeading = page.getByText("这个系列下还没有已发布文章");
+      await expect(seriesEmptyHeading).toHaveClass(/text-blue-700/);
+      await expect(seriesEmptyHeading.locator("xpath=..")) .toHaveClass(/bg-slate-100\/70/);
+
       await page.goto(`/category/${fixture.missingCategorySlug}`);
       await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
 
@@ -81,6 +125,7 @@ test.describe("public archive pages", () => {
       await page.goto(`/series/${fixture.missingSeriesSlug}`);
       await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupArchiveFixture();
     }
   });
@@ -230,6 +275,24 @@ async function seedArchiveFixture(seed: string): Promise<ArchiveFixture> {
   };
 }
 
+async function cleanupArchivePublishedPosts() {
+  await withDb(async (db) => {
+    const browserPublishedPosts = await db
+      .select({ id: posts.id })
+      .from(posts)
+      .where(and(like(posts.slug, `${BROWSER_PREFIX}published-%`), eq(posts.status, "published")));
+
+    if (browserPublishedPosts.length > 0) {
+      await db.delete(posts).where(
+        inArray(
+          posts.id,
+          browserPublishedPosts.map((post) => post.id),
+        ),
+      );
+    }
+  });
+}
+
 async function cleanupArchiveFixture() {
   await withDb(async (db) => {
     const browserPosts = await db
@@ -269,10 +332,77 @@ async function cleanupArchiveFixture() {
   });
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_layout_width: await getSettingValue("public_layout_width"),
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_layout_width: "narrow" | "default" | "wide";
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_layout_width", values.public_layout_width);
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_layout_width", snapshot.public_layout_width);
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
+async function getSettingValue(
+  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+) {
+  return withDb(async (db) => {
+    const [row] = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
 async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {
   const client = postgres(databaseUrl, { max: 1 });
   const db = drizzle(client, {
-    schema: { categories, postSeries, postTags, posts, series, tags, users },
+    schema: { categories, postSeries, postTags, posts, series, settings, tags, users },
     casing: "snake_case",
   });
 

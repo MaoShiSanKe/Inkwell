@@ -190,6 +190,8 @@ describe("blog author page", () => {
 
     expect(markup).toContain("这个作者下还没有已发布文章");
     expect(markup).toContain("该作者发布文章后，会自动出现在这个作者归档页。");
+    expect(markup).toContain("bg-slate-100/70");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 });
 

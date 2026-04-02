@@ -176,6 +176,8 @@ describe("blog category page", () => {
 
     expect(markup).toContain("这个分类下还没有已发布文章");
     expect(markup).toContain("文章发布后，会自动出现在这个分类归档页。");
+    expect(markup).toContain("bg-slate-100/70");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 });
 
