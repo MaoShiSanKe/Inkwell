@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { resolvePublishedTagRssBySlugMock, getSiteOriginMock, notFoundMock } = vi.hoisted(() => ({
+const { resolvePublishedTagRssBySlugMock, getSiteBrandNameMock, getSiteOriginMock, notFoundMock } = vi.hoisted(() => ({
   resolvePublishedTagRssBySlugMock: vi.fn(),
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
   notFoundMock: vi.fn(() => {
     throw new Error("not-found");
   }),
 }));
-
 vi.mock("next/navigation", () => ({
   notFound: notFoundMock,
 }));
@@ -17,12 +17,15 @@ vi.mock("@/lib/blog/posts", () => ({
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
 
 describe("tag rss route", () => {
   beforeEach(() => {
     resolvePublishedTagRssBySlugMock.mockReset();
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     notFoundMock.mockClear();
     getSiteOriginMock.mockReturnValue("https://example.com");
@@ -60,7 +63,7 @@ describe("tag rss route", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("application/xml");
-    expect(body).toContain("<title>Next.js 标签 RSS | Inkwell</title>");
+    expect(body).toContain("<title>Next.js 标签 RSS | Inkwell Daily</title>");
     expect(body).toContain("<link>https://example.com/tag/nextjs</link>");
     expect(body).toContain("<description>Next.js posts</description>");
     expect(body).toContain("<link>https://example.com/post/nextjs-rss</link>");

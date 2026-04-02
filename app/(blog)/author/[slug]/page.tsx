@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
+import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
 import { resolvePublishedAuthorArchiveBySlug } from "@/lib/blog/posts";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 type AuthorPageProps = {
   params: Promise<{
@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
   const canonicalUrl = buildSiteUrl(`/author/${result.author.slug}`, siteOrigin);
   const description = `查看作者“${result.author.displayName}”下已经发布的文章。`;
   const title = `${result.author.displayName} 的文章`;
+  const siteName = await getSiteBrandName();
 
   return {
     title,
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: AuthorPageProps): Promise<Met
       title,
       description,
       url: canonicalUrl,
-      siteName: SITE_NAME,
+      siteName,
     },
     twitter: {
       card: "summary",

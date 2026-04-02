@@ -51,12 +51,18 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 - 首页 Hero 下方可渲染一个固定的精选入口区块
 - 三张入口卡片仅在同时配置了文案与链接时渲染
 - 入口卡片继续复用公开站点的表面样式与强调色映射
+- `site_brand_name` 还会同步影响根布局 metadata、公开页面 Open Graph `siteName`、RSS 标题，以及文章 JSON-LD 中的 publisher 名称
 
 当前生效位置：
 - `app/(blog)/page.tsx`
 - `app/(blog)/layout.tsx`
 - `app/(admin)/[adminPath]/layout.tsx`
 - `app/layout.tsx`
+- `app/rss.xml/route.ts`
+- `app/category/[slug]/rss.xml/route.ts`
+- `app/tag/[slug]/rss.xml/route.ts`
+- `lib/blog/post-seo.ts`
+- `lib/blog/friend-links.ts`
 
 ### 2.2 首页文章列表展示
 由以下 settings 驱动：

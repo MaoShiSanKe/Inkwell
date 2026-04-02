@@ -2,7 +2,8 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, searchPublishedPostsMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, searchPublishedPostsMock } = vi.hoisted(() => ({
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
   searchPublishedPostsMock: vi.fn(),
 }));
@@ -21,6 +22,7 @@ vi.mock("next/link", () => ({
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
 
@@ -30,9 +32,35 @@ vi.mock("@/lib/blog/posts", () => ({
 
 describe("search page", () => {
   beforeEach(() => {
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     searchPublishedPostsMock.mockReset();
+  });
+
+  it("returns metadata with configured site branding", async () => {
+    const { generateMetadata } = await import("./page");
+    const metadata = await generateMetadata();
+
+    expect(metadata).toMatchObject({
+      title: "搜索",
+      alternates: {
+        canonical: "https://example.com/search",
+      },
+      robots: {
+        index: false,
+        follow: false,
+      },
+      openGraph: {
+        title: "Inkwell Daily 搜索",
+        url: "https://example.com/search",
+        siteName: "Inkwell Daily",
+      },
+      twitter: {
+        title: "Inkwell Daily 搜索",
+      },
+    });
   });
 
   it("renders helper copy when query is empty", async () => {

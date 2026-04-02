@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { DEFAULT_DESCRIPTION } from "@/lib/blog/post-seo";
 import { ThemeScript } from "@/components/theme-script";
-import { getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,14 +18,18 @@ const geistMono = Geist_Mono({
 
 const siteOrigin = getSiteOrigin();
 
-export const metadata: Metadata = {
-  metadataBase: siteOrigin ? new URL(siteOrigin) : undefined,
-  title: {
-    default: "Inkwell",
-    template: "%s | Inkwell",
-  },
-  description: "一个面向内容管理、评论互动与 SEO 优化的自建博客框架。",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteBrandName = await getSiteBrandName();
+
+  return {
+    metadataBase: siteOrigin ? new URL(siteOrigin) : undefined,
+    title: {
+      default: siteBrandName,
+      template: `%s | ${siteBrandName}`,
+    },
+    description: DEFAULT_DESCRIPTION,
+  };
+}
 
 export default async function RootLayout({
   children,

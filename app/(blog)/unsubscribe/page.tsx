@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
+import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
 import { getSubscriberUnsubscribePreview } from "@/lib/blog/subscribers";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 type UnsubscribePageProps = {
   searchParams: Promise<{
@@ -15,6 +15,7 @@ type UnsubscribePageProps = {
 export async function generateMetadata(): Promise<Metadata> {
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl("/unsubscribe", siteOrigin);
+  const siteName = await getSiteBrandName();
 
   return {
     title: "退订",
@@ -28,14 +29,14 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: "website",
-      title: `${SITE_NAME} 退订`,
+      title: `${siteName} 退订`,
       description: DEFAULT_DESCRIPTION,
       url: canonicalUrl,
-      siteName: SITE_NAME,
+      siteName,
     },
     twitter: {
       card: "summary",
-      title: `${SITE_NAME} 退订`,
+      title: `${siteName} 退订`,
       description: DEFAULT_DESCRIPTION,
     },
   };

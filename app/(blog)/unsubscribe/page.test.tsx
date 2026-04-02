@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, getSubscriberUnsubscribePreviewMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, getSubscriberUnsubscribePreviewMock } = vi.hoisted(() => ({
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
   getSubscriberUnsubscribePreviewMock: vi.fn(),
 }));
-
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
 
@@ -19,6 +20,8 @@ vi.mock("@/app/(blog)/subscribe/actions", () => ({
 
 describe("unsubscribe page", () => {
   beforeEach(() => {
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     getSubscriberUnsubscribePreviewMock.mockReset();
@@ -36,6 +39,14 @@ describe("unsubscribe page", () => {
       robots: {
         index: false,
         follow: false,
+      },
+      openGraph: {
+        title: "Inkwell Daily 退订",
+        url: "https://example.com/unsubscribe",
+        siteName: "Inkwell Daily",
+      },
+      twitter: {
+        title: "Inkwell Daily 退订",
       },
     });
   });

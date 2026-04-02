@@ -175,6 +175,18 @@ describe("buildRssXml", () => {
     expect(xml).toContain("<description>测试摘要</description>");
     expect(xml).toContain("<author>管理员</author>");
   });
+
+  it("falls back to the configured site brand name for the channel title", () => {
+    const xml = buildRssXml(
+      {
+        siteOrigin: "https://example.com",
+        siteBrandName: "Inkwell Daily",
+      },
+      [],
+    );
+
+    expect(xml).toContain("<title>Inkwell Daily</title>");
+  });
 });
 
 describe("resolveImageUrl", () => {
@@ -406,6 +418,24 @@ describe("buildArticleJsonLd", () => {
       publisher: {
         "@type": "Organization",
         name: "Inkwell",
+      },
+    });
+  });
+
+  it("uses the configured site brand name for the publisher when provided", () => {
+    const post = createPostSeoInput();
+    const jsonLd = buildArticleJsonLd(
+      post,
+      "https://example.com/post/test-post",
+      "这是摘要",
+      "https://example.com/og.png",
+      "Inkwell Daily",
+    );
+
+    expect(jsonLd).toMatchObject({
+      publisher: {
+        "@type": "Organization",
+        name: "Inkwell Daily",
       },
     });
   });

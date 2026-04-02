@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock } = vi.hoisted(() => ({
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
 
@@ -16,6 +18,8 @@ vi.mock("@/components/blog/subscribe-form", () => ({
 
 describe("subscribe page", () => {
   beforeEach(() => {
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
   });
@@ -30,7 +34,12 @@ describe("subscribe page", () => {
         canonical: "https://example.com/subscribe",
       },
       openGraph: {
+        title: "Inkwell Daily 订阅",
         url: "https://example.com/subscribe",
+        siteName: "Inkwell Daily",
+      },
+      twitter: {
+        title: "Inkwell Daily 订阅",
       },
     });
   });

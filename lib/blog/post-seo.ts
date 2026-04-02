@@ -160,6 +160,7 @@ export function buildArticleJsonLd(
   canonicalUrl: string,
   description: string,
   imageUrl: string | null,
+  siteBrandName = SITE_NAME,
 ) {
   const articleJsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -175,7 +176,7 @@ export function buildArticleJsonLd(
     },
     publisher: {
       "@type": "Organization",
-      name: SITE_NAME,
+      name: siteBrandName,
     },
   };
 
@@ -235,6 +236,7 @@ export function buildSitemapXml(
 export function buildRssXml(
   input: {
     siteOrigin: string | null;
+    siteBrandName?: string;
     channelTitle?: string;
     channelDescription?: string;
     channelPath?: string;
@@ -249,7 +251,7 @@ export function buildRssXml(
     author: { displayName: string };
   }>,
 ) {
-  const channelTitle = input.channelTitle ?? SITE_NAME;
+  const channelTitle = input.channelTitle ?? input.siteBrandName ?? SITE_NAME;
   const channelDescription = input.channelDescription ?? DEFAULT_DESCRIPTION;
   const channelLink = buildSiteUrl(input.channelPath ?? "/", input.siteOrigin);
   const lastBuildDate = (items[0]?.updatedAt ?? new Date()).toUTCString();

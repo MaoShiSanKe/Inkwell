@@ -2,11 +2,11 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, resolvePublishedAuthorArchiveBySlugMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, resolvePublishedAuthorArchiveBySlugMock } = vi.hoisted(() => ({
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
   resolvePublishedAuthorArchiveBySlugMock: vi.fn(),
 }));
-
 class NotFoundSignal extends Error {
   constructor() {
     super("not-found");
@@ -37,15 +37,17 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
-
 vi.mock("@/lib/blog/posts", () => ({
   resolvePublishedAuthorArchiveBySlug: resolvePublishedAuthorArchiveBySlugMock,
 }));
 
 describe("blog author page", () => {
   beforeEach(() => {
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     resolvePublishedAuthorArchiveBySlugMock.mockReset();
@@ -92,6 +94,7 @@ describe("blog author page", () => {
         title: "Author Name 的文章",
         description: "查看作者“Author Name”下已经发布的文章。",
         url: "https://example.com/author/author-name",
+        siteName: "Inkwell Daily",
       },
       twitter: {
         card: "summary",

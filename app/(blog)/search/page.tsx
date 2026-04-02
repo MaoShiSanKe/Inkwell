@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
+import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
 import { searchPublishedPosts } from "@/lib/blog/posts";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +16,7 @@ type SearchPageProps = {
 export async function generateMetadata(): Promise<Metadata> {
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl("/search", siteOrigin);
+  const siteName = await getSiteBrandName();
 
   return {
     title: "搜索",
@@ -29,14 +30,14 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: "website",
-      title: `${SITE_NAME} 搜索`,
+      title: `${siteName} 搜索`,
       description: DEFAULT_DESCRIPTION,
       url: canonicalUrl,
-      siteName: SITE_NAME,
+      siteName,
     },
     twitter: {
       card: "summary",
-      title: `${SITE_NAME} 搜索`,
+      title: `${siteName} 搜索`,
       description: DEFAULT_DESCRIPTION,
     },
   };

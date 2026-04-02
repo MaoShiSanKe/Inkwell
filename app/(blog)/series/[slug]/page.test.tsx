@@ -2,11 +2,11 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, resolvePublishedSeriesArchiveBySlugMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, resolvePublishedSeriesArchiveBySlugMock } = vi.hoisted(() => ({
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
   resolvePublishedSeriesArchiveBySlugMock: vi.fn(),
 }));
-
 class NotFoundSignal extends Error {
   constructor() {
     super("not-found");
@@ -37,15 +37,17 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
-
 vi.mock("@/lib/blog/posts", () => ({
   resolvePublishedSeriesArchiveBySlug: resolvePublishedSeriesArchiveBySlugMock,
 }));
 
 describe("blog series page", () => {
   beforeEach(() => {
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     resolvePublishedSeriesArchiveBySlugMock.mockReset();
@@ -93,6 +95,7 @@ describe("blog series page", () => {
         title: "React Basics 系列",
         description: "从基础到实践的 React 系列。",
         url: "https://example.com/series/react-basics",
+        siteName: "Inkwell Daily",
       },
       twitter: {
         card: "summary",

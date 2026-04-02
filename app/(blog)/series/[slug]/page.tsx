@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
+import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
 import { resolvePublishedSeriesArchiveBySlug } from "@/lib/blog/posts";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 type SeriesPageProps = {
   params: Promise<{
@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: SeriesPageProps): Promise<Met
   const description =
     result.series.description?.trim() || `查看系列“${result.series.name}”下已经发布的文章。`;
   const title = `${result.series.name} 系列`;
+  const siteName = await getSiteBrandName();
 
   return {
     title,
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: SeriesPageProps): Promise<Met
       title,
       description,
       url: canonicalUrl,
-      siteName: SITE_NAME,
+      siteName,
     },
     twitter: {
       card: "summary",

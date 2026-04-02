@@ -14,7 +14,6 @@ import {
   type BlogPostPageData,
 } from "@/lib/blog/posts";
 import {
-  SITE_NAME,
   buildArticleJsonLd,
   buildBreadcrumbListJsonLd,
   buildCategoryUrl,
@@ -27,7 +26,7 @@ import {
 } from "@/lib/blog/post-seo";
 import { parsePostContentForToc } from "@/lib/blog/post-toc";
 import { getPublishedPostViewCount, recordPublishedPostView } from "@/lib/blog/views";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 type PostPageProps = {
   params: Promise<{
@@ -48,6 +47,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 
   const post = result.post;
   const siteOrigin = getSiteOrigin();
+  const siteName = await getSiteBrandName();
   const title = post.seo.metaTitle?.trim() || post.title;
   const description = resolvePostDescription(post);
   const canonicalUrl = resolveCanonicalUrl(post, siteOrigin);
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       title: ogTitle,
       description: ogDescription,
       url: canonicalUrl,
-      siteName: SITE_NAME,
+      siteName,
       publishedTime: post.publishedAt?.toISOString(),
       modifiedTime: post.updatedAt.toISOString(),
       authors: [post.author.displayName],
@@ -164,6 +164,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
     : null;
   const publicCommentCount = countApprovedComments(approvedComments);
   const siteOrigin = getSiteOrigin();
+  const siteName = await getSiteBrandName();
   const canonicalUrl = resolveCanonicalUrl(post, siteOrigin);
   const description = resolvePostDescription(post);
   const imageUrl = resolveImageUrl(post.ogImage, siteOrigin);
@@ -173,6 +174,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
     canonicalUrl,
     description,
     imageUrl,
+    siteName,
   );
   const breadcrumbJsonLd = buildBreadcrumbListJsonLd(breadcrumbItems, siteOrigin);
 

@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
+  getSiteBrandNameMock,
   getSiteOriginMock,
   resolvePublishedPostBySlugMock,
   listRelatedPublishedPostsMock,
@@ -10,6 +11,7 @@ const {
   getPublishedPostViewCountMock,
   recordPublishedPostViewMock,
 } = vi.hoisted(() => ({
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
   resolvePublishedPostBySlugMock: vi.fn(),
   listRelatedPublishedPostsMock: vi.fn(),
@@ -73,6 +75,7 @@ vi.mock("@/lib/blog/views", () => ({
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
 
@@ -109,6 +112,8 @@ vi.mock("@/components/blog/post-like-button", () => ({
 
 describe("blog post page", () => {
   beforeEach(() => {
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     resolvePublishedPostBySlugMock.mockReset();
@@ -138,6 +143,33 @@ describe("blog post page", () => {
     });
 
     expect(metadata).toEqual({});
+  });
+
+  it("returns metadata with configured site branding for a published post", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData(),
+    });
+
+    const { generateMetadata } = await import("./page");
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+
+    expect(metadata).toMatchObject({
+      title: "Metadata title",
+      description: "Metadata description",
+      openGraph: {
+        title: "OG title",
+        description: "OG description",
+        url: "https://example.com/post/canonical-slug",
+        siteName: "Inkwell Daily",
+      },
+      twitter: {
+        title: "OG title",
+        description: "OG description",
+      },
+    });
   });
 
   it("redirects to the current slug when resolvePublishedPostBySlug returns a redirect", async () => {
@@ -221,6 +253,7 @@ describe("blog post page", () => {
     expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).toContain('"item":"https://example.com/"');
     expect(markup).toContain('"item":"https://example.com/post/canonical-slug"');
+    expect(markup).toContain('"publisher":{"@type":"Organization","name":"Inkwell Daily"}');
   });
 
   it("renders category path breadcrumbs when breadcrumbEnabled is true and categories exist", async () => {

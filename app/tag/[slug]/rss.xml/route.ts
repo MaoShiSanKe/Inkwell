@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { buildRssXml, SITE_NAME } from "@/lib/blog/post-seo";
+import { buildRssXml } from "@/lib/blog/post-seo";
 import { resolvePublishedTagRssBySlug } from "@/lib/blog/posts";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 type TagRssRouteProps = {
   params: Promise<{
@@ -11,7 +11,11 @@ type TagRssRouteProps = {
 };
 
 export async function GET(_request: Request, { params }: TagRssRouteProps) {
-  const [{ slug }, siteOrigin] = await Promise.all([params, getSiteOrigin()]);
+  const [{ slug }, siteOrigin, siteBrandName] = await Promise.all([
+    params,
+    getSiteOrigin(),
+    getSiteBrandName(),
+  ]);
   const result = await resolvePublishedTagRssBySlug(slug);
 
   if (result.kind !== "feed") {
@@ -21,7 +25,8 @@ export async function GET(_request: Request, { params }: TagRssRouteProps) {
   const xml = buildRssXml(
     {
       siteOrigin,
-      channelTitle: `${result.tag.name} 标签 RSS | ${SITE_NAME}`,
+      siteBrandName,
+      channelTitle: `${result.tag.name} 标签 RSS | ${siteBrandName}`,
       channelDescription:
         result.tag.description?.trim() || `订阅标签“${result.tag.name}”下的最新已发布文章。`,
       channelPath: `/tag/${result.tag.slug}`,

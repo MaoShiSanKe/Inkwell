@@ -15,7 +15,7 @@ describe("friend-links page", () => {
     listPublicFriendLinksMock.mockReset();
     getFriendLinksPageMetadataMock.mockReset();
     getFriendLinksPageMetadataMock.mockResolvedValue({
-      title: "友情链接 | Inkwell",
+      title: "友情链接 | Inkwell Daily",
       description: "浏览站点公开展示的友情链接列表。",
       canonicalUrl: "https://example.com/friend-links",
     });
@@ -26,7 +26,7 @@ describe("friend-links page", () => {
     const metadata = await generateMetadata();
 
     expect(metadata).toMatchObject({
-      title: "友情链接 | Inkwell",
+      title: "友情链接 | Inkwell Daily",
       description: "浏览站点公开展示的友情链接列表。",
       alternates: {
         canonical: "https://example.com/friend-links",

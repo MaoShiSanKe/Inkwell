@@ -2,11 +2,11 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, resolvePublishedTagArchiveBySlugMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, resolvePublishedTagArchiveBySlugMock } = vi.hoisted(() => ({
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
   resolvePublishedTagArchiveBySlugMock: vi.fn(),
 }));
-
 class NotFoundSignal extends Error {
   constructor() {
     super("not-found");
@@ -37,15 +37,17 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
-
 vi.mock("@/lib/blog/posts", () => ({
   resolvePublishedTagArchiveBySlug: resolvePublishedTagArchiveBySlugMock,
 }));
 
 describe("blog tag page", () => {
   beforeEach(() => {
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
     resolvePublishedTagArchiveBySlugMock.mockReset();
@@ -80,6 +82,7 @@ describe("blog tag page", () => {
       },
       openGraph: {
         url: "https://example.com/tag/nextjs",
+        siteName: "Inkwell Daily",
       },
     });
   });

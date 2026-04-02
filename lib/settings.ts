@@ -2,6 +2,7 @@ import "server-only";
 
 import { eq, inArray } from "drizzle-orm";
 
+import { SITE_NAME } from "./blog/post-seo";
 import { db } from "./db";
 import { settings, users } from "./db/schema";
 import {
@@ -234,6 +235,12 @@ export async function listSubscriberNotificationRecipients() {
     })
     .from(users)
     .where(eq(users.role, "subscriber"));
+}
+
+export async function getSiteBrandName() {
+  const siteBrandName = await getSetting("site_brand_name");
+
+  return siteBrandName || SITE_NAME;
 }
 
 export function getSiteOrigin() {

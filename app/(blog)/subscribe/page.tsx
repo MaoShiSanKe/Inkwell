@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SubscribeForm } from "@/components/blog/subscribe-form";
-import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
-import { getSiteOrigin } from "@/lib/settings";
+import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 type SubscribePageProps = {
   searchParams: Promise<{
@@ -14,6 +14,7 @@ type SubscribePageProps = {
 export async function generateMetadata(): Promise<Metadata> {
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl("/subscribe", siteOrigin);
+  const siteName = await getSiteBrandName();
 
   return {
     title: "订阅",
@@ -23,14 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       type: "website",
-      title: `${SITE_NAME} 订阅`,
+      title: `${siteName} 订阅`,
       description: DEFAULT_DESCRIPTION,
       url: canonicalUrl,
-      siteName: SITE_NAME,
+      siteName,
     },
     twitter: {
       card: "summary",
-      title: `${SITE_NAME} 订阅`,
+      title: `${siteName} 订阅`,
       description: DEFAULT_DESCRIPTION,
     },
   };

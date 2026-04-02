@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
+import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
 import { resolvePublishedTagArchiveBySlug } from "@/lib/blog/posts";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 type TagPageProps = {
   params: Promise<{
@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
   const description =
     result.tag.description?.trim() || `查看标签“${result.tag.name}”下已经发布的文章。`;
   const title = `${result.tag.name} 标签`;
+  const siteName = await getSiteBrandName();
 
   return {
     title,
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
       title,
       description,
       url: canonicalUrl,
-      siteName: SITE_NAME,
+      siteName,
     },
     twitter: {
       card: "summary",

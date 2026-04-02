@@ -1,21 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { listPublishedRssPostsMock, getSiteOriginMock } = vi.hoisted(() => ({
+const { listPublishedRssPostsMock, getSiteBrandNameMock, getSiteOriginMock } = vi.hoisted(() => ({
   listPublishedRssPostsMock: vi.fn(),
+  getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
 }));
-
 vi.mock("@/lib/blog/posts", () => ({
   listPublishedRssPosts: listPublishedRssPostsMock,
 }));
 
 vi.mock("@/lib/settings", () => ({
+  getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
 }));
-
 describe("rss.xml route", () => {
   beforeEach(() => {
     listPublishedRssPostsMock.mockReset();
+    getSiteBrandNameMock.mockReset();
+    getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
   });
@@ -43,7 +45,8 @@ describe("rss.xml route", () => {
     expect(response.headers.get("content-type")).toContain("application/xml");
     expect(body).toContain('<?xml version="1.0" encoding="UTF-8"?>');
     expect(body).toContain("<rss version=\"2.0\">");
-    expect(body).toContain("<title>Inkwell RSS</title>");
+    expect(body).toContain("<title>Inkwell Daily RSS</title>");
+    expect(body).toContain("<description>订阅 Inkwell Daily 的最新已发布文章。</description>");
     expect(body).toContain("<link>https://example.com/post/hello-rss</link>");
     expect(body).toContain("<description>RSS excerpt</description>");
   });

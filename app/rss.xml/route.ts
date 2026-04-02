@@ -1,14 +1,19 @@
-import { buildRssXml, SITE_NAME } from "@/lib/blog/post-seo";
+import { buildRssXml } from "@/lib/blog/post-seo";
 import { listPublishedRssPosts } from "@/lib/blog/posts";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 export async function GET() {
-  const [posts, siteOrigin] = await Promise.all([listPublishedRssPosts(), getSiteOrigin()]);
+  const [posts, siteOrigin, siteBrandName] = await Promise.all([
+    listPublishedRssPosts(),
+    getSiteOrigin(),
+    getSiteBrandName(),
+  ]);
   const xml = buildRssXml(
     {
       siteOrigin,
-      channelTitle: `${SITE_NAME} RSS`,
-      channelDescription: "订阅 Inkwell 的最新已发布文章。",
+      siteBrandName,
+      channelTitle: `${siteBrandName} RSS`,
+      channelDescription: `订阅 ${siteBrandName} 的最新已发布文章。`,
       channelPath: "/",
     },
     posts,

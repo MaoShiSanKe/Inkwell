@@ -1,9 +1,9 @@
-import { resolveImageUrl, buildSiteUrl, SITE_NAME } from "@/lib/blog/post-seo";
+import { resolveImageUrl, buildSiteUrl } from "@/lib/blog/post-seo";
 import {
   getFriendLinksSitemapEntry,
   listPublishedFriendLinks,
 } from "@/lib/admin/friend-links";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
 
 export async function listPublicFriendLinks() {
   const siteOrigin = getSiteOrigin();
@@ -18,9 +18,10 @@ export async function listPublicFriendLinks() {
 export async function getFriendLinksPageMetadata() {
   const siteOrigin = getSiteOrigin();
   const canonicalUrl = buildSiteUrl("/friend-links", siteOrigin);
+  const siteBrandName = await getSiteBrandName();
 
   return {
-    title: `友情链接 | ${SITE_NAME}`,
+    title: `友情链接 | ${siteBrandName}`,
     description: "浏览站点公开展示的友情链接列表。",
     canonicalUrl,
   };
