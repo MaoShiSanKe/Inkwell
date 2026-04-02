@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteBrandNameMock, getSiteOriginMock, getSubscriberUnsubscribePreviewMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, getThemeFrameworkSettingsMock, getSubscriberUnsubscribePreviewMock } = vi.hoisted(() => ({
   getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
   getSubscriberUnsubscribePreviewMock: vi.fn(),
 }));
 vi.mock("@/lib/settings", () => ({
   getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
 }));
 
 vi.mock("@/lib/blog/subscribers", () => ({
@@ -24,6 +26,8 @@ describe("unsubscribe page", () => {
     getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
+    getThemeFrameworkSettingsMock.mockReset();
+    getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     getSubscriberUnsubscribePreviewMock.mockReset();
   });
 
@@ -51,7 +55,7 @@ describe("unsubscribe page", () => {
     });
   });
 
-  it("renders a confirmation form for a valid unsubscribe token", async () => {
+  it("renders themed confirmation form for a valid unsubscribe token", async () => {
     getSubscriberUnsubscribePreviewMock.mockResolvedValue({
       isValid: true,
       token: "token-value",
@@ -70,6 +74,9 @@ describe("unsubscribe page", () => {
     expect(markup).toContain("确认退订");
     expect(markup).toContain("reader@example.com");
     expect(markup).toContain("Reader");
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
   it("renders an error state for an invalid unsubscribe token", async () => {
@@ -89,3 +96,12 @@ describe("unsubscribe page", () => {
     expect(markup).not.toContain("确认退订");
   });
 });
+
+function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    ...overrides,
+  };
+}

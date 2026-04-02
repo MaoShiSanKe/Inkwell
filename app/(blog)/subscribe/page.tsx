@@ -3,7 +3,12 @@ import Link from "next/link";
 
 import { SubscribeForm } from "@/components/blog/subscribe-form";
 import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
-import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
+import {
+  resolveAccentClass,
+  resolveContentWidthClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type SubscribePageProps = {
   searchParams: Promise<{
@@ -39,11 +44,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function SubscribePage({ searchParams }: SubscribePageProps) {
   const { email = "" } = await searchParams;
+  const themeFrameworkSettings = await getThemeFrameworkSettings();
+  const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
+  const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
+  const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
       <div className="flex flex-col gap-3">
-        <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+        <p className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>
           Subscribe
         </p>
         <h1 className="text-4xl font-semibold tracking-tight">订阅新文章通知</h1>
@@ -54,10 +63,10 @@ export default async function SubscribePage({ searchParams }: SubscribePageProps
 
       <SubscribeForm initialEmail={email} />
 
-      <div className="rounded-2xl border border-slate-200 px-6 py-5 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:text-slate-300">
+      <div className={`rounded-2xl border px-6 py-5 text-sm leading-6 text-slate-600 dark:text-slate-300 ${surfaceClass}`}>
         <p>
           只通知新文章发布，不会发送广告邮件。如需返回首页，可前往
-          <Link className="ml-1 underline underline-offset-4" href="/">
+          <Link className={`ml-1 underline underline-offset-4 ${accentClass}`} href="/">
             最新文章
           </Link>
           。

@@ -9,6 +9,12 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import { emailNotifications, settings, users } from "../../lib/db/schema";
+
+type ThemeSettingsSnapshot = {
+  public_layout_width: string | null;
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
 import { hashPasswordValue } from "../../lib/password-utils";
 
 const testEnvPath = resolveTestEnvPath();
@@ -23,12 +29,21 @@ assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 test.describe("subscriber workflow browser regression", () => {
   test("subscribes publicly, manages subscribers in admin, and completes unsubscribe", async ({ page }) => {
     const fixture = await seedSubscriberFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_layout_width: "wide",
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto("/");
       await page.getByRole("link", { name: "订阅新文章" }).click();
       await expect(page).toHaveURL(/\/subscribe$/);
       await expect(page.locator("h1")).toContainText("订阅新文章通知");
+      await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
+      await expect(page.getByText("Subscribe", { exact: true })).toHaveClass(/text-blue-700/);
 
       await page.getByLabel("昵称").fill("Browser Reader");
       await page.getByLabel("邮箱").fill(fixture.readerEmail);
@@ -61,11 +76,14 @@ test.describe("subscriber workflow browser regression", () => {
       const unsubscribeToken = await insertSubscriberAndCreateToken(fixture.readerEmail, "Browser Reader");
       await page.goto(`/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`);
       await expect(page.getByRole("heading", { name: "退订邮件通知" })).toBeVisible();
+      await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
+      await expect(page.getByText("Unsubscribe", { exact: true })).toHaveClass(/text-blue-700/);
       await expect(page.getByText(fixture.readerEmail)).toBeVisible();
       await page.getByRole("button", { name: "确认退订" }).click();
       await expect(page).toHaveURL(/\/unsubscribe\?status=removed$/);
       await expect(page.getByText("你已成功退订后续新文章邮件。")).toBeVisible();
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupSubscriberFixture();
     }
   });
@@ -185,15 +203,75 @@ async function cleanupSubscriberFixture() {
   });
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_layout_width: await getSettingValue("public_layout_width"),
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_layout_width: "narrow" | "default" | "wide";
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_layout_width", values.public_layout_width);
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_layout_width", snapshot.public_layout_width);
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
 async function getConfiguredAdminPath() {
+  const value = await getSettingValue("admin_path");
+  return value?.trim() || "admin";
+}
+
+async function getSettingValue(
+  key: "admin_path" | "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+) {
   return withDb(async (db) => {
     const [row] = await db
       .select({ value: settings.value })
       .from(settings)
-      .where(eq(settings.key, "admin_path"))
+      .where(eq(settings.key, key))
       .limit(1);
 
-    return row?.value?.trim() || "admin";
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 

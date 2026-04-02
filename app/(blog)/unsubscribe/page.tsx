@@ -3,7 +3,12 @@ import Link from "next/link";
 
 import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
 import { getSubscriberUnsubscribePreview } from "@/lib/blog/subscribers";
-import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
+import {
+  resolveAccentClass,
+  resolveContentWidthClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type UnsubscribePageProps = {
   searchParams: Promise<{
@@ -51,11 +56,15 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
       : status === "missing"
         ? "该邮箱当前已经不在订阅列表中。"
         : null;
+  const themeFrameworkSettings = await getThemeFrameworkSettings();
+  const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
+  const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
+  const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
       <div className="flex flex-col gap-3">
-        <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+        <p className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>
           Unsubscribe
         </p>
         <h1 className="text-4xl font-semibold tracking-tight">退订邮件通知</h1>
@@ -72,7 +81,7 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
         <form
           action="/unsubscribe/confirm"
           method="get"
-          className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800"
+          className={`flex flex-col gap-6 rounded-2xl border p-6 ${surfaceClass}`}
         >
           <input type="hidden" name="token" value={preview.token} />
 
@@ -98,7 +107,7 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
       ) : (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-5 text-sm leading-6 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
           退订链接无效或已失效。你也可以返回
-          <Link className="ml-1 underline underline-offset-4" href="/subscribe">
+          <Link className={`ml-1 underline underline-offset-4 ${accentClass}`} href="/subscribe">
             订阅页
           </Link>
           重新确认邮箱状态。
