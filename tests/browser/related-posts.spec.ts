@@ -4,11 +4,11 @@ import { basename, resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
-import { and, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { categories, postTags, posts, tags, users } from "../../lib/db/schema";
+import { categories, postTags, posts, settings, tags, users } from "../../lib/db/schema";
 
 const testEnvPath = resolveTestEnvPath();
 
@@ -17,17 +17,29 @@ loadEnv({ path: testEnvPath, override: true });
 const BROWSER_PREFIX = "integration-browser-related-posts-";
 const databaseUrl = getDatabaseUrl();
 
+type ThemeSettingsSnapshot = {
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
+
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("related posts browser regression", () => {
   test("shows related published posts on the public post page and navigates to the related post", async ({ page }) => {
     const fixture = await seedRelatedPostsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto(`/post/${fixture.primarySlug}`);
       await expect(page.getByRole("heading", { name: fixture.primaryTitle })).toBeVisible();
       await expect(page.getByRole("heading", { name: "相关文章" })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.relatedTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.relatedTitle }).locator("xpath=ancestor::article[1]")).toHaveClass(/hover:border-blue-300/);
       await expect(page.getByText(fixture.unrelatedTitle)).toHaveCount(0);
 
       await page.getByRole("link", { name: fixture.relatedTitle }).click();
@@ -38,6 +50,7 @@ test.describe("related posts browser regression", () => {
       await expect(page.getByRole("link", { name: fixture.primaryTitle })).toBeVisible();
       await expect(page.getByText(fixture.unrelatedTitle)).toHaveCount(0);
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupRelatedPostsFixture();
     }
   });
@@ -160,6 +173,26 @@ async function seedRelatedPostsFixture(seed: string): Promise<RelatedPostsFixtur
   };
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
 async function cleanupRelatedPostsFixture() {
   await withDb(async (db) => {
     const browserPosts = await db
@@ -198,6 +231,49 @@ async function cleanupRelatedPostsFixture() {
   });
 }
 
+
+async function getSettingValue(
+  key: "public_surface_variant" | "public_accent_theme",
+) {
+  return withDb(async (db) => {
+    const [row] = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
 
 async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {
   const client = postgres(databaseUrl, { max: 1 });

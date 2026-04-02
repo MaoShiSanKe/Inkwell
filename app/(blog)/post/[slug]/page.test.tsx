@@ -426,6 +426,7 @@ describe("blog post page", () => {
     expect(markup).toContain("相关文章");
     expect(markup).toContain("Related title");
     expect(markup).toContain("/post/related-slug");
+    expect(markup).toContain("hover:border-blue-300");
     expect(markup).toContain("application/ld+json");
     expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).toContain("post-like-button count:3:blue:solid");

@@ -177,6 +177,15 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const relatedCardHoverClass =
+    themeFrameworkSettings.public_accent_theme === "blue"
+      ? "hover:border-blue-300 dark:hover:border-blue-700"
+      : themeFrameworkSettings.public_accent_theme === "emerald"
+        ? "hover:border-emerald-300 dark:hover:border-emerald-700"
+        : themeFrameworkSettings.public_accent_theme === "amber"
+          ? "hover:border-amber-300 dark:hover:border-amber-700"
+          : "hover:border-slate-400 dark:hover:border-slate-600";
+  const relatedCardClass = `flex flex-col gap-2 rounded-2xl border px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${relatedCardHoverClass}`;
   const breadcrumbItems = buildBreadcrumbItems(post);
   const articleJsonLd = buildArticleJsonLd(
     post,
@@ -347,7 +356,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         {relatedPosts.length > 0 ? (
           <div className="flex flex-col gap-3">
             {relatedPosts.map((relatedPost) => (
-              <article key={relatedPost.id} className="flex flex-col gap-2">
+              <article key={relatedPost.id} className={relatedCardClass}>
                 <h3 className="text-lg font-semibold tracking-tight">
                   <Link className={`hover:underline ${accentClass}`} href={`/post/${relatedPost.slug}`}>
                     {relatedPost.title}
