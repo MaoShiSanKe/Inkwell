@@ -139,6 +139,7 @@ describe("blog tag page", () => {
     expect(markup).toContain('href="/author/author-name"');
     expect(markup).toContain("/post/published-slug");
     expect(markup).toContain("/category/frontend");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300");
   });
 
   it("calls notFound when the tag slug does not exist", async () => {

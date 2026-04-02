@@ -76,6 +76,8 @@ export default async function TagPage({ params }: TagPageProps) {
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const emptyStateClass =
     themeFrameworkSettings.public_surface_variant === "solid"
       ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
@@ -107,7 +109,7 @@ export default async function TagPage({ params }: TagPageProps) {
             >
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
-                  <Link className={`hover:underline ${accentClass}`} href={`/author/${post.author.slug}`}>
+                  <Link className={metadataLinkClass} href={`/author/${post.author.slug}`}>
                     作者：{post.author.displayName}
                   </Link>
                   {post.publishedAt ? (
@@ -116,13 +118,13 @@ export default async function TagPage({ params }: TagPageProps) {
                     </time>
                   ) : null}
                   {post.category ? (
-                    <Link className={`hover:underline ${accentClass}`} href={`/category/${post.category.slug}`}>
+                    <Link className={metadataLinkClass} href={`/category/${post.category.slug}`}>
                       分类：{post.category.name}
                     </Link>
                   ) : null}
                 </div>
                 <h2 className="text-2xl font-semibold tracking-tight">
-                  <Link className="hover:underline" href={`/post/${post.slug}`}>
+                  <Link className={accentLinkClass} href={`/post/${post.slug}`}>
                     {post.title}
                   </Link>
                 </h2>
