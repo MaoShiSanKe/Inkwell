@@ -320,7 +320,13 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         )}
       </article>
 
-      <PostLikeButton postId={post.id} postSlug={post.slug} initialLikeCount={likeCount} />
+      <PostLikeButton
+        postId={post.id}
+        postSlug={post.slug}
+        initialLikeCount={likeCount}
+        accentTheme={themeFrameworkSettings.public_accent_theme}
+        surfaceVariant={themeFrameworkSettings.public_surface_variant}
+      />
 
       <section className={`mt-6 flex flex-col gap-4 rounded-2xl border px-6 py-5 ${surfaceClass}`}>
         <div className="flex flex-col gap-2">

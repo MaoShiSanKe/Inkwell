@@ -116,9 +116,15 @@ vi.mock("@/components/blog/comment-list", () => ({
 }));
 
 vi.mock("@/components/blog/post-like-button", () => ({
-  PostLikeButton: ({ initialLikeCount }: { initialLikeCount: number }) => (
-    <div>{`post-like-button count:${initialLikeCount}`}</div>
-  ),
+  PostLikeButton: ({
+    initialLikeCount,
+    accentTheme,
+    surfaceVariant,
+  }: {
+    initialLikeCount: number;
+    accentTheme?: string;
+    surfaceVariant?: string;
+  }) => <div>{`post-like-button count:${initialLikeCount}:${accentTheme ?? ""}:${surfaceVariant ?? ""}`}</div>,
 }));
 
 describe("blog post page", () => {
@@ -414,7 +420,7 @@ describe("blog post page", () => {
     expect(markup).toContain("/post/related-slug");
     expect(markup).toContain("application/ld+json");
     expect(markup).toContain('"@type":"BreadcrumbList"');
-    expect(markup).toContain("post-like-button count:3");
+    expect(markup).toContain("post-like-button count:3:blue:solid");
     expect(markup).toContain("当前共有 2 条已公开评论。");
     expect(markup).toContain("comment-list");
     expect(markup).toContain("Top Level");

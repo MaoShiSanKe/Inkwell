@@ -8,7 +8,7 @@ import { eq, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { postLikes, posts, users } from "../../lib/db/schema";
+import { postLikes, posts, settings, users } from "../../lib/db/schema";
 
 const testEnvPath = resolveTestEnvPath();
 
@@ -17,16 +17,29 @@ loadEnv({ path: testEnvPath, override: true });
 const BROWSER_PREFIX = "integration-browser-likes-";
 const databaseUrl = getDatabaseUrl();
 
+type ThemeSettingsSnapshot = {
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
+
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("post likes browser regression", () => {
   test("likes a published post once and keeps count stable on repeat click", async ({ page }) => {
     const fixture = await seedLikesFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto(`/post/${fixture.slug}`);
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
       await expect(page.getByText("当前共有 0 次点赞。")).toBeVisible();
+      await expect(page.getByRole("button", { name: "点赞" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
+      await expect(page.getByText("当前共有 0 次点赞。")).toHaveClass(/text-slate-600/);
 
       await page.getByRole("button", { name: "点赞" }).click();
       await expect(page.getByText("点赞成功。")).toBeVisible();
@@ -38,6 +51,7 @@ test.describe("post likes browser regression", () => {
       await expect(page.getByText("当前共有 1 次点赞。")).toBeVisible();
       await expect.poll(() => getLikeCount(fixture.postId)).toBe(1);
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupLikesFixture();
     }
   });
@@ -91,6 +105,26 @@ async function seedLikesFixture(seed: string): Promise<LikesFixture> {
   };
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
 async function cleanupLikesFixture() {
   await withDb(async (db) => {
     const browserPosts = await db
@@ -131,6 +165,49 @@ async function getLikeCount(postId: number) {
       .where(eq(postLikes.postId, postId));
 
     return rows.length;
+  });
+}
+
+async function getSettingValue(
+  key: "public_surface_variant" | "public_accent_theme",
+) {
+  return withDb(async (db) => {
+    const [row] = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
