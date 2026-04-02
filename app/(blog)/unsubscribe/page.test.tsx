@@ -77,6 +77,8 @@ describe("unsubscribe page", () => {
     expect(markup).toContain("max-w-6xl");
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("text-blue-700 dark:text-blue-300");
+    expect(markup).toContain("border-red-300");
+    expect(markup).toContain("focus-visible:ring-blue-500/40");
   });
 
   it("renders an error state for an invalid unsubscribe token", async () => {

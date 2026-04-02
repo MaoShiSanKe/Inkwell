@@ -60,6 +60,15 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const buttonFocusRingClass =
+    themeFrameworkSettings.public_accent_theme === "blue"
+      ? "focus-visible:ring-blue-500/40"
+      : themeFrameworkSettings.public_accent_theme === "emerald"
+        ? "focus-visible:ring-emerald-500/40"
+        : themeFrameworkSettings.public_accent_theme === "amber"
+          ? "focus-visible:ring-amber-500/40"
+          : "focus-visible:ring-slate-500/40";
+  const destructiveButtonClass = `inline-flex items-center justify-center rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40 ${buttonFocusRingClass}`;
 
   return (
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
@@ -97,10 +106,7 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
             </p>
           </div>
 
-          <button
-            className="inline-flex items-center justify-center rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
-            type="submit"
-          >
+          <button className={destructiveButtonClass} type="submit">
             确认退订
           </button>
         </form>

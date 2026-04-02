@@ -13,9 +13,15 @@ vi.mock("@/lib/settings", () => ({
 }));
 
 vi.mock("@/components/blog/subscribe-form", () => ({
-  SubscribeForm: ({ initialEmail }: { initialEmail?: string }) => (
-    <div>{`subscribe-form:${initialEmail ?? ""}`}</div>
-  ),
+  SubscribeForm: ({
+    initialEmail,
+    accentTheme,
+    surfaceVariant,
+  }: {
+    initialEmail?: string;
+    accentTheme?: string;
+    surfaceVariant?: string;
+  }) => <div>{`subscribe-form:${initialEmail ?? ""}:${accentTheme ?? ""}:${surfaceVariant ?? ""}`}</div>,
 }));
 
 describe("subscribe page", () => {
@@ -58,7 +64,7 @@ describe("subscribe page", () => {
     );
 
     expect(markup).toContain("订阅新文章通知");
-    expect(markup).toContain("subscribe-form:reader@example.com");
+    expect(markup).toContain("subscribe-form:reader@example.com:blue:solid");
     expect(markup).toContain("max-w-6xl");
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("text-blue-700 dark:text-blue-300");

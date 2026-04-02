@@ -44,6 +44,8 @@ test.describe("subscriber workflow browser regression", () => {
       await expect(page.locator("h1")).toContainText("订阅新文章通知");
       await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
       await expect(page.getByText("Subscribe", { exact: true })).toHaveClass(/text-blue-700/);
+      await expect(page.getByRole("button", { name: "订阅邮件通知" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
+      await expect(page.getByLabel("邮箱")).toHaveClass(/focus:border-blue-500/);
 
       await page.getByLabel("昵称").fill("Browser Reader");
       await page.getByLabel("邮箱").fill(fixture.readerEmail);
@@ -79,6 +81,8 @@ test.describe("subscriber workflow browser regression", () => {
       await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
       await expect(page.getByText("Unsubscribe", { exact: true })).toHaveClass(/text-blue-700/);
       await expect(page.getByText(fixture.readerEmail)).toBeVisible();
+      await expect(page.getByRole("button", { name: "确认退订" })).toHaveClass(/border-red-300/);
+      await expect(page.getByRole("button", { name: "确认退订" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
       await page.getByRole("button", { name: "确认退订" }).click();
       await expect(page).toHaveURL(/\/unsubscribe\?status=removed$/);
       await expect(page.getByText("你已成功退订后续新文章邮件。")).toBeVisible();

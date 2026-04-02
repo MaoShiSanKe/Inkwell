@@ -4,12 +4,20 @@ import { useActionState } from "react";
 
 import { subscribeAction } from "@/app/(blog)/subscribe/actions";
 import { initialSubscriptionFormState } from "@/lib/blog/subscription-form";
+import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
+import { resolveAccentClass, resolveSurfaceClass } from "@/lib/theme";
 
 type SubscribeFormProps = {
   initialEmail?: string;
+  accentTheme?: PublicAccentTheme;
+  surfaceVariant?: PublicSurfaceVariant;
 };
 
-export function SubscribeForm({ initialEmail = "" }: SubscribeFormProps) {
+export function SubscribeForm({
+  initialEmail = "",
+  accentTheme = "slate",
+  surfaceVariant = "soft",
+}: SubscribeFormProps) {
   const [state = initialSubscriptionFormState, formAction, isPending] = useActionState(
     subscribeAction,
     {
@@ -20,11 +28,37 @@ export function SubscribeForm({ initialEmail = "" }: SubscribeFormProps) {
       },
     },
   );
+  const surfaceClass = resolveSurfaceClass(surfaceVariant);
+  const accentClass = resolveAccentClass(accentTheme);
+  const fieldSurfaceClass =
+    surfaceVariant === "solid"
+      ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
+      : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
+  const buttonSurfaceClass =
+    "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+  const inputAccentBorderClass =
+    accentTheme === "blue"
+      ? "focus:border-blue-500"
+      : accentTheme === "emerald"
+        ? "focus:border-emerald-500"
+        : accentTheme === "amber"
+          ? "focus:border-amber-500"
+          : "focus:border-slate-500";
+  const buttonAccentRingClass =
+    accentTheme === "blue"
+      ? "focus-visible:ring-blue-500/40"
+      : accentTheme === "emerald"
+        ? "focus-visible:ring-emerald-500/40"
+        : accentTheme === "amber"
+          ? "focus-visible:ring-amber-500/40"
+          : "focus-visible:ring-slate-500/40";
+  const inputClass = `rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
+  const buttonClass = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
 
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800"
+      className={`flex flex-col gap-6 rounded-2xl border p-6 ${surfaceClass}`}
     >
       <div className="flex flex-col gap-2">
         <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
@@ -58,7 +92,7 @@ export function SubscribeForm({ initialEmail = "" }: SubscribeFormProps) {
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
         昵称
         <input
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          className={inputClass}
           type="text"
           name="displayName"
           defaultValue={state.values.displayName}
@@ -72,7 +106,7 @@ export function SubscribeForm({ initialEmail = "" }: SubscribeFormProps) {
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
         邮箱
         <input
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          className={inputClass}
           type="email"
           name="email"
           defaultValue={state.values.email}
@@ -84,12 +118,8 @@ export function SubscribeForm({ initialEmail = "" }: SubscribeFormProps) {
         ) : null}
       </label>
 
-      <button
-        className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-        type="submit"
-        disabled={isPending}
-      >
-        {isPending ? "提交中..." : "订阅邮件通知"}
+      <button className={buttonClass} type="submit" disabled={isPending}>
+        <span className={accentClass}>{isPending ? "提交中..." : "订阅邮件通知"}</span>
       </button>
     </form>
   );

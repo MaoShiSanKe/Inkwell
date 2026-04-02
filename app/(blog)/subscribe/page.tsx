@@ -61,7 +61,11 @@ export default async function SubscribePage({ searchParams }: SubscribePageProps
         </p>
       </div>
 
-      <SubscribeForm initialEmail={email} />
+      <SubscribeForm
+        initialEmail={email}
+        accentTheme={themeFrameworkSettings.public_accent_theme}
+        surfaceVariant={themeFrameworkSettings.public_surface_variant}
+      />
 
       <div className={`rounded-2xl border px-6 py-5 text-sm leading-6 text-slate-600 dark:text-slate-300 ${surfaceClass}`}>
         <p>
