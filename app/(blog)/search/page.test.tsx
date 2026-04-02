@@ -80,17 +80,20 @@ describe("search page", () => {
     });
   });
 
-  it("renders helper copy when query is empty", async () => {
+  it("renders themed helper copy and controls when query is empty", async () => {
     const { default: SearchPage } = await import("./page");
     const element = await SearchPage({ searchParams: Promise.resolve({}) });
     const markup = renderToStaticMarkup(element);
 
     expect(markup).toContain("搜索已发布文章");
     expect(markup).toContain("输入关键词开始搜索");
+    expect(markup).toContain("bg-slate-100/70");
+    expect(markup).toContain("focus:border-blue-500");
+    expect(markup).toContain("focus-visible:ring-blue-500/40");
     expect(searchPublishedPostsMock).not.toHaveBeenCalled();
   });
 
-  it("renders matching search results", async () => {
+  it("renders themed matching search results", async () => {
     searchPublishedPostsMock.mockResolvedValue([createPostListItem()]);
 
     const { default: SearchPage } = await import("./page");
@@ -102,6 +105,7 @@ describe("search page", () => {
     expect(markup).toContain("Published title");
     expect(markup).toContain("Published excerpt");
     expect(markup).toContain('href="/post/published-slug"');
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
   it("renders an empty state when query returns no matches", async () => {

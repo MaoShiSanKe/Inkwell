@@ -62,6 +62,50 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const fieldSurfaceClass =
+    themeFrameworkSettings.public_surface_variant === "solid"
+      ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
+      : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
+  const buttonSurfaceClass =
+    themeFrameworkSettings.public_surface_variant === "solid"
+      ? "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+      : "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+  const emptyStateSurfaceClass =
+    themeFrameworkSettings.public_surface_variant === "solid"
+      ? "border-slate-300 bg-slate-100/70 text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
+      : "border-slate-300 bg-white/80 text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
+  const resultCountClass = `text-sm ${accentClass}`;
+  const postTitleLinkClass = `hover:underline ${accentClass}`;
+  const metaTextClass = "text-sm text-slate-500 dark:text-slate-400";
+  const excerptClass = "text-base leading-7 text-slate-600 dark:text-slate-300";
+  const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
+  const buttonAccentRingClass =
+    themeFrameworkSettings.public_accent_theme === "blue"
+      ? "focus-visible:ring-blue-500/40"
+      : themeFrameworkSettings.public_accent_theme === "emerald"
+        ? "focus-visible:ring-emerald-500/40"
+        : themeFrameworkSettings.public_accent_theme === "amber"
+          ? "focus-visible:ring-amber-500/40"
+          : "focus-visible:ring-slate-500/40";
+  const inputAccentBorderClass =
+    themeFrameworkSettings.public_accent_theme === "blue"
+      ? "focus:border-blue-500"
+      : themeFrameworkSettings.public_accent_theme === "emerald"
+        ? "focus:border-emerald-500"
+        : themeFrameworkSettings.public_accent_theme === "amber"
+          ? "focus:border-amber-500"
+          : "focus:border-slate-500";
+  const inputAccentTextClass =
+    themeFrameworkSettings.public_accent_theme === "blue"
+      ? "text-blue-700 dark:text-blue-300"
+      : themeFrameworkSettings.public_accent_theme === "emerald"
+        ? "text-emerald-700 dark:text-emerald-300"
+        : themeFrameworkSettings.public_accent_theme === "amber"
+          ? "text-amber-700 dark:text-amber-300"
+          : "text-slate-700 dark:text-slate-200";
+  const inputClass = `min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
+  const buttonClass = `inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
+  const emptyStateClass = `rounded-2xl border border-dashed px-6 py-12 text-center ${emptyStateSurfaceClass}`;
 
   return (
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
@@ -77,33 +121,30 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       <form action="/search" className="flex flex-col gap-3 sm:flex-row">
         <input
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          className={inputClass}
           defaultValue={query}
           name="q"
           placeholder="输入关键词，例如：Next.js、SEO、评论"
           type="search"
         />
-        <button
-          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-          type="submit"
-        >
-          搜索
+        <button className={buttonClass} type="submit">
+          <span className={inputAccentTextClass}>搜索</span>
         </button>
       </form>
 
       {!query ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:text-slate-300">
-          <p className="text-lg font-medium">输入关键词开始搜索</p>
+        <div className={emptyStateClass}>
+          <p className={emptyStateHeadingClass}>输入关键词开始搜索</p>
           <p className="mt-2 text-sm">搜索结果只包含当前已发布的文章，不包含草稿、定时发布和回收站内容。</p>
         </div>
       ) : posts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:text-slate-300">
-          <p className="text-lg font-medium">没有找到相关文章</p>
+        <div className={emptyStateClass}>
+          <p className={emptyStateHeadingClass}>没有找到相关文章</p>
           <p className="mt-2 text-sm">请尝试更换关键词，或缩短查询词后重新搜索。</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className={resultCountClass}>
             共找到 {posts.length} 篇与 “{query}” 相关的已发布文章。
           </p>
           {posts.map((post) => (
@@ -112,7 +153,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               className={`rounded-2xl border px-6 py-5 ${surfaceClass}`}
             >
               <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+                <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${metaTextClass}`}>
                   <Link className={`hover:underline ${accentClass}`} href={`/author/${post.author.slug}`}>
                     作者：{post.author.displayName}
                   </Link>
@@ -128,15 +169,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   ) : null}
                 </div>
                 <h2 className="text-2xl font-semibold tracking-tight">
-                  <Link className="hover:underline" href={`/post/${post.slug}`}>
+                  <Link className={postTitleLinkClass} href={`/post/${post.slug}`}>
                     {post.title}
                   </Link>
                 </h2>
-                {post.excerpt ? (
-                  <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
-                    {post.excerpt}
-                  </p>
-                ) : null}
+                {post.excerpt ? <p className={excerptClass}>{post.excerpt}</p> : null}
               </div>
             </article>
           ))}
