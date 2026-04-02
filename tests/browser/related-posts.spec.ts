@@ -39,6 +39,8 @@ test.describe("related posts browser regression", () => {
       await expect(page.getByRole("heading", { name: fixture.primaryTitle })).toBeVisible();
       await expect(page.getByRole("heading", { name: "相关文章" })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.relatedTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.relatedTitle })).toHaveClass(/underline-offset-4/);
+      await expect(page.getByRole("link", { name: fixture.relatedTitle })).toHaveClass(/text-blue-700/);
       await expect(page.getByRole("link", { name: fixture.relatedTitle }).locator("xpath=ancestor::article[1]")).toHaveClass(/hover:border-blue-300/);
       await expect(page.getByText(fixture.unrelatedTitle)).toHaveCount(0);
 

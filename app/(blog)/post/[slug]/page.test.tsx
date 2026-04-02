@@ -439,6 +439,7 @@ describe("blog post page", () => {
     expect(markup).toContain("Related title");
     expect(markup).toContain("/post/related-slug");
     expect(markup).toContain("hover:border-blue-300");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300");
     expect(markup).toContain("application/ld+json");
     expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).toContain("post-like-button count:3:blue:solid");

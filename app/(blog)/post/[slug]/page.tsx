@@ -369,7 +369,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
             {relatedPosts.map((relatedPost) => (
               <article key={relatedPost.id} className={relatedCardClass}>
                 <h3 className="text-lg font-semibold tracking-tight">
-                  <Link className={`hover:underline ${accentClass}`} href={`/post/${relatedPost.slug}`}>
+                  <Link className={accentLinkClass} href={`/post/${relatedPost.slug}`}>
                     {relatedPost.title}
                   </Link>
                 </h3>
