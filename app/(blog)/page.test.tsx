@@ -132,6 +132,8 @@ describe("blog home page", () => {
 
     expect(markup).toContain("还没有已发布文章");
     expect(markup).toContain("第一篇公开文章发布后，会显示在这里。");
+    expect(markup).toContain("bg-slate-100/70");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 });
 

@@ -61,6 +61,11 @@ export default async function BlogHomePage() {
   const metaTextClass = compact ? "text-xs" : "text-sm";
   const titleClass = compact ? "text-xl" : "text-2xl";
   const excerptClass = compact ? "text-sm leading-6" : "text-base leading-7";
+  const emptyStateClass =
+    themeFrameworkSettings.public_surface_variant === "solid"
+      ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
+      : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
+  const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
   const featuredLinks = [
     {
       label: themeFrameworkSettings.home_featured_link_1_label,
@@ -139,8 +144,8 @@ export default async function BlogHomePage() {
       ) : null}
 
       {posts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:text-slate-300">
-          <p className="text-lg font-medium">还没有已发布文章</p>
+        <div className={emptyStateClass}>
+          <p className={emptyStateHeadingClass}>还没有已发布文章</p>
           <p className="mt-2 text-sm">第一篇公开文章发布后，会显示在这里。</p>
         </div>
       ) : (

@@ -87,6 +87,12 @@ test.describe("public archive pages", () => {
 
       await cleanupArchivePublishedPosts();
 
+      await page.goto(`/`);
+      await expect(page.getByRole("heading", { name: "最新文章" })).toBeVisible();
+      const homeEmptyHeading = page.getByText("还没有已发布文章");
+      await expect(homeEmptyHeading).toHaveClass(/text-blue-700/);
+      await expect(homeEmptyHeading.locator("xpath=..")) .toHaveClass(/bg-slate-100\/70/);
+
       await page.goto(`/category/${fixture.categorySlug}`);
       await expect(page.getByRole("heading", { name: fixture.categoryName })).toBeVisible();
       await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
