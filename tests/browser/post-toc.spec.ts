@@ -4,11 +4,16 @@ import { basename, resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
-import { and, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { posts, users } from "../../lib/db/schema";
+import { posts, settings, users } from "../../lib/db/schema";
+
+type ThemeSettingsSnapshot = {
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
 
 const testEnvPath = resolveTestEnvPath();
 
@@ -22,12 +27,20 @@ assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 test.describe("post toc browser regression", () => {
   test("shows toc links and jumps to the matching heading", async ({ page }) => {
     const fixture = await seedPostTocFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto(`/post/${fixture.slug}`);
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
       await expect(page.getByRole("navigation", { name: "文章目录" })).toBeVisible();
+      await expect(page.getByRole("navigation", { name: "文章目录" })).toHaveClass(/bg-slate-100\/90/);
       await expect(page.getByRole("link", { name: fixture.sectionHeading })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.sectionHeading })).toHaveClass(/text-blue-700/);
       await expect(page.getByRole("link", { name: fixture.subsectionHeading })).toBeVisible();
 
       await page.getByRole("link", { name: fixture.subsectionHeading }).click();
@@ -35,14 +48,21 @@ test.describe("post toc browser regression", () => {
       await expect.poll(() => new URL(page.url()).hash).toBe(`#${fixture.subsectionId}`);
       await expect(page.locator(`#${fixture.subsectionId}`)).toBeInViewport();
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupPostTocFixture();
     }
   });
 
   test("keeps the toc usable on narrow screens", async ({ page }) => {
     const fixture = await seedPostTocFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(`/post/${fixture.slug}`);
 
@@ -54,6 +74,7 @@ test.describe("post toc browser regression", () => {
       await expect.poll(() => new URL(page.url()).hash).toBe(`#${fixture.sectionId}`);
       await expect(page.locator(`#${fixture.sectionId}`)).toBeInViewport();
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupPostTocFixture();
     }
   });
@@ -120,6 +141,26 @@ async function seedPostTocFixture(seed: string): Promise<PostTocFixture> {
   };
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
 async function cleanupPostTocFixture() {
   await withDb(async (db) => {
     const browserPosts = await db
@@ -152,6 +193,49 @@ async function cleanupPostTocFixture() {
         ),
       );
     }
+  });
+}
+
+async function getSettingValue(
+  key: "public_surface_variant" | "public_accent_theme",
+) {
+  return withDb(async (db) => {
+    const [row] = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 

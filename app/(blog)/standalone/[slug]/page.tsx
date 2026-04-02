@@ -84,7 +84,13 @@ export default async function StandalonePage({ params }: StandalonePageProps) {
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-6 px-6 py-16`}>
       <p className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>Page</p>
       <h1 className="text-3xl font-semibold tracking-tight">{page.title}</h1>
-      {hasTableOfContents ? <PostTableOfContents items={parsedContent.tocItems} /> : null}
+      {hasTableOfContents ? (
+        <PostTableOfContents
+          items={parsedContent.tocItems}
+          accentTheme={themeFrameworkSettings.public_accent_theme}
+          surfaceVariant={themeFrameworkSettings.public_surface_variant}
+        />
+      ) : null}
       <article className={`flex flex-col gap-4 rounded-2xl border px-6 py-5 text-base leading-7 ${surfaceClass}`}>
         {shouldRenderParsedContent ? (
           parsedContent.blocks.map((block, index) => {

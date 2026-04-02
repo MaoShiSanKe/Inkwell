@@ -620,6 +620,8 @@ describe("blog post page", () => {
 
     expect(markup).toContain("文章目录");
     expect(markup).toContain('aria-label="文章目录"');
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
+    expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain('href="#overview"');
     expect(markup).toContain('href="#details"');
     expect(markup).toContain('id="overview"');

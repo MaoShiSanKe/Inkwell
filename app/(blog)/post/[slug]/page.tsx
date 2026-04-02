@@ -280,7 +280,13 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           ))}
         </section>
       ) : null}
-      {hasTableOfContents ? <PostTableOfContents items={parsedContent.tocItems} /> : null}
+      {hasTableOfContents ? (
+        <PostTableOfContents
+          items={parsedContent.tocItems}
+          accentTheme={themeFrameworkSettings.public_accent_theme}
+          surfaceVariant={themeFrameworkSettings.public_surface_variant}
+        />
+      ) : null}
       <article className={`flex flex-col gap-4 rounded-2xl border px-6 py-5 text-base leading-7 ${surfaceClass}`}>
         {shouldRenderParsedContent ? (
           parsedContent.blocks.map((block, index) => {
