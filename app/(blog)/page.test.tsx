@@ -95,6 +95,7 @@ describe("blog home page", () => {
     expect(markup).toContain('href="/author/author-name"');
     expect(markup).toContain("/post/published-slug");
     expect(markup).toContain("/category/published-category");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300");
     expect(markup).toContain("max-w-6xl");
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("hover:border-blue-300");

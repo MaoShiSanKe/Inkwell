@@ -83,6 +83,8 @@ export default async function BlogHomePage() {
           ? "hover:border-amber-300 dark:hover:border-amber-700 focus-visible:ring-amber-500/40"
           : "hover:border-slate-400 dark:hover:border-slate-600 focus-visible:ring-slate-500/40";
   const featuredLinkCardClass = `rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${featuredLinkHoverClass}`;
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const ctaClass = `inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 dark:border-slate-700 ${accentClass} ${ctaHoverClass}`;
   const featuredLinks = [
     {
@@ -182,7 +184,7 @@ export default async function BlogHomePage() {
                       className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${metaTextClass} text-slate-500 dark:text-slate-400`}
                     >
                       {showAuthor ? (
-                        <Link className={`hover:underline ${accentClass}`} href={`/author/${post.author.slug}`}>
+                        <Link className={metadataLinkClass} href={`/author/${post.author.slug}`}>
                           作者：{post.author.displayName}
                         </Link>
                       ) : null}
@@ -192,14 +194,14 @@ export default async function BlogHomePage() {
                         </time>
                       ) : null}
                       {showCategory && post.category ? (
-                        <Link className={`hover:underline ${accentClass}`} href={`/category/${post.category.slug}`}>
+                        <Link className={metadataLinkClass} href={`/category/${post.category.slug}`}>
                           分类：{post.category.name}
                         </Link>
                       ) : null}
                     </div>
                   ) : null}
                   <h2 className={`${titleClass} font-semibold tracking-tight`}>
-                    <Link className="hover:underline" href={`/post/${post.slug}`}>
+                    <Link className={accentLinkClass} href={`/post/${post.slug}`}>
                       {post.title}
                     </Link>
                   </h2>
