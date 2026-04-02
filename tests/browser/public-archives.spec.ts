@@ -39,6 +39,7 @@ test.describe("public archive pages", () => {
 
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "最新文章" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "查看分类" })).toHaveClass(/hover:border-blue-300/);
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);

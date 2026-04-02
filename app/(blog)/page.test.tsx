@@ -97,6 +97,7 @@ describe("blog home page", () => {
     expect(markup).toContain("/category/published-category");
     expect(markup).toContain("max-w-6xl");
     expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("hover:border-blue-300");
   });
 
   it("renders compact list cards and hides disabled post metadata", async () => {
