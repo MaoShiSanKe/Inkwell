@@ -49,7 +49,7 @@ export function CommentList({
     surfaceVariant === "solid"
       ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-10 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
       : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-10 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
-  const replyLinkClass = `text-sm font-medium underline underline-offset-4 hover:text-slate-900 dark:hover:text-slate-100 ${accentClass}`;
+  const replyLinkClass = `text-sm font-medium underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
   const replySurfaceClass =
     surfaceVariant === "solid"
       ? "rounded-2xl border border-slate-300 bg-slate-100/70 p-4 dark:border-slate-700 dark:bg-slate-900/70"

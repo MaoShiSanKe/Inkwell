@@ -43,6 +43,7 @@ test.describe("comments browser regression", () => {
       await expect(page.getByText("还没有评论")).toHaveCount(0);
       await expect(page.getByRole("button", { name: "提交评论" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
       await expect(page.getByLabel("邮箱")).toHaveClass(/focus:border-blue-500/);
+      await expect(page.getByRole("link", { name: "回复" }).first()).toHaveClass(/underline-offset-4/);
       await expect(page.getByRole("link", { name: "回复" }).first()).toHaveClass(/text-blue-700/);
       await expect(page.getByText(fixture.visibleParentContent)).toBeVisible();
       await expect(

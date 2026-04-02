@@ -45,6 +45,7 @@ describe("CommentList", () => {
 
     expect(markup).toContain("Top level comment");
     expect(markup).toContain("text-emerald-700 dark:text-emerald-300");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400");
     expect(markup).toContain('href="/post/post-slug?replyTo=1#comment-form"');
     expect(markup).toContain("bg-white/80");
   });
