@@ -11,6 +11,7 @@ export function SiteHeader({ settings }: { settings: ThemeFrameworkSettings }) {
   const widthClass = resolveContentWidthClass(settings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(settings.public_surface_variant);
   const accentClass = resolveAccentClass(settings.public_accent_theme);
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
 
   return (
     <header className={`mx-auto w-full ${widthClass} px-6 pt-6`}>
@@ -19,7 +20,7 @@ export function SiteHeader({ settings }: { settings: ThemeFrameworkSettings }) {
           <div className="flex flex-col gap-1">
             <Link
               href="/"
-              className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}
+              className={`text-sm uppercase tracking-[0.2em] ${accentLinkClass}`}
             >
               {settings.site_brand_name}
             </Link>
