@@ -57,6 +57,7 @@ test.describe("comments browser regression", () => {
       await expect(page).toHaveURL(new RegExp(`replyTo=${fixture.parentCommentId}`));
       await expect(page.getByRole("heading", { name: "回复评论" })).toBeVisible();
       await expect(page.getByText(`当前正在回复 ${fixture.parentAuthorName}。系统仅支持两层评论嵌套。`)).toBeVisible();
+      await expect(page.getByRole("link", { name: "取消回复" })).toHaveClass(/underline-offset-4/);
       await expect(page.getByRole("link", { name: "取消回复" })).toHaveClass(/text-blue-700/);
 
       await page.goto(`/post/${fixture.slug}`);

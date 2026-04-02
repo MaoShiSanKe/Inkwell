@@ -2,8 +2,18 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/link", () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    href,
+    className,
+    children,
+  }: {
+    href: string;
+    className?: string;
+    children: React.ReactNode;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }));
 
@@ -44,6 +54,7 @@ describe("CommentForm", () => {
 
     expect(markup).toContain("取消回复");
     expect(markup).toContain("text-emerald-700 dark:text-emerald-300");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400");
     expect(markup).toContain("当前正在回复 Reply Target。系统仅支持两层评论嵌套。");
   });
 });
