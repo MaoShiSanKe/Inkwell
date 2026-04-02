@@ -56,6 +56,7 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 当前生效位置：
 - `app/(blog)/page.tsx`
 - `app/(blog)/layout.tsx`
+- `app/(blog)/friend-links/page.tsx`
 - `app/(admin)/[adminPath]/layout.tsx`
 - `app/layout.tsx`
 - `app/rss.xml/route.ts`
@@ -88,7 +89,7 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 
 当前行为：
 - 页头品牌区与页脚说明区已结构化
-- 首页、公开布局、搜索页与分类 / 标签 / 作者 / 系列归档页共享宽度 / 表面 / 强调色映射
+- 首页、公开布局、搜索页、友情链接页与分类 / 标签 / 作者 / 系列归档页共享宽度 / 表面 / 强调色映射
 - `public_custom_css` 仍保留为 escape hatch
 
 ### 2.4 默认主题模式

@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 
 import { listPublicFriendLinks, getFriendLinksPageMetadata } from "@/lib/blog/friend-links";
+import { getThemeFrameworkSettings } from "@/lib/settings";
+import {
+  resolveAccentClass,
+  resolveContentWidthClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 export async function generateMetadata(): Promise<Metadata> {
   const metadata = await getFriendLinksPageMetadata();
@@ -26,12 +32,18 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function FriendLinksPage() {
-  const friendLinks = await listPublicFriendLinks();
+  const [friendLinks, themeFrameworkSettings] = await Promise.all([
+    listPublicFriendLinks(),
+    getThemeFrameworkSettings(),
+  ]);
+  const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
+  const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
+  const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
 
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
       <div className="flex flex-col gap-3">
-        <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Links</p>
+        <p className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>Links</p>
         <h1 className="text-3xl font-semibold tracking-tight">友情链接</h1>
         <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
           这里收录了一些值得关注的站点与作者项目。
@@ -48,7 +60,7 @@ export default async function FriendLinksPage() {
           {friendLinks.map((friendLink) => (
             <a
               key={friendLink.id}
-              className="flex h-full flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-slate-400 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-slate-600"
+              className={`flex h-full flex-col gap-4 rounded-2xl border p-6 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass}`}
               href={friendLink.url}
               target="_blank"
               rel="noopener noreferrer"
@@ -67,7 +79,7 @@ export default async function FriendLinksPage() {
                 )}
                 <div className="min-w-0 flex-1">
                   <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{friendLink.siteName}</h2>
-                  <p className="truncate text-sm text-slate-500 dark:text-slate-400">{friendLink.url}</p>
+                  <p className={`truncate text-sm ${accentClass}`}>{friendLink.url}</p>
                 </div>
               </div>
               <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">{friendLink.description || "暂无描述。"}</p>

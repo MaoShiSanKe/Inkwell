@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { listPublicFriendLinksMock, getFriendLinksPageMetadataMock } = vi.hoisted(() => ({
+const { listPublicFriendLinksMock, getFriendLinksPageMetadataMock, getThemeFrameworkSettingsMock } = vi.hoisted(() => ({
   listPublicFriendLinksMock: vi.fn(),
   getFriendLinksPageMetadataMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
 }));
 
 vi.mock("@/lib/blog/friend-links", () => ({
@@ -10,16 +11,48 @@ vi.mock("@/lib/blog/friend-links", () => ({
   getFriendLinksPageMetadata: getFriendLinksPageMetadataMock,
 }));
 
+vi.mock("@/lib/settings", () => ({
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
+}));
+
 describe("friend-links page", () => {
   beforeEach(() => {
     listPublicFriendLinksMock.mockReset();
     getFriendLinksPageMetadataMock.mockReset();
+    getThemeFrameworkSettingsMock.mockReset();
+    getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     getFriendLinksPageMetadataMock.mockResolvedValue({
       title: "友情链接 | Inkwell Daily",
       description: "浏览站点公开展示的友情链接列表。",
       canonicalUrl: "https://example.com/friend-links",
     });
   });
+
+  it("renders themed friend-link classes", async () => {
+    listPublicFriendLinksMock.mockResolvedValue([
+      {
+        id: 1,
+        siteName: "Friend Site",
+        url: "https://friend.example.com",
+        description: "A friendly blog.",
+        sortOrder: 1,
+        updatedAt: new Date("2026-03-30T12:00:00.000Z"),
+        logo: null,
+        logoUrl: null,
+      },
+    ]);
+
+    const { default: FriendLinksPage } = await import("./page");
+    const element = await FriendLinksPage();
+    const markup = await import("react-dom/server").then(({ renderToStaticMarkup }) =>
+      renderToStaticMarkup(element),
+    );
+
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
+  });
+
 
   it("returns metadata for the public friend-links page", async () => {
     const { generateMetadata } = await import("./page");
@@ -64,3 +97,12 @@ describe("friend-links page", () => {
     expect(markup).toContain('rel="noopener noreferrer"');
   });
 });
+
+function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    ...overrides,
+  };
+}
