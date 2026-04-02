@@ -39,6 +39,7 @@ test.describe("post likes browser regression", () => {
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
       await expect(page.getByText("当前共有 0 次点赞。")).toBeVisible();
       await expect(page.getByRole("button", { name: "点赞" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
+      await expect(page.getByRole("button", { name: "点赞" })).toHaveClass(/text-white/);
       await expect(page.getByText("当前共有 0 次点赞。")).toHaveClass(/text-slate-600/);
 
       await page.getByRole("button", { name: "点赞" }).click();

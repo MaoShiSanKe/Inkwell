@@ -21,7 +21,8 @@ describe("PostLikeButton", () => {
 
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("focus-visible:ring-blue-500/40");
-    expect(markup).toContain("text-blue-700 dark:text-blue-300");
+    expect(markup).toContain("text-white");
+    expect(markup).toContain("dark:text-slate-900");
     expect(markup).toContain("当前共有 2 次点赞。");
   });
 
@@ -31,6 +32,7 @@ describe("PostLikeButton", () => {
     );
 
     expect(markup).toContain("focus-visible:ring-slate-500/40");
-    expect(markup).toContain("text-slate-700 dark:text-slate-200");
+    expect(markup).toContain("text-white");
+    expect(markup).toContain("dark:text-slate-900");
   });
 });

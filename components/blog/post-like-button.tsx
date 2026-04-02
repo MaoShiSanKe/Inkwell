@@ -70,7 +70,7 @@ export function PostLikeButton({
           }}
           type="button"
         >
-          <span className={accentClass}>{isPending ? "提交中..." : "点赞"}</span>
+          {isPending ? "提交中..." : "点赞"}
         </button>
       </div>
       {message ? <p className={messageClass}>{message}</p> : null}
