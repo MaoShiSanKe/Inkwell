@@ -186,8 +186,17 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           ? "hover:border-amber-300 dark:hover:border-amber-700"
           : "hover:border-slate-400 dark:hover:border-slate-600";
   const relatedCardClass = `flex flex-col gap-2 rounded-2xl border px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${relatedCardHoverClass}`;
+  const tagHoverBorderClass =
+    themeFrameworkSettings.public_accent_theme === "blue"
+      ? "hover:border-blue-300 dark:hover:border-blue-700"
+      : themeFrameworkSettings.public_accent_theme === "emerald"
+        ? "hover:border-emerald-300 dark:hover:border-emerald-700"
+        : themeFrameworkSettings.public_accent_theme === "amber"
+          ? "hover:border-amber-300 dark:hover:border-amber-700"
+          : "hover:border-slate-400 dark:hover:border-slate-600";
   const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
+  const tagLinkClass = `inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm transition ${tagHoverBorderClass} ${accentClass}`;
   const breadcrumbItems = buildBreadcrumbItems(post);
   const articleJsonLd = buildArticleJsonLd(
     post,
@@ -283,7 +292,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           {post.tags.map((tag) => (
             <Link
               key={tag.id}
-              className={`inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm transition hover:border-slate-400 ${accentClass}`}
+              className={tagLinkClass}
               href={`/tag/${tag.slug}`}
             >
               {tag.name}

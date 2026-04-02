@@ -591,6 +591,8 @@ describe("blog post page", () => {
     expect(markup).toContain('href="/tag/nextjs"');
     expect(markup).toContain(">React<");
     expect(markup).toContain(">Next.js<");
+    expect(markup).toContain("hover:border-blue-300");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
   it("does not render the tag section when the published post has no tags", async () => {
