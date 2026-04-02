@@ -40,10 +40,18 @@ test.describe("comments browser regression", () => {
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
       await expect(page.getByRole("heading", { name: "评论", exact: true })).toBeVisible();
       await expect(page.getByText("当前共有 2 条已公开评论。")).toBeVisible();
+      await expect(page.getByText("还没有评论")).toHaveCount(0);
       await expect(page.getByRole("button", { name: "提交评论" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
       await expect(page.getByLabel("邮箱")).toHaveClass(/focus:border-blue-500/);
+      await expect(page.getByRole("link", { name: "回复" }).first()).toHaveClass(/text-blue-700/);
       await expect(page.getByText(fixture.visibleParentContent)).toBeVisible();
+      await expect(
+        page.getByText(fixture.visibleParentContent).locator("xpath=ancestor::li[1]"),
+      ).toHaveClass(/bg-slate-100\/90/);
       await expect(page.getByText(fixture.visibleReplyContent)).toBeVisible();
+      await expect(
+        page.getByText(fixture.visibleReplyContent).locator("xpath=ancestor::li[1]"),
+      ).toHaveClass(/bg-slate-100\/70/);
 
       await page.getByRole("link", { name: "回复" }).first().click();
       await expect(page).toHaveURL(new RegExp(`replyTo=${fixture.parentCommentId}`));

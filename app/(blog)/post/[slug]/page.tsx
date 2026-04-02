@@ -368,7 +368,12 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           </p>
         </div>
 
-        <CommentList comments={approvedComments} postSlug={post.slug} />
+        <CommentList
+          comments={approvedComments}
+          postSlug={post.slug}
+          accentTheme={themeFrameworkSettings.public_accent_theme}
+          surfaceVariant={themeFrameworkSettings.public_surface_variant}
+        />
         <CommentForm
           postId={post.id}
           postSlug={post.slug}

@@ -100,9 +100,17 @@ vi.mock("@/components/blog/comment-form", () => ({
 }));
 
 vi.mock("@/components/blog/comment-list", () => ({
-  CommentList: ({ comments }: { comments: Array<{ authorName: string; replies: Array<{ authorName: string }> }> }) => (
+  CommentList: ({
+    comments,
+    accentTheme,
+    surfaceVariant,
+  }: {
+    comments: Array<{ authorName: string; replies: Array<{ authorName: string }> }>;
+    accentTheme?: string;
+    surfaceVariant?: string;
+  }) => (
     <div>
-      comment-list
+      comment-list:{accentTheme ?? ""}:{surfaceVariant ?? ""}
       {comments.map((comment) => (
         <span key={comment.authorName}>
           {comment.authorName}
@@ -422,7 +430,7 @@ describe("blog post page", () => {
     expect(markup).toContain('"@type":"BreadcrumbList"');
     expect(markup).toContain("post-like-button count:3:blue:solid");
     expect(markup).toContain("当前共有 2 条已公开评论。");
-    expect(markup).toContain("comment-list");
+    expect(markup).toContain("comment-list:blue:solid");
     expect(markup).toContain("Top Level");
     expect(markup).toContain("Reply User");
     expect(markup).toContain("comment-form:blue:solid replying:Top Level");
