@@ -95,6 +95,7 @@ describe("unsubscribe page", () => {
     );
 
     expect(markup).toContain("退订链接无效或已失效。");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400");
     expect(markup).not.toContain("确认退订");
   });
 });

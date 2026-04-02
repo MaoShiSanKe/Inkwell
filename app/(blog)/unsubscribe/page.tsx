@@ -60,6 +60,7 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
   const buttonFocusRingClass =
     themeFrameworkSettings.public_accent_theme === "blue"
       ? "focus-visible:ring-blue-500/40"
@@ -113,7 +114,7 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
       ) : (
         <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-5 text-sm leading-6 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
           退订链接无效或已失效。你也可以返回
-          <Link className={`ml-1 underline underline-offset-4 ${accentClass}`} href="/subscribe">
+          <Link className={`ml-1 ${accentLinkClass}`} href="/subscribe">
             订阅页
           </Link>
           重新确认邮箱状态。

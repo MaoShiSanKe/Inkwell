@@ -48,6 +48,7 @@ export default async function SubscribePage({ searchParams }: SubscribePageProps
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
 
   return (
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
@@ -70,7 +71,7 @@ export default async function SubscribePage({ searchParams }: SubscribePageProps
       <div className={`rounded-2xl border px-6 py-5 text-sm leading-6 text-slate-600 dark:text-slate-300 ${surfaceClass}`}>
         <p>
           只通知新文章发布，不会发送广告邮件。如需返回首页，可前往
-          <Link className={`ml-1 underline underline-offset-4 ${accentClass}`} href="/">
+          <Link className={`ml-1 ${accentLinkClass}`} href="/">
             最新文章
           </Link>
           。
