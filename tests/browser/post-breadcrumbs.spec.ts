@@ -4,11 +4,11 @@ import { basename, resolve } from "node:path";
 
 import { expect, test } from "@playwright/test";
 import { config as loadEnv } from "dotenv";
-import { and, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { categories, postMeta, posts, users } from "../../lib/db/schema";
+import { categories, postMeta, posts, settings, users } from "../../lib/db/schema";
 
 const testEnvPath = resolveTestEnvPath();
 
@@ -17,13 +17,24 @@ loadEnv({ path: testEnvPath, override: true });
 const BROWSER_PREFIX = "integration-browser-post-breadcrumbs-";
 const databaseUrl = getDatabaseUrl();
 
+type ThemeSettingsSnapshot = {
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
+
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("post breadcrumbs browser regression", () => {
   test("shows hierarchical breadcrumbs and links to the category archive", async ({ page }) => {
     const fixture = await seedPostBreadcrumbsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto(`/post/${fixture.slug}`);
 
       const breadcrumbs = page.getByRole("navigation", { name: "面包屑" });
@@ -31,6 +42,8 @@ test.describe("post breadcrumbs browser regression", () => {
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
       await expect(breadcrumbs).toBeVisible();
       await expect(breadcrumbs.getByRole("link", { name: "首页" })).toBeVisible();
+      await expect(breadcrumbs.getByRole("link", { name: "首页" })).toHaveClass(/underline-offset-4/);
+      await expect(breadcrumbs.getByRole("link", { name: "首页" })).toHaveClass(/text-blue-700/);
       await expect(breadcrumbs.getByRole("link", { name: fixture.parentCategoryName })).toBeVisible();
       await expect(breadcrumbs.getByRole("link", { name: fixture.childCategoryName })).toBeVisible();
       await expect(page.locator('[aria-current="page"]')).toHaveText(fixture.title);
@@ -40,6 +53,7 @@ test.describe("post breadcrumbs browser regression", () => {
       await expect(page).toHaveURL(new RegExp(`/category/${fixture.childCategorySlug}$`));
       await expect(page.getByRole("heading", { name: fixture.childCategoryName })).toBeVisible();
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupPostBreadcrumbsFixture();
     }
   });
@@ -128,6 +142,26 @@ async function seedPostBreadcrumbsFixture(seed: string): Promise<PostBreadcrumbs
   };
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
 async function cleanupPostBreadcrumbsFixture() {
   await withDb(async (db) => {
     const browserPosts = await db
@@ -165,10 +199,53 @@ async function cleanupPostBreadcrumbsFixture() {
   });
 }
 
+async function getSettingValue(
+  key: "public_surface_variant" | "public_accent_theme",
+) {
+  return withDb(async (db) => {
+    const [row] = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
 async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {
   const client = postgres(databaseUrl, { max: 1 });
   const db = drizzle(client, {
-    schema: { categories, postMeta, posts, users },
+    schema: { categories, postMeta, posts, settings, users },
     casing: "snake_case",
   });
 

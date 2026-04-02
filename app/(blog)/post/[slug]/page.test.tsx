@@ -45,8 +45,18 @@ const { notFoundMock, permanentRedirectMock } = vi.hoisted(() => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) => (
-    <a href={href}>{children}</a>
+  default: ({
+    href,
+    className,
+    children,
+  }: {
+    href: string;
+    className?: string;
+    children: React.ReactNode;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }));
 
@@ -278,6 +288,7 @@ describe("blog post page", () => {
     expect(markup).toContain('aria-label="面包屑"');
     expect(breadcrumbMarkup).toContain('href="/"');
     expect(breadcrumbMarkup).toContain(">首页<");
+    expect(breadcrumbMarkup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300");
     expect(breadcrumbMarkup).not.toContain('href="/category/frontend"');
     expect(markup).toContain('aria-current="page"');
     expect(markup).toContain('>Canonical title<');
@@ -417,6 +428,7 @@ describe("blog post page", () => {
     expect(markup).toContain('href="/author/author-name"');
     expect(markup).toContain('href="/category/frontend"');
     expect(markup).toContain("分类：Frontend");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300");
     expect(markup).toContain("Canonical content body");
     expect(markup).not.toContain("文章目录");
     expect(markup).toContain("发布时间：");
@@ -481,6 +493,7 @@ describe("blog post page", () => {
 
     expect(markup).toContain('href="/category/guides"');
     expect(markup).toContain("分类：Guides");
+    expect(markup).toContain('class="text-sm underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300"');
   });
 
   it("renders a clickable series link when the published post has a series", async () => {
@@ -503,6 +516,7 @@ describe("blog post page", () => {
 
     expect(markup).toContain('href="/series/getting-started"');
     expect(markup).toContain("系列：Getting Started");
+    expect(markup).toContain('class="text-sm underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300"');
   });
 
   it("does not render the category link when the published post has no category", async () => {

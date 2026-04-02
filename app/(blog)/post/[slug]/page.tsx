@@ -186,6 +186,8 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           ? "hover:border-amber-300 dark:hover:border-amber-700"
           : "hover:border-slate-400 dark:hover:border-slate-600";
   const relatedCardClass = `flex flex-col gap-2 rounded-2xl border px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${relatedCardHoverClass}`;
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const breadcrumbItems = buildBreadcrumbItems(post);
   const articleJsonLd = buildArticleJsonLd(
     post,
@@ -230,7 +232,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
                     {item.name}
                   </span>
                 ) : (
-                  <Link className={`underline underline-offset-4 ${accentClass}`} href={item.path}>
+                  <Link className={accentLinkClass} href={item.path}>
                     {item.name}
                   </Link>
                 )}
@@ -248,16 +250,16 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           {post.excerpt}
         </p>
       ) : null}
-      <Link className={`text-sm hover:underline ${accentClass}`} href={`/author/${post.author.slug}`}>
+      <Link className={metadataLinkClass} href={`/author/${post.author.slug}`}>
         作者：{post.author.displayName}
       </Link>
       {post.category ? (
-        <Link className={`text-sm hover:underline ${accentClass}`} href={`/category/${post.category.slug}`}>
+        <Link className={metadataLinkClass} href={`/category/${post.category.slug}`}>
           分类：{post.category.name}
         </Link>
       ) : null}
       {post.series ? (
-        <Link className={`text-sm hover:underline ${accentClass}`} href={`/series/${post.series.slug}`}>
+        <Link className={metadataLinkClass} href={`/series/${post.series.slug}`}>
           系列：{post.series.name}
         </Link>
       ) : null}
