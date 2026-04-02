@@ -2,9 +2,10 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteBrandNameMock, getSiteOriginMock, resolvePublishedSeriesArchiveBySlugMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, getThemeFrameworkSettingsMock, resolvePublishedSeriesArchiveBySlugMock } = vi.hoisted(() => ({
   getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
   resolvePublishedSeriesArchiveBySlugMock: vi.fn(),
 }));
 class NotFoundSignal extends Error {
@@ -39,6 +40,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/settings", () => ({
   getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
 }));
 vi.mock("@/lib/blog/posts", () => ({
   resolvePublishedSeriesArchiveBySlug: resolvePublishedSeriesArchiveBySlugMock,
@@ -50,8 +52,33 @@ describe("blog series page", () => {
     getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
+    getThemeFrameworkSettingsMock.mockReset();
+    getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     resolvePublishedSeriesArchiveBySlugMock.mockReset();
     notFoundMock.mockClear();
+  });
+
+  it("renders themed archive classes", async () => {
+    resolvePublishedSeriesArchiveBySlugMock.mockResolvedValue({
+      kind: "archive",
+      series: {
+        id: 1,
+        name: "React Basics",
+        slug: "react-basics",
+        description: "Series description",
+      },
+      posts: [createPostListItem()],
+    });
+
+    const { default: SeriesPage } = await import("./page");
+    const element = await SeriesPage({
+      params: Promise.resolve({ slug: "react-basics" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
   it("returns empty metadata when the series slug does not exist", async () => {
@@ -171,6 +198,15 @@ describe("blog series page", () => {
     );
   });
 });
+
+function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    ...overrides,
+  };
+}
 
 function createPostListItem() {
   return {

@@ -2,9 +2,10 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteBrandNameMock, getSiteOriginMock, searchPublishedPostsMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, getThemeFrameworkSettingsMock, searchPublishedPostsMock } = vi.hoisted(() => ({
   getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
   searchPublishedPostsMock: vi.fn(),
 }));
 
@@ -24,6 +25,7 @@ vi.mock("next/link", () => ({
 vi.mock("@/lib/settings", () => ({
   getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
 }));
 
 vi.mock("@/lib/blog/posts", () => ({
@@ -36,8 +38,23 @@ describe("search page", () => {
     getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
+    getThemeFrameworkSettingsMock.mockReset();
+    getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     searchPublishedPostsMock.mockReset();
   });
+
+  it("renders themed archive classes for search results", async () => {
+    searchPublishedPostsMock.mockResolvedValue([createPostListItem()]);
+
+    const { default: SearchPage } = await import("./page");
+    const element = await SearchPage({ searchParams: Promise.resolve({ q: "Next.js" }) });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
+  });
+
 
   it("returns metadata with configured site branding", async () => {
     const { generateMetadata } = await import("./page");
@@ -99,6 +116,15 @@ describe("search page", () => {
     expect(markup).toContain("请尝试更换关键词");
   });
 });
+
+function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    ...overrides,
+  };
+}
 
 function createPostListItem() {
   return {

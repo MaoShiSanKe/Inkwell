@@ -4,7 +4,16 @@ import { notFound } from "next/navigation";
 
 import { DEFAULT_DESCRIPTION, buildSiteUrl } from "@/lib/blog/post-seo";
 import { resolvePublishedCategoryArchiveBySlug } from "@/lib/blog/posts";
-import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
+import {
+  getSiteBrandName,
+  getSiteOrigin,
+  getThemeFrameworkSettings,
+} from "@/lib/settings";
+import {
+  resolveAccentClass,
+  resolveContentWidthClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type CategoryPageProps = {
   params: Promise<{
@@ -65,11 +74,15 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const { category, posts } = result;
   const description =
     category.description?.trim() || DEFAULT_DESCRIPTION;
+  const themeFrameworkSettings = await getThemeFrameworkSettings();
+  const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
+  const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
+  const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-8 px-6 py-16">
+    <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
       <div className="flex flex-col gap-3">
-        <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+        <p className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>
           Category
         </p>
         <h1 className="text-4xl font-semibold tracking-tight">{category.name}</h1>
@@ -88,14 +101,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           {posts.map((post) => (
             <article
               key={post.id}
-              className="rounded-2xl border border-slate-200 px-6 py-5 dark:border-slate-800"
+              className={`rounded-2xl border px-6 py-5 ${surfaceClass}`}
             >
               <div className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
-                  <Link
-                    className="hover:text-slate-900 hover:underline dark:hover:text-slate-100"
-                    href={`/author/${post.author.slug}`}
-                  >
+                  <Link className={`hover:underline ${accentClass}`} href={`/author/${post.author.slug}`}>
                     作者：{post.author.displayName}
                   </Link>
                   {post.publishedAt ? (

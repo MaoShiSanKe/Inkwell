@@ -1,8 +1,29 @@
 import { describe, expect, it } from "vitest";
 
-import { parseThemeMode, resolveThemeMode } from "./theme";
+import {
+  parseThemeMode,
+  resolveAccentClass,
+  resolveContentWidthClass,
+  resolveSurfaceClass,
+  resolveThemeMode,
+} from "./theme";
 
 describe("theme helpers", () => {
+  it("resolves content width classes", () => {
+    expect(resolveContentWidthClass("wide")).toBe("max-w-6xl");
+    expect(resolveContentWidthClass("default")).toBe("max-w-4xl");
+  });
+
+  it("resolves surface classes", () => {
+    expect(resolveSurfaceClass("solid")).toContain("bg-slate-100/90");
+    expect(resolveSurfaceClass("soft")).toContain("bg-white/80");
+  });
+
+  it("resolves accent classes", () => {
+    expect(resolveAccentClass("blue")).toBe("text-blue-700 dark:text-blue-300");
+    expect(resolveAccentClass("slate")).toBe("text-slate-700 dark:text-slate-200");
+  });
+
   it("prefers stored theme over backend default and system preference", () => {
     expect(
       resolveThemeMode({

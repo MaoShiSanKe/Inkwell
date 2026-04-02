@@ -2,9 +2,10 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteBrandNameMock, getSiteOriginMock, resolvePublishedTagArchiveBySlugMock } = vi.hoisted(() => ({
+const { getSiteBrandNameMock, getSiteOriginMock, getThemeFrameworkSettingsMock, resolvePublishedTagArchiveBySlugMock } = vi.hoisted(() => ({
   getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
   resolvePublishedTagArchiveBySlugMock: vi.fn(),
 }));
 class NotFoundSignal extends Error {
@@ -39,6 +40,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/settings", () => ({
   getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
 }));
 vi.mock("@/lib/blog/posts", () => ({
   resolvePublishedTagArchiveBySlug: resolvePublishedTagArchiveBySlugMock,
@@ -50,8 +52,33 @@ describe("blog tag page", () => {
     getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
+    getThemeFrameworkSettingsMock.mockReset();
+    getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     resolvePublishedTagArchiveBySlugMock.mockReset();
     notFoundMock.mockClear();
+  });
+
+  it("renders themed archive classes", async () => {
+    resolvePublishedTagArchiveBySlugMock.mockResolvedValue({
+      kind: "archive",
+      tag: {
+        id: 1,
+        name: "Next.js",
+        slug: "nextjs",
+        description: "Tagged posts",
+      },
+      posts: [createPostListItem()],
+    });
+
+    const { default: TagPage } = await import("./page");
+    const element = await TagPage({
+      params: Promise.resolve({ slug: "nextjs" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
   it("returns metadata for the tag archive including the RSS alternate", async () => {
@@ -152,6 +179,15 @@ describe("blog tag page", () => {
     expect(markup).toContain("文章发布并关联这个标签后，会自动出现在这里。");
   });
 });
+
+function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    ...overrides,
+  };
+}
 
 function createPostListItem() {
   return {
