@@ -75,7 +75,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       ? "border-slate-300 bg-slate-100/70 text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
       : "border-slate-300 bg-white/80 text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
   const resultCountClass = `text-sm ${accentClass}`;
-  const postTitleLinkClass = `hover:underline ${accentClass}`;
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const postTitleLinkClass = accentLinkClass;
+  const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const metaTextClass = "text-sm text-slate-500 dark:text-slate-400";
   const excerptClass = "text-base leading-7 text-slate-600 dark:text-slate-300";
   const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
@@ -154,7 +156,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             >
               <div className="flex flex-col gap-3">
                 <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${metaTextClass}`}>
-                  <Link className={`hover:underline ${accentClass}`} href={`/author/${post.author.slug}`}>
+                  <Link className={metadataLinkClass} href={`/author/${post.author.slug}`}>
                     作者：{post.author.displayName}
                   </Link>
                   {post.publishedAt ? (
@@ -163,7 +165,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     </time>
                   ) : null}
                   {post.category ? (
-                    <Link className={`hover:underline ${accentClass}`} href={`/category/${post.category.slug}`}>
+                    <Link className={metadataLinkClass} href={`/category/${post.category.slug}`}>
                       分类：{post.category.name}
                     </Link>
                   ) : null}

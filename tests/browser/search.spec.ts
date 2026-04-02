@@ -53,6 +53,8 @@ test.describe("public search browser regression", () => {
       await expect(page.getByText(`共找到 1 篇与 “${fixture.query}” 相关的已发布文章。`)).toBeVisible();
       await expect(page.getByText(`共找到 1 篇与 “${fixture.query}” 相关的已发布文章。`)).toHaveClass(/text-blue-700/);
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
+      await expect(page.getByRole("link", { name: fixture.publishedTitle })).toHaveClass(/underline-offset-4/);
+      await expect(page.getByRole("link", { name: "作者：Browser Search Author" })).toHaveClass(/underline-offset-4/);
       await expect(page.getByText(fixture.publishedExcerpt)).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.hiddenTitle })).toHaveCount(0);
     } finally {

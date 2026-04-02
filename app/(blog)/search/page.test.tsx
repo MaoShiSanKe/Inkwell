@@ -105,6 +105,9 @@ describe("search page", () => {
     expect(markup).toContain("Published title");
     expect(markup).toContain("Published excerpt");
     expect(markup).toContain('href="/post/published-slug"');
+    expect(markup).toContain('href="/author/author-name"');
+    expect(markup).toContain('href="/category/published-category"');
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300");
     expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
