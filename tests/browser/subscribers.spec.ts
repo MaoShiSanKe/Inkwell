@@ -46,6 +46,7 @@ test.describe("subscriber workflow browser regression", () => {
       await expect(page.getByText("Subscribe", { exact: true })).toHaveClass(/text-blue-700/);
       await expect(page.getByRole("link", { name: "最新文章" })).toHaveClass(/underline-offset-4/);
       await expect(page.getByRole("button", { name: "订阅邮件通知" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
+      await expect(page.getByRole("button", { name: "订阅邮件通知" })).toHaveClass(/text-white/);
       await expect(page.getByLabel("邮箱")).toHaveClass(/focus:border-blue-500/);
 
       await page.getByLabel("昵称").fill("Browser Reader");

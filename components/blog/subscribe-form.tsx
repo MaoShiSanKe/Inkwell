@@ -5,7 +5,7 @@ import { useActionState } from "react";
 import { subscribeAction } from "@/app/(blog)/subscribe/actions";
 import { initialSubscriptionFormState } from "@/lib/blog/subscription-form";
 import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
-import { resolveAccentClass, resolveSurfaceClass } from "@/lib/theme";
+import { resolveSurfaceClass } from "@/lib/theme";
 
 type SubscribeFormProps = {
   initialEmail?: string;
@@ -29,7 +29,6 @@ export function SubscribeForm({
     },
   );
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
-  const accentClass = resolveAccentClass(accentTheme);
   const fieldSurfaceClass =
     surfaceVariant === "solid"
       ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
@@ -119,7 +118,7 @@ export function SubscribeForm({
       </label>
 
       <button className={buttonClass} type="submit" disabled={isPending}>
-        <span className={accentClass}>{isPending ? "提交中..." : "订阅邮件通知"}</span>
+        {isPending ? "提交中..." : "订阅邮件通知"}
       </button>
     </form>
   );
