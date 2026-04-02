@@ -21,10 +21,17 @@ const databaseUrl = getDatabaseUrl();
 assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 
 test.describe("custom pages browser regression", () => {
-  test("creates a published page and serves it at the root slug", async ({ page, request }) => {
+  test("creates a published page, shows themed standalone styles, and serves it at the root slug", async ({ page, request }) => {
     const fixture = await seedCustomPageFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_layout_width: "wide",
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto(
         `/${fixture.adminPath}/login?redirect=${encodeURIComponent(`/${fixture.adminPath}/pages/new`)}`,
       );
@@ -55,6 +62,9 @@ test.describe("custom pages browser regression", () => {
 
       await page.goto(`/${fixture.slug}`);
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
+      await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
+      await expect(page.getByText("Page", { exact: true })).toHaveClass(/text-blue-700/);
+      await expect(page.locator("article")).toHaveClass(/bg-slate-100\/90/);
       await expect(page.getByText("文章目录")).toBeVisible();
       await expect(page.getByRole("heading", { name: "Section" })).toBeVisible();
 
@@ -63,10 +73,17 @@ test.describe("custom pages browser regression", () => {
       const sitemapBody = await sitemapResponse.text();
       expect(sitemapBody).toContain(`<loc>/${fixture.slug}</loc>`);
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupCustomPageFixture();
     }
   });
 });
+
+type ThemeSettingsSnapshot = {
+  public_layout_width: string | null;
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
 
 type CustomPageFixture = {
   adminPath: string;
@@ -156,15 +173,75 @@ async function cleanupCustomPageFixture() {
   });
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_layout_width: await getSettingValue("public_layout_width"),
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_layout_width: "narrow" | "default" | "wide";
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_layout_width", values.public_layout_width);
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_layout_width", snapshot.public_layout_width);
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
 async function getConfiguredAdminPath() {
+  const value = await getSettingValue("admin_path");
+  return value?.trim() || "admin";
+}
+
+async function getSettingValue(
+  key: "admin_path" | "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+) {
   return withDb(async (db) => {
     const [row] = await db
       .select({ value: settings.value })
       .from(settings)
-      .where(eq(settings.key, "admin_path"))
+      .where(eq(settings.key, key))
       .limit(1);
 
-    return row?.value?.trim() || "admin";
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 

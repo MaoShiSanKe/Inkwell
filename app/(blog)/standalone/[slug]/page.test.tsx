@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, resolveStandalonePageBySlugMock } = vi.hoisted(() => ({
+const { getSiteOriginMock, getThemeFrameworkSettingsMock, resolveStandalonePageBySlugMock } = vi.hoisted(() => ({
   getSiteOriginMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
   resolveStandalonePageBySlugMock: vi.fn(),
 }));
 
 vi.mock("@/lib/settings", () => ({
   getSiteOrigin: getSiteOriginMock,
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
 }));
 
 vi.mock("@/lib/blog/pages", () => ({
@@ -24,7 +26,42 @@ describe("standalone page", () => {
   beforeEach(() => {
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
+    getThemeFrameworkSettingsMock.mockReset();
+    getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     resolveStandalonePageBySlugMock.mockReset();
+  });
+
+  it("renders themed standalone classes", async () => {
+    resolveStandalonePageBySlugMock.mockResolvedValue({
+      id: 1,
+      title: "About",
+      slug: "about",
+      content: ["Intro", "", "## Section", "Body"].join("\n"),
+      publishedAt: new Date("2026-03-30T12:00:00.000Z"),
+      updatedAt: new Date("2026-03-30T12:10:00.000Z"),
+      seo: {
+        metaTitle: null,
+        metaDescription: null,
+        ogTitle: null,
+        ogDescription: null,
+        canonicalUrl: null,
+        noindex: false,
+        nofollow: false,
+      },
+      ogImage: null,
+    });
+
+    const { default: StandalonePage } = await import("./page");
+    const element = await StandalonePage({
+      params: Promise.resolve({ slug: "about" }),
+    });
+    const markup = await import("react-dom/server").then(({ renderToStaticMarkup }) =>
+      renderToStaticMarkup(element),
+    );
+
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
   it("returns metadata for a published standalone page", async () => {
@@ -98,3 +135,12 @@ describe("standalone page", () => {
     expect(markup).toContain("Body");
   });
 });
+
+function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    ...overrides,
+  };
+}

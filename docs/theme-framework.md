@@ -89,7 +89,7 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 
 当前行为：
 - 页头品牌区与页脚说明区已结构化
-- 首页、公开布局、搜索页、友情链接页与分类 / 标签 / 作者 / 系列归档页共享宽度 / 表面 / 强调色映射
+- 首页、公开布局、搜索页、友情链接页、独立页面与分类 / 标签 / 作者 / 系列归档页共享宽度 / 表面 / 强调色映射
 - `public_custom_css` 仍保留为 escape hatch
 
 ### 2.4 默认主题模式
@@ -153,11 +153,13 @@ npm run test:browser
 当前已覆盖的代表性测试：
 - `app/(blog)/layout.test.tsx`
 - `app/(blog)/page.test.tsx`
+- `app/(blog)/standalone/[slug]/page.test.tsx`
 - `app/(admin)/[adminPath]/layout.test.tsx`
 - `lib/theme.test.ts`
 - `tests/integration/admin/settings.integration.test.ts`
 - `tests/browser/theme-toggle.spec.ts`
 - `tests/browser/settings.spec.ts`
+- `tests/browser/custom-pages.spec.ts`
 
 ## 6. 后续扩展建议
 

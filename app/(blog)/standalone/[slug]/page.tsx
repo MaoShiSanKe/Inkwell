@@ -5,7 +5,12 @@ import { PostTableOfContents } from "@/components/blog/post-table-of-contents";
 import { resolveImageUrl, buildSiteUrl } from "@/lib/blog/post-seo";
 import { resolveStandalonePageDescription, resolveStandalonePageBySlug } from "@/lib/blog/pages";
 import { parsePostContentForToc } from "@/lib/blog/post-toc";
-import { getSiteOrigin } from "@/lib/settings";
+import { getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
+import {
+  resolveAccentClass,
+  resolveContentWidthClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type StandalonePageProps = {
   params: Promise<{
@@ -66,17 +71,21 @@ export default async function StandalonePage({ params }: StandalonePageProps) {
     notFound();
   }
 
+  const themeFrameworkSettings = await getThemeFrameworkSettings();
+  const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
+  const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
+  const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
   const parsedContent = parsePostContentForToc(page.content);
   const hasTableOfContents = parsedContent.tocItems.length > 0;
   const hasParsedImages = parsedContent.blocks.some((block) => block.type === "image");
   const shouldRenderParsedContent = hasTableOfContents || hasParsedImages;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-16">
-      <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">Page</p>
+    <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-6 px-6 py-16`}>
+      <p className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>Page</p>
       <h1 className="text-3xl font-semibold tracking-tight">{page.title}</h1>
       {hasTableOfContents ? <PostTableOfContents items={parsedContent.tocItems} /> : null}
-      <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 dark:border-slate-800">
+      <article className={`flex flex-col gap-4 rounded-2xl border px-6 py-5 text-base leading-7 ${surfaceClass}`}>
         {shouldRenderParsedContent ? (
           parsedContent.blocks.map((block, index) => {
             if (block.type === "heading") {
@@ -98,7 +107,7 @@ export default async function StandalonePage({ params }: StandalonePageProps) {
             if (block.type === "image") {
               return (
                 <figure key={`${block.url}-${index}`} className="flex flex-col gap-3">
-                  <img alt={block.altText} className="rounded-xl border border-slate-200 dark:border-slate-800" src={block.url} />
+                  <img alt={block.altText} className={`rounded-xl border ${surfaceClass}`} src={block.url} />
                   <figcaption className="text-sm text-slate-500 dark:text-slate-400">{block.altText}</figcaption>
                 </figure>
               );

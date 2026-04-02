@@ -92,8 +92,8 @@ npm run test:browser
 - Theme Framework v1（品牌、首页 Hero、首页精选入口、首页列表变体、默认主题模式）
 
 如果改动属于 Theme Framework v1，建议最少覆盖：
-- 单元 / Vitest：`app/(blog)/page.test.tsx`、`app/(blog)/layout.test.tsx`、`app/(admin)/[adminPath]/layout.test.tsx`、`lib/theme.test.ts`
-- Browser：`tests/browser/settings.spec.ts`、`tests/browser/theme-toggle.spec.ts`
+- 单元 / Vitest：`app/(blog)/page.test.tsx`、`app/(blog)/layout.test.tsx`、`app/(blog)/standalone/[slug]/page.test.tsx`、`app/(admin)/[adminPath]/layout.test.tsx`、`lib/theme.test.ts`
+- Browser：`tests/browser/settings.spec.ts`、`tests/browser/theme-toggle.spec.ts`、`tests/browser/custom-pages.spec.ts`
 
 因为这类改动往往同时影响：
 - 后台 settings 表单

@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated docs artifacts ignored by the repository:
+    ".vitepress/cache/**",
+    ".vitepress/dist/**",
+    "site/.vitepress/cache/**",
+    "site/.vitepress/dist/**",
     // Generated test artifacts ignored by the repository:
     "coverage/**",
     "playwright-report/**",
