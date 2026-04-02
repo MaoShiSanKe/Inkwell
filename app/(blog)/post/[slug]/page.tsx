@@ -366,6 +366,8 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         <CommentForm
           postId={post.id}
           postSlug={post.slug}
+          accentTheme={themeFrameworkSettings.public_accent_theme}
+          surfaceVariant={themeFrameworkSettings.public_surface_variant}
           replyTarget={replyTarget
             ? {
                 id: replyTarget.id,

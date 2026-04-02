@@ -11,6 +11,11 @@ import postgres from "postgres";
 import { comments, posts, settings, users } from "../../lib/db/schema";
 import { hashPasswordValue } from "../../lib/password-utils";
 
+type ThemeSettingsSnapshot = {
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
+
 const testEnvPath = resolveTestEnvPath();
 
 loadEnv({ path: testEnvPath, override: true });
@@ -23,12 +28,20 @@ assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 test.describe("comments browser regression", () => {
   test("covers public submission, reply flow, admin approval, and public visibility", async ({ page }) => {
     const fixture = await seedCommentsFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
+    const originalThemeSettings = await captureThemeSettings();
 
     try {
+      await applyThemeSettings({
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto(`/post/${fixture.slug}`);
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
       await expect(page.getByRole("heading", { name: "评论", exact: true })).toBeVisible();
       await expect(page.getByText("当前共有 2 条已公开评论。")).toBeVisible();
+      await expect(page.getByRole("button", { name: "提交评论" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
+      await expect(page.getByLabel("邮箱")).toHaveClass(/focus:border-blue-500/);
       await expect(page.getByText(fixture.visibleParentContent)).toBeVisible();
       await expect(page.getByText(fixture.visibleReplyContent)).toBeVisible();
 
@@ -36,6 +49,7 @@ test.describe("comments browser regression", () => {
       await expect(page).toHaveURL(new RegExp(`replyTo=${fixture.parentCommentId}`));
       await expect(page.getByRole("heading", { name: "回复评论" })).toBeVisible();
       await expect(page.getByText(`当前正在回复 ${fixture.parentAuthorName}。系统仅支持两层评论嵌套。`)).toBeVisible();
+      await expect(page.getByRole("link", { name: "取消回复" })).toHaveClass(/text-blue-700/);
 
       await page.goto(`/post/${fixture.slug}`);
       await page.getByLabel("昵称").fill("Pending Browser User");
@@ -67,6 +81,7 @@ test.describe("comments browser regression", () => {
       await expect(page.getByText("Pending browser comment body")).toBeVisible();
       await expect(page.getByText("当前共有 3 条已公开评论。")).toBeVisible();
     } finally {
+      await cleanupThemeSettings(originalThemeSettings);
       await cleanupCommentsFixture(fixture.originalCommentModeration);
     }
   });
@@ -189,6 +204,26 @@ async function seedCommentsFixture(seed: string): Promise<CommentsFixture> {
   };
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
 async function cleanupCommentsFixture(originalCommentModeration: string | null) {
   await withDb(async (db) => {
     const browserPosts = await db
@@ -225,22 +260,7 @@ async function cleanupCommentsFixture(originalCommentModeration: string | null) 
     if (originalCommentModeration === null) {
       await db.delete(settings).where(eq(settings.key, "comment_moderation"));
     } else {
-      await db
-        .insert(settings)
-        .values({
-          key: "comment_moderation",
-          value: originalCommentModeration,
-          isSecret: false,
-          updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: settings.key,
-          set: {
-            value: originalCommentModeration,
-            isSecret: false,
-            updatedAt: new Date(),
-          },
-        });
+      await restoreSetting("comment_moderation", originalCommentModeration);
     }
   });
 }
@@ -258,15 +278,59 @@ async function getCurrentCommentModeration() {
 }
 
 async function getConfiguredAdminPath() {
+  const value = await getSettingValue("admin_path");
+  return value?.trim() || "admin";
+}
+
+async function getSettingValue(
+  key:
+    | "admin_path"
+    | "comment_moderation"
+    | "public_surface_variant"
+    | "public_accent_theme",
+) {
   return withDb(async (db) => {
     const [row] = await db
       .select({ value: settings.value })
       .from(settings)
-      .where(eq(settings.key, "admin_path"))
+      .where(eq(settings.key, key))
       .limit(1);
 
-    return row?.value?.trim() || "admin";
+    return row?.value ?? null;
   });
+}
+
+async function restoreSetting(
+  key: "comment_moderation" | "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
+async function restoreCommentModeration(value: string | null) {
+  await restoreSetting("comment_moderation", value);
 }
 
 async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {

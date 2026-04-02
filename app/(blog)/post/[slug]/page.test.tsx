@@ -83,9 +83,17 @@ vi.mock("@/lib/settings", () => ({
 }));
 
 vi.mock("@/components/blog/comment-form", () => ({
-  CommentForm: ({ replyTarget }: { replyTarget?: { authorName: string } | null }) => (
+  CommentForm: ({
+    replyTarget,
+    accentTheme,
+    surfaceVariant,
+  }: {
+    replyTarget?: { authorName: string } | null;
+    accentTheme?: string;
+    surfaceVariant?: string;
+  }) => (
     <div>
-      comment-form
+      comment-form:{accentTheme ?? ""}:{surfaceVariant ?? ""}
       {replyTarget ? ` replying:${replyTarget.authorName}` : " top-level"}
     </div>
   ),
@@ -411,7 +419,7 @@ describe("blog post page", () => {
     expect(markup).toContain("comment-list");
     expect(markup).toContain("Top Level");
     expect(markup).toContain("Reply User");
-    expect(markup).toContain("comment-form replying:Top Level");
+    expect(markup).toContain("comment-form:blue:solid replying:Top Level");
     expect(recordPublishedPostViewMock).toHaveBeenCalledWith({ postId: 1 });
     expect(listRelatedPublishedPostsMock).toHaveBeenCalledWith({
       postId: 1,
@@ -435,6 +443,7 @@ describe("blog post page", () => {
     expect(markup).toContain("max-w-6xl");
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("text-blue-700 dark:text-blue-300");
+    expect(markup).toContain("comment-form:blue:solid top-level");
   });
 
   it("renders a clickable category link when the published post has a category", async () => {

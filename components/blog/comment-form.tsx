@@ -6,17 +6,27 @@ import { useRouter } from "next/navigation";
 
 import { submitCommentAction } from "@/app/(blog)/post/[slug]/actions";
 import { createCommentFormState } from "@/lib/blog/comment-form";
+import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
+import { resolveAccentClass, resolveSurfaceClass } from "@/lib/theme";
 
 type CommentFormProps = {
   postId: number;
   postSlug: string;
+  accentTheme?: PublicAccentTheme;
+  surfaceVariant?: PublicSurfaceVariant;
   replyTarget?: {
     id: number;
     authorName: string;
   } | null;
 };
 
-export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFormProps) {
+export function CommentForm({
+  postId,
+  postSlug,
+  accentTheme = "slate",
+  surfaceVariant = "soft",
+  replyTarget = null,
+}: CommentFormProps) {
   const router = useRouter();
   const initialState = createCommentFormState({
     postId: String(postId),
@@ -27,6 +37,34 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
     initialState,
   );
   const formKey = `${state.submissionStatus}:${replyTarget?.id ?? "top-level"}:${state.message ?? "idle"}`;
+  const surfaceClass = resolveSurfaceClass(surfaceVariant);
+  const accentClass = resolveAccentClass(accentTheme);
+  const fieldSurfaceClass =
+    surfaceVariant === "solid"
+      ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
+      : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
+  const buttonSurfaceClass =
+    "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+  const inputAccentBorderClass =
+    accentTheme === "blue"
+      ? "focus:border-blue-500"
+      : accentTheme === "emerald"
+        ? "focus:border-emerald-500"
+        : accentTheme === "amber"
+          ? "focus:border-amber-500"
+          : "focus:border-slate-500";
+  const buttonAccentRingClass =
+    accentTheme === "blue"
+      ? "focus-visible:ring-blue-500/40"
+      : accentTheme === "emerald"
+        ? "focus-visible:ring-emerald-500/40"
+        : accentTheme === "amber"
+          ? "focus-visible:ring-amber-500/40"
+          : "focus-visible:ring-slate-500/40";
+  const inputClass = `rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
+  const textAreaClass = `min-h-36 rounded-lg border px-3 py-2 text-sm leading-7 outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
+  const buttonClass = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
+  const replyLinkClass = `text-sm font-medium underline underline-offset-4 hover:text-slate-900 dark:hover:text-slate-100 ${accentClass}`;
 
   useEffect(() => {
     if (state.submissionStatus === "approved") {
@@ -39,7 +77,7 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
       key={formKey}
       id="comment-form"
       action={formAction}
-      className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800"
+      className={`flex flex-col gap-6 rounded-2xl border p-6 ${surfaceClass}`}
     >
       <input type="hidden" name="postId" value={postId} />
       <input type="hidden" name="parentId" value={replyTarget ? replyTarget.id : ""} />
@@ -55,10 +93,7 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
         </p>
         {replyTarget ? (
           <div>
-            <Link
-              className="text-sm font-medium text-slate-600 underline underline-offset-4 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
-              href={`/post/${postSlug}#comment-form`}
-            >
+            <Link className={replyLinkClass} href={`/post/${postSlug}#comment-form`}>
               取消回复
             </Link>
           </div>
@@ -94,7 +129,7 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
         <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
           昵称
           <input
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+            className={inputClass}
             type="text"
             name="authorName"
             defaultValue={state.values.authorName}
@@ -108,7 +143,7 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
         <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
           邮箱
           <input
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+            className={inputClass}
             type="email"
             name="authorEmail"
             defaultValue={state.values.authorEmail}
@@ -123,7 +158,7 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
         个人主页
         <input
-          className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          className={inputClass}
           type="url"
           name="authorUrl"
           defaultValue={state.values.authorUrl}
@@ -137,7 +172,7 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
       <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
         评论内容
         <textarea
-          className="min-h-36 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none placeholder:text-slate-400 focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          className={textAreaClass}
           name="content"
           defaultValue={state.values.content}
           placeholder={replyTarget ? "写下你的回复内容..." : "写下你的评论内容..."}
@@ -149,12 +184,8 @@ export function CommentForm({ postId, postSlug, replyTarget = null }: CommentFor
       </label>
 
       <div className="flex items-center gap-3">
-        <button
-          className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-          type="submit"
-          disabled={isPending}
-        >
-          {isPending ? "提交中..." : replyTarget ? "提交回复" : "提交评论"}
+        <button className={buttonClass} type="submit" disabled={isPending}>
+          <span className={accentClass}>{isPending ? "提交中..." : replyTarget ? "提交回复" : "提交评论"}</span>
         </button>
       </div>
     </form>
