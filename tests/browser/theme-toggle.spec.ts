@@ -26,6 +26,8 @@ test.describe("theme toggle browser regression", () => {
       await page.goto("/");
 
       await expect(page.getByRole("button", { name: "切换深色模式" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "切换深色模式" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
+      await expect(page.getByRole("button", { name: "切换深色模式" })).toHaveClass(/hover:border-blue-300/);
       await expect(page.locator("html")).toHaveClass(/dark/);
       await expect(page.getByRole("button", { name: "切换深色模式" })).toContainText("浅色模式");
 
@@ -39,7 +41,10 @@ test.describe("theme toggle browser regression", () => {
       await expect(page.locator("html")).toHaveClass(/dark/);
       await expect(page.getByRole("button", { name: "切换深色模式" })).toContainText("浅色模式");
     } finally {
-      await cleanupThemeFixture(fixture.originalPublicThemeDefaultMode);
+      await cleanupThemeFixture(
+        fixture.originalPublicThemeDefaultMode,
+        fixture.originalPublicAccentTheme,
+      );
     }
   });
 
@@ -72,7 +77,10 @@ test.describe("theme toggle browser regression", () => {
       await expect(page.locator("html")).toHaveClass(/dark/);
       await expect(page.getByRole("button", { name: "切换深色模式" })).toContainText("浅色模式");
     } finally {
-      await cleanupThemeFixture(fixture.originalPublicThemeDefaultMode);
+      await cleanupThemeFixture(
+        fixture.originalPublicThemeDefaultMode,
+        fixture.originalPublicAccentTheme,
+      );
     }
   });
 
@@ -86,7 +94,10 @@ test.describe("theme toggle browser regression", () => {
       await expect(page.locator("html")).toHaveClass(/dark/);
       await expect(page.getByRole("button", { name: "切换深色模式" })).toContainText("浅色模式");
     } finally {
-      await cleanupThemeFixture(fixture.originalPublicThemeDefaultMode);
+      await cleanupThemeFixture(
+        fixture.originalPublicThemeDefaultMode,
+        fixture.originalPublicAccentTheme,
+      );
     }
   });
 });
@@ -94,22 +105,30 @@ test.describe("theme toggle browser regression", () => {
 type ThemeFixture = {
   adminPath: string;
   originalPublicThemeDefaultMode: string | null;
+  originalPublicAccentTheme: string | null;
 };
 
 async function seedThemeFixture(defaultMode: "system" | "light" | "dark"): Promise<ThemeFixture> {
   const originalPublicThemeDefaultMode = await getSettingValue("public_theme_default_mode");
+  const originalPublicAccentTheme = await getSettingValue("public_accent_theme");
   const adminPath = await getConfiguredAdminPath();
 
   await restoreSetting("public_theme_default_mode", defaultMode);
+  await restoreSetting("public_accent_theme", "blue");
 
   return {
     adminPath,
     originalPublicThemeDefaultMode,
+    originalPublicAccentTheme,
   };
 }
 
-async function cleanupThemeFixture(originalPublicThemeDefaultMode: string | null) {
+async function cleanupThemeFixture(
+  originalPublicThemeDefaultMode: string | null,
+  originalPublicAccentTheme: string | null,
+) {
   await restoreSetting("public_theme_default_mode", originalPublicThemeDefaultMode);
+  await restoreSetting("public_accent_theme", originalPublicAccentTheme);
 }
 
 async function getConfiguredAdminPath() {
@@ -117,7 +136,9 @@ async function getConfiguredAdminPath() {
   return value?.trim() || "admin";
 }
 
-async function getSettingValue(key: "admin_path" | "public_theme_default_mode") {
+async function getSettingValue(
+  key: "admin_path" | "public_theme_default_mode" | "public_accent_theme",
+) {
   return withDb(async (db) => {
     const [row] = await db
       .select({ value: settings.value })
@@ -130,8 +151,8 @@ async function getSettingValue(key: "admin_path" | "public_theme_default_mode") 
 }
 
 async function restoreSetting(
-  key: "public_theme_default_mode",
-  value: "system" | "light" | "dark" | string | null,
+  key: "public_theme_default_mode" | "public_accent_theme",
+  value: "system" | "light" | "dark" | "slate" | "blue" | "emerald" | "amber" | string | null,
 ) {
   await withDb(async (db) => {
     if (value === null) {

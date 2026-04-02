@@ -35,7 +35,10 @@ export default async function BlogLayout({ children }: BlogLayoutProps) {
       <PublicCustomCss css={publicCodeSettings.public_custom_css} />
       <SiteHeader settings={themeFrameworkSettings} />
       <div className={`mx-auto flex w-full ${widthClass} justify-end px-6 pt-4`}>
-        <ThemeToggle defaultMode={themeFrameworkSettings.public_theme_default_mode} />
+        <ThemeToggle
+          defaultMode={themeFrameworkSettings.public_theme_default_mode}
+          accentTheme={themeFrameworkSettings.public_accent_theme}
+        />
       </div>
       <DismissiblePublicNotice settings={publicNoticeSettings} />
       {children}

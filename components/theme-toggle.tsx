@@ -1,9 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
-import type { PublicThemeDefaultMode } from "@/lib/settings-config";
+import type { PublicAccentTheme, PublicThemeDefaultMode } from "@/lib/settings-config";
 import { THEME_STORAGE_KEY, type ThemeMode, resolveThemeMode } from "@/lib/theme";
+
+const THEME_CHANGE_EVENT = "inkwell-theme-change";
+
+function resolveAccentInteractionClass(accentTheme?: PublicAccentTheme) {
+  switch (accentTheme) {
+    case "blue":
+      return "hover:border-blue-300 dark:hover:border-blue-700 focus-visible:ring-blue-500/40";
+    case "emerald":
+      return "hover:border-emerald-300 dark:hover:border-emerald-700 focus-visible:ring-emerald-500/40";
+    case "amber":
+      return "hover:border-amber-300 dark:hover:border-amber-700 focus-visible:ring-amber-500/40";
+    default:
+      return "hover:border-slate-400 dark:hover:border-slate-600 focus-visible:ring-slate-500/40";
+  }
+}
 
 function applyTheme(theme: ThemeMode) {
   const root = document.documentElement;
@@ -15,22 +30,53 @@ function resolveInitialTheme(defaultMode: PublicThemeDefaultMode): ThemeMode {
   return defaultMode === "dark" ? "dark" : "light";
 }
 
-export function ThemeToggle({ defaultMode = "system" }: { defaultMode?: PublicThemeDefaultMode }) {
-  const [theme, setTheme] = useState<ThemeMode>(resolveInitialTheme(defaultMode));
+function subscribeToThemeChanges(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === THEME_STORAGE_KEY) {
+      callback();
     }
+  };
+  const handleThemeChange = () => callback();
 
-    setTheme(
-      resolveThemeMode({
-        storedMode: window.localStorage.getItem(THEME_STORAGE_KEY),
-        defaultMode,
-        systemPrefersDark: window.matchMedia("(prefers-color-scheme: dark)").matches,
-      }),
-    );
-  }, [defaultMode]);
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+  mediaQuery.addEventListener("change", handleThemeChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+    mediaQuery.removeEventListener("change", handleThemeChange);
+  };
+}
+
+function resolveThemeSnapshot(defaultMode: PublicThemeDefaultMode): ThemeMode {
+  if (typeof window === "undefined") {
+    return resolveInitialTheme(defaultMode);
+  }
+
+  return resolveThemeMode({
+    storedMode: window.localStorage.getItem(THEME_STORAGE_KEY),
+    defaultMode,
+    systemPrefersDark: window.matchMedia("(prefers-color-scheme: dark)").matches,
+  });
+}
+
+export function ThemeToggle({
+  defaultMode = "system",
+  accentTheme,
+}: {
+  defaultMode?: PublicThemeDefaultMode;
+  accentTheme?: PublicAccentTheme;
+}) {
+  const accentInteractionClass = resolveAccentInteractionClass(accentTheme);
+  const getThemeSnapshot = useCallback(() => resolveThemeSnapshot(defaultMode), [defaultMode]);
+  const getServerSnapshot = useCallback(() => resolveInitialTheme(defaultMode), [defaultMode]);
+  const theme = useSyncExternalStore(subscribeToThemeChanges, getThemeSnapshot, getServerSnapshot);
 
   useEffect(() => {
     applyTheme(theme);
@@ -40,12 +86,12 @@ export function ThemeToggle({ defaultMode = "system" }: { defaultMode?: PublicTh
     <button
       type="button"
       aria-label="切换深色模式"
-      className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+      className={`inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900 ${accentInteractionClass}`}
       onClick={() => {
         const nextTheme: ThemeMode = theme === "dark" ? "light" : "dark";
-        setTheme(nextTheme);
-        applyTheme(nextTheme);
         window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+        applyTheme(nextTheme);
+        window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
       }}
     >
       {theme === "dark" ? "浅色模式" : "深色模式"}
