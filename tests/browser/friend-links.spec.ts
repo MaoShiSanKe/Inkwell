@@ -65,6 +65,7 @@ test.describe("friend-links browser regression", () => {
       await expect(card).toHaveAttribute("target", "_blank");
       await expect(card).toHaveAttribute("rel", "noopener noreferrer");
       await expect(page.getByText(fixture.url)).toHaveClass(/text-blue-700/);
+      await expect(page.getByText(fixture.url)).toHaveClass(/underline-offset-4/);
 
       await page.goto(`/${fixture.pageSlug}`);
       await expect(page.getByRole("heading", { name: fixture.pageTitle })).toBeVisible();

@@ -93,6 +93,7 @@ describe("friend-links page", () => {
     expect(markup).toContain("友情链接");
     expect(markup).toContain("Friend Site");
     expect(markup).toContain("https://friend.example.com");
+    expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 text-blue-700 dark:text-blue-300");
     expect(markup).toContain("LINK");
     expect(markup).toContain("暂无描述。");
     expect(markup).toContain('target="_blank"');

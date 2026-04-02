@@ -52,6 +52,8 @@ export default async function FriendLinksPage() {
           ? "hover:border-amber-300 dark:hover:border-amber-700"
           : "hover:border-slate-400 dark:hover:border-slate-600";
   const cardClass = `flex h-full flex-col gap-4 rounded-2xl border p-6 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${cardHoverClass}`;
+  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const urlTextClass = `truncate text-sm ${accentLinkClass}`;
   const logoImageClass = `h-14 w-14 rounded-xl border object-cover ${surfaceClass}`;
   const logoTileClass = `flex h-14 w-14 items-center justify-center rounded-xl border ${surfaceClass}`;
 
@@ -96,7 +98,7 @@ export default async function FriendLinksPage() {
                   <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                     {friendLink.siteName}
                   </h2>
-                  <p className={`truncate text-sm ${accentClass}`}>{friendLink.url}</p>
+                  <p className={urlTextClass}>{friendLink.url}</p>
                 </div>
               </div>
               <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
