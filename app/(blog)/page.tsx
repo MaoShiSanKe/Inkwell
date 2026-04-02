@@ -61,6 +61,23 @@ export default async function BlogHomePage() {
   const metaTextClass = compact ? "text-xs" : "text-sm";
   const titleClass = compact ? "text-xl" : "text-2xl";
   const excerptClass = compact ? "text-sm leading-6" : "text-base leading-7";
+  const featuredLinks = [
+    {
+      label: themeFrameworkSettings.home_featured_link_1_label,
+      url: themeFrameworkSettings.home_featured_link_1_url,
+      description: themeFrameworkSettings.home_featured_link_1_description,
+    },
+    {
+      label: themeFrameworkSettings.home_featured_link_2_label,
+      url: themeFrameworkSettings.home_featured_link_2_url,
+      description: themeFrameworkSettings.home_featured_link_2_description,
+    },
+    {
+      label: themeFrameworkSettings.home_featured_link_3_label,
+      url: themeFrameworkSettings.home_featured_link_3_url,
+      description: themeFrameworkSettings.home_featured_link_3_description,
+    },
+  ].filter((item) => item.label && item.url);
 
   return (
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>
@@ -85,6 +102,41 @@ export default async function BlogHomePage() {
           {themeFrameworkSettings.home_primary_cta_label}
         </Link>
       </div>
+
+      {featuredLinks.length > 0 ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {themeFrameworkSettings.home_featured_links_title}
+            </h2>
+            {themeFrameworkSettings.home_featured_links_description ? (
+              <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
+                {themeFrameworkSettings.home_featured_links_description}
+              </p>
+            ) : null}
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {featuredLinks.map((item) => (
+              <Link
+                key={item.url}
+                href={item.url}
+                className={`rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass}`}
+              >
+                <div className="flex flex-col gap-2">
+                  <span className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>
+                    {item.label}
+                  </span>
+                  {item.description ? (
+                    <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                      {item.description}
+                    </p>
+                  ) : null}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {posts.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:text-slate-300">

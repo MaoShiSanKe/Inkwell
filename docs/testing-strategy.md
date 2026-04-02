@@ -89,7 +89,7 @@ npm run test:browser
 - 评论交互
 - 点赞/浏览量
 - 公开布局
-- Theme Framework v1（品牌、首页 Hero、首页列表变体、默认主题模式）
+- Theme Framework v1（品牌、首页 Hero、首页精选入口、首页列表变体、默认主题模式）
 
 如果改动属于 Theme Framework v1，建议最少覆盖：
 - 单元 / Vitest：`app/(blog)/page.test.tsx`、`app/(blog)/layout.test.tsx`、`app/(admin)/[adminPath]/layout.test.tsx`、`lib/theme.test.ts`

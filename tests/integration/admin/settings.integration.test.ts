@@ -31,6 +31,17 @@ const SETTINGS_KEYS = [
   "home_hero_description",
   "home_primary_cta_label",
   "home_primary_cta_url",
+  "home_featured_links_title",
+  "home_featured_links_description",
+  "home_featured_link_1_label",
+  "home_featured_link_1_url",
+  "home_featured_link_1_description",
+  "home_featured_link_2_label",
+  "home_featured_link_2_url",
+  "home_featured_link_2_description",
+  "home_featured_link_3_label",
+  "home_featured_link_3_url",
+  "home_featured_link_3_description",
   "home_posts_variant",
   "home_show_post_excerpt",
   "home_show_post_author",
@@ -122,6 +133,21 @@ describe("admin settings write paths", () => {
         originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
       home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
       home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_featured_links_title: originalSettings.home_featured_links_title ?? "精选入口",
+      home_featured_links_description:
+        originalSettings.home_featured_links_description ?? "把高频入口放在首页，减少访客寻找内容的成本。",
+      home_featured_link_1_label: originalSettings.home_featured_link_1_label ?? "查看分类",
+      home_featured_link_1_url: originalSettings.home_featured_link_1_url ?? "/category",
+      home_featured_link_1_description:
+        originalSettings.home_featured_link_1_description ?? "按主题浏览已经发布的内容。",
+      home_featured_link_2_label: originalSettings.home_featured_link_2_label ?? "查看标签",
+      home_featured_link_2_url: originalSettings.home_featured_link_2_url ?? "/tag",
+      home_featured_link_2_description:
+        originalSettings.home_featured_link_2_description ?? "通过标签快速找到相关话题。",
+      home_featured_link_3_label: originalSettings.home_featured_link_3_label ?? "查看友链",
+      home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
+      home_featured_link_3_description:
+        originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ??
         "comfortable",
@@ -193,6 +219,17 @@ describe("admin settings write paths", () => {
       home_hero_description: "浏览站点中已经发布的文章、专题与长期归档。",
       home_primary_cta_label: "立即订阅",
       home_primary_cta_url: "/subscribe",
+      home_featured_links_title: "精选入口",
+      home_featured_links_description: "把高频入口放在首页，减少访客寻找内容的成本。",
+      home_featured_link_1_label: "查看分类",
+      home_featured_link_1_url: "/category",
+      home_featured_link_1_description: "按主题浏览已经发布的内容。",
+      home_featured_link_2_label: "查看标签",
+      home_featured_link_2_url: "/tag",
+      home_featured_link_2_description: "通过标签快速找到相关话题。",
+      home_featured_link_3_label: "查看友链",
+      home_featured_link_3_url: "/friend-links",
+      home_featured_link_3_description: "发现更多值得关注的站点与作者。",
       home_posts_variant: "compact",
       home_show_post_excerpt: "false",
       home_show_post_author: "true",
@@ -232,6 +269,8 @@ describe("admin settings write paths", () => {
       expect.arrayContaining([
         expect.objectContaining({ key: "site_brand_name", value: "Inkwell Daily" }),
         expect.objectContaining({ key: "home_hero_title", value: "最新文章与精选内容" }),
+        expect.objectContaining({ key: "home_featured_links_title", value: "精选入口" }),
+        expect.objectContaining({ key: "home_featured_link_1_url", value: "/category" }),
         expect.objectContaining({ key: "home_posts_variant", value: "compact" }),
         expect.objectContaining({ key: "public_layout_width", value: "wide" }),
         expect.objectContaining({ key: "public_theme_default_mode", value: "dark" }),
@@ -267,6 +306,21 @@ describe("admin settings write paths", () => {
         originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
       home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
       home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_featured_links_title: originalSettings.home_featured_links_title ?? "精选入口",
+      home_featured_links_description:
+        originalSettings.home_featured_links_description ?? "把高频入口放在首页，减少访客寻找内容的成本。",
+      home_featured_link_1_label: originalSettings.home_featured_link_1_label ?? "查看分类",
+      home_featured_link_1_url: originalSettings.home_featured_link_1_url ?? "/category",
+      home_featured_link_1_description:
+        originalSettings.home_featured_link_1_description ?? "按主题浏览已经发布的内容。",
+      home_featured_link_2_label: originalSettings.home_featured_link_2_label ?? "查看标签",
+      home_featured_link_2_url: originalSettings.home_featured_link_2_url ?? "/tag",
+      home_featured_link_2_description:
+        originalSettings.home_featured_link_2_description ?? "通过标签快速找到相关话题。",
+      home_featured_link_3_label: originalSettings.home_featured_link_3_label ?? "查看友链",
+      home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
+      home_featured_link_3_description:
+        originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:
@@ -365,6 +419,21 @@ describe("admin settings write paths", () => {
         originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
       home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
       home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_featured_links_title: originalSettings.home_featured_links_title ?? "精选入口",
+      home_featured_links_description:
+        originalSettings.home_featured_links_description ?? "把高频入口放在首页，减少访客寻找内容的成本。",
+      home_featured_link_1_label: originalSettings.home_featured_link_1_label ?? "查看分类",
+      home_featured_link_1_url: originalSettings.home_featured_link_1_url ?? "/category",
+      home_featured_link_1_description:
+        originalSettings.home_featured_link_1_description ?? "按主题浏览已经发布的内容。",
+      home_featured_link_2_label: originalSettings.home_featured_link_2_label ?? "查看标签",
+      home_featured_link_2_url: originalSettings.home_featured_link_2_url ?? "/tag",
+      home_featured_link_2_description:
+        originalSettings.home_featured_link_2_description ?? "通过标签快速找到相关话题。",
+      home_featured_link_3_label: originalSettings.home_featured_link_3_label ?? "查看友链",
+      home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
+      home_featured_link_3_description:
+        originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:
@@ -432,6 +501,21 @@ describe("admin settings write paths", () => {
         originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
       home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
       home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_featured_links_title: originalSettings.home_featured_links_title ?? "精选入口",
+      home_featured_links_description:
+        originalSettings.home_featured_links_description ?? "把高频入口放在首页，减少访客寻找内容的成本。",
+      home_featured_link_1_label: originalSettings.home_featured_link_1_label ?? "查看分类",
+      home_featured_link_1_url: originalSettings.home_featured_link_1_url ?? "/category",
+      home_featured_link_1_description:
+        originalSettings.home_featured_link_1_description ?? "按主题浏览已经发布的内容。",
+      home_featured_link_2_label: originalSettings.home_featured_link_2_label ?? "查看标签",
+      home_featured_link_2_url: originalSettings.home_featured_link_2_url ?? "/tag",
+      home_featured_link_2_description:
+        originalSettings.home_featured_link_2_description ?? "通过标签快速找到相关话题。",
+      home_featured_link_3_label: originalSettings.home_featured_link_3_label ?? "查看友链",
+      home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
+      home_featured_link_3_description:
+        originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:
@@ -505,6 +589,21 @@ describe("admin settings write paths", () => {
         originalSettings.home_hero_description ?? "浏览站点中已经发布的文章与公开归档。",
       home_primary_cta_label: originalSettings.home_primary_cta_label ?? "订阅新文章",
       home_primary_cta_url: originalSettings.home_primary_cta_url ?? "/subscribe",
+      home_featured_links_title: originalSettings.home_featured_links_title ?? "精选入口",
+      home_featured_links_description:
+        originalSettings.home_featured_links_description ?? "把高频入口放在首页，减少访客寻找内容的成本。",
+      home_featured_link_1_label: originalSettings.home_featured_link_1_label ?? "查看分类",
+      home_featured_link_1_url: originalSettings.home_featured_link_1_url ?? "/category",
+      home_featured_link_1_description:
+        originalSettings.home_featured_link_1_description ?? "按主题浏览已经发布的内容。",
+      home_featured_link_2_label: originalSettings.home_featured_link_2_label ?? "查看标签",
+      home_featured_link_2_url: originalSettings.home_featured_link_2_url ?? "/tag",
+      home_featured_link_2_description:
+        originalSettings.home_featured_link_2_description ?? "通过标签快速找到相关话题。",
+      home_featured_link_3_label: originalSettings.home_featured_link_3_label ?? "查看友链",
+      home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
+      home_featured_link_3_description:
+        originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:

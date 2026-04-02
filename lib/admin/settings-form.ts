@@ -33,6 +33,17 @@ export type SettingsFormValues = {
   home_hero_description: string;
   home_primary_cta_label: string;
   home_primary_cta_url: string;
+  home_featured_links_title: string;
+  home_featured_links_description: string;
+  home_featured_link_1_label: string;
+  home_featured_link_1_url: string;
+  home_featured_link_1_description: string;
+  home_featured_link_2_label: string;
+  home_featured_link_2_url: string;
+  home_featured_link_2_description: string;
+  home_featured_link_3_label: string;
+  home_featured_link_3_url: string;
+  home_featured_link_3_description: string;
   home_posts_variant: HomePostsVariant;
   home_show_post_excerpt: "true" | "false";
   home_show_post_author: "true" | "false";
@@ -98,6 +109,17 @@ export const initialSettingsFormValues: SettingsFormValues = {
   home_hero_description: "浏览站点中已经发布的文章与公开归档。",
   home_primary_cta_label: "订阅新文章",
   home_primary_cta_url: "/subscribe",
+  home_featured_links_title: "精选入口",
+  home_featured_links_description: "把高频入口放在首页，减少访客寻找内容的成本。",
+  home_featured_link_1_label: "查看分类",
+  home_featured_link_1_url: "/category",
+  home_featured_link_1_description: "按主题浏览已经发布的内容。",
+  home_featured_link_2_label: "查看标签",
+  home_featured_link_2_url: "/tag",
+  home_featured_link_2_description: "通过标签快速找到相关话题。",
+  home_featured_link_3_label: "查看友链",
+  home_featured_link_3_url: "/friend-links",
+  home_featured_link_3_description: "发现更多值得关注的站点与作者。",
   home_posts_variant: "comfortable",
   home_show_post_excerpt: "true",
   home_show_post_author: "true",

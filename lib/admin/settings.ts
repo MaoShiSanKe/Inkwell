@@ -98,6 +98,21 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
       input.home_hero_description?.trim() ?? "浏览站点中已经发布的文章与公开归档。",
     home_primary_cta_label: input.home_primary_cta_label?.trim() ?? "订阅新文章",
     home_primary_cta_url: input.home_primary_cta_url?.trim() ?? "/subscribe",
+    home_featured_links_title: input.home_featured_links_title?.trim() ?? "精选入口",
+    home_featured_links_description:
+      input.home_featured_links_description?.trim() ?? "把高频入口放在首页，减少访客寻找内容的成本。",
+    home_featured_link_1_label: input.home_featured_link_1_label?.trim() ?? "查看分类",
+    home_featured_link_1_url: input.home_featured_link_1_url?.trim() ?? "/category",
+    home_featured_link_1_description:
+      input.home_featured_link_1_description?.trim() ?? "按主题浏览已经发布的内容。",
+    home_featured_link_2_label: input.home_featured_link_2_label?.trim() ?? "查看标签",
+    home_featured_link_2_url: input.home_featured_link_2_url?.trim() ?? "/tag",
+    home_featured_link_2_description:
+      input.home_featured_link_2_description?.trim() ?? "通过标签快速找到相关话题。",
+    home_featured_link_3_label: input.home_featured_link_3_label?.trim() ?? "查看友链",
+    home_featured_link_3_url: input.home_featured_link_3_url?.trim() ?? "/friend-links",
+    home_featured_link_3_description:
+      input.home_featured_link_3_description?.trim() ?? "发现更多值得关注的站点与作者。",
     home_posts_variant:
       input.home_posts_variant?.trim() === "compact" ? "compact" : "comfortable",
     home_show_post_excerpt:
@@ -190,6 +205,17 @@ function toFormValues(values: SettingValues): SettingsFormValues {
     home_hero_description: values.home_hero_description,
     home_primary_cta_label: values.home_primary_cta_label,
     home_primary_cta_url: values.home_primary_cta_url,
+    home_featured_links_title: values.home_featured_links_title,
+    home_featured_links_description: values.home_featured_links_description,
+    home_featured_link_1_label: values.home_featured_link_1_label,
+    home_featured_link_1_url: values.home_featured_link_1_url,
+    home_featured_link_1_description: values.home_featured_link_1_description,
+    home_featured_link_2_label: values.home_featured_link_2_label,
+    home_featured_link_2_url: values.home_featured_link_2_url,
+    home_featured_link_2_description: values.home_featured_link_2_description,
+    home_featured_link_3_label: values.home_featured_link_3_label,
+    home_featured_link_3_url: values.home_featured_link_3_url,
+    home_featured_link_3_description: values.home_featured_link_3_description,
     home_posts_variant: values.home_posts_variant,
     home_show_post_excerpt: values.home_show_post_excerpt ? "true" : "false",
     home_show_post_author: values.home_show_post_author ? "true" : "false",
@@ -267,6 +293,22 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
       return "首页主按钮文案格式无效。";
     case "home_primary_cta_url":
       return "首页主按钮链接无效。";
+    case "home_featured_links_title":
+      return "首页精选入口标题格式无效。";
+    case "home_featured_links_description":
+      return "首页精选入口说明格式无效。";
+    case "home_featured_link_1_label":
+    case "home_featured_link_2_label":
+    case "home_featured_link_3_label":
+      return "首页精选入口文案格式无效。";
+    case "home_featured_link_1_url":
+    case "home_featured_link_2_url":
+    case "home_featured_link_3_url":
+      return "首页精选入口链接无效。";
+    case "home_featured_link_1_description":
+    case "home_featured_link_2_description":
+    case "home_featured_link_3_description":
+      return "首页精选入口说明格式无效。";
     case "home_posts_variant":
       return "首页文章展示模式无效。";
     case "home_show_post_excerpt":
@@ -357,6 +399,17 @@ function validateSettingsInput(values: SettingsFormValues):
     home_hero_description: values.home_hero_description,
     home_primary_cta_label: values.home_primary_cta_label,
     home_primary_cta_url: values.home_primary_cta_url,
+    home_featured_links_title: values.home_featured_links_title,
+    home_featured_links_description: values.home_featured_links_description,
+    home_featured_link_1_label: values.home_featured_link_1_label,
+    home_featured_link_1_url: values.home_featured_link_1_url,
+    home_featured_link_1_description: values.home_featured_link_1_description,
+    home_featured_link_2_label: values.home_featured_link_2_label,
+    home_featured_link_2_url: values.home_featured_link_2_url,
+    home_featured_link_2_description: values.home_featured_link_2_description,
+    home_featured_link_3_label: values.home_featured_link_3_label,
+    home_featured_link_3_url: values.home_featured_link_3_url,
+    home_featured_link_3_description: values.home_featured_link_3_description,
     home_posts_variant: values.home_posts_variant,
     home_show_post_excerpt: values.home_show_post_excerpt,
     home_show_post_author: values.home_show_post_author,
@@ -598,6 +651,17 @@ export async function updateAdminSettings(
         nextSettings.home_hero_description !== currentSettings.home_hero_description ||
         nextSettings.home_primary_cta_label !== currentSettings.home_primary_cta_label ||
         nextSettings.home_primary_cta_url !== currentSettings.home_primary_cta_url ||
+        nextSettings.home_featured_links_title !== currentSettings.home_featured_links_title ||
+        nextSettings.home_featured_links_description !== currentSettings.home_featured_links_description ||
+        nextSettings.home_featured_link_1_label !== currentSettings.home_featured_link_1_label ||
+        nextSettings.home_featured_link_1_url !== currentSettings.home_featured_link_1_url ||
+        nextSettings.home_featured_link_1_description !== currentSettings.home_featured_link_1_description ||
+        nextSettings.home_featured_link_2_label !== currentSettings.home_featured_link_2_label ||
+        nextSettings.home_featured_link_2_url !== currentSettings.home_featured_link_2_url ||
+        nextSettings.home_featured_link_2_description !== currentSettings.home_featured_link_2_description ||
+        nextSettings.home_featured_link_3_label !== currentSettings.home_featured_link_3_label ||
+        nextSettings.home_featured_link_3_url !== currentSettings.home_featured_link_3_url ||
+        nextSettings.home_featured_link_3_description !== currentSettings.home_featured_link_3_description ||
         nextSettings.home_posts_variant !== currentSettings.home_posts_variant ||
         nextSettings.home_show_post_excerpt !== currentSettings.home_show_post_excerpt ||
         nextSettings.home_show_post_author !== currentSettings.home_show_post_author ||

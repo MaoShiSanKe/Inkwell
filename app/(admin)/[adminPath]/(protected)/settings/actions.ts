@@ -95,6 +95,17 @@ export async function saveSettingsAction(
     home_hero_description: String(formData.get("home_hero_description") ?? ""),
     home_primary_cta_label: String(formData.get("home_primary_cta_label") ?? ""),
     home_primary_cta_url: String(formData.get("home_primary_cta_url") ?? ""),
+    home_featured_links_title: String(formData.get("home_featured_links_title") ?? ""),
+    home_featured_links_description: String(formData.get("home_featured_links_description") ?? ""),
+    home_featured_link_1_label: String(formData.get("home_featured_link_1_label") ?? ""),
+    home_featured_link_1_url: String(formData.get("home_featured_link_1_url") ?? ""),
+    home_featured_link_1_description: String(formData.get("home_featured_link_1_description") ?? ""),
+    home_featured_link_2_label: String(formData.get("home_featured_link_2_label") ?? ""),
+    home_featured_link_2_url: String(formData.get("home_featured_link_2_url") ?? ""),
+    home_featured_link_2_description: String(formData.get("home_featured_link_2_description") ?? ""),
+    home_featured_link_3_label: String(formData.get("home_featured_link_3_label") ?? ""),
+    home_featured_link_3_url: String(formData.get("home_featured_link_3_url") ?? ""),
+    home_featured_link_3_description: String(formData.get("home_featured_link_3_description") ?? ""),
     home_posts_variant: String(formData.get("home_posts_variant") ?? "comfortable") as
       | "comfortable"
       | "compact",

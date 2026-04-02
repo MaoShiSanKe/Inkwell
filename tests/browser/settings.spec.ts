@@ -58,6 +58,17 @@ test.describe("settings browser regression", () => {
       await page.getByLabel("首页说明").fill("浏览主题框架驱动的首页内容。\n支持可配置的 Hero 与列表视图。");
       await page.getByLabel("首页主按钮文案").fill("查看订阅");
       await page.getByLabel("首页主按钮链接").fill("/newsletter");
+      await page.getByLabel("首页精选入口标题").fill("精选导航");
+      await page.getByLabel("首页精选入口说明").fill("把重点入口放在首页，帮助访客快速跳转。");
+      await page.getByLabel("卡片 1 文案").fill("浏览分类");
+      await page.getByLabel("卡片 1 链接").fill("/category");
+      await page.getByLabel("卡片 1 说明").fill("按主题浏览已经发布的内容。");
+      await page.getByLabel("卡片 2 文案").fill("浏览标签");
+      await page.getByLabel("卡片 2 链接").fill("/tag");
+      await page.getByLabel("卡片 2 说明").fill("通过标签快速找到相关话题。");
+      await page.getByLabel("卡片 3 文案").fill("浏览友链");
+      await page.getByLabel("卡片 3 链接").fill("/friend-links");
+      await page.getByLabel("卡片 3 说明").fill("发现更多值得关注的站点与作者。");
       await page.getByLabel("首页文章展示模式").selectOption("compact");
       await page.getByLabel("首页显示摘要").selectOption("false");
       await page.getByLabel("首页显示作者").selectOption("false");
@@ -101,6 +112,11 @@ test.describe("settings browser regression", () => {
       await expect(page.getByRole("heading", { name: "最新文章与精选内容" })).toBeVisible();
       await expect(page.getByText("浏览主题框架驱动的首页内容。 支持可配置的 Hero 与列表视图。")).toBeVisible();
       await expect(page.getByRole("link", { name: "查看订阅" })).toHaveAttribute("href", "/newsletter");
+      await expect(page.getByRole("heading", { name: "精选导航" })).toBeVisible();
+      await expect(page.getByText("把重点入口放在首页，帮助访客快速跳转。")).toBeVisible();
+      await expect(page.getByRole("link", { name: "浏览分类" })).toHaveAttribute("href", "/category");
+      await expect(page.getByRole("link", { name: "浏览标签" })).toHaveAttribute("href", "/tag");
+      await expect(page.getByRole("link", { name: "浏览友链" })).toHaveAttribute("href", "/friend-links");
       await expect(page.getByText("Published excerpt")).toHaveCount(0);
       await expect(page.getByText("作者：Author Name")).toHaveCount(0);
       await expect(page.getByText("分类：Published Category")).toHaveCount(0);
@@ -116,6 +132,14 @@ test.describe("settings browser regression", () => {
       const homeHeroDescription = await getSettingValue("home_hero_description");
       const homePrimaryCtaLabel = await getSettingValue("home_primary_cta_label");
       const homePrimaryCtaUrl = await getSettingValue("home_primary_cta_url");
+      const homeFeaturedLinksTitle = await getSettingValue("home_featured_links_title");
+      const homeFeaturedLinksDescription = await getSettingValue("home_featured_links_description");
+      const homeFeaturedLink1Label = await getSettingValue("home_featured_link_1_label");
+      const homeFeaturedLink1Url = await getSettingValue("home_featured_link_1_url");
+      const homeFeaturedLink2Label = await getSettingValue("home_featured_link_2_label");
+      const homeFeaturedLink2Url = await getSettingValue("home_featured_link_2_url");
+      const homeFeaturedLink3Label = await getSettingValue("home_featured_link_3_label");
+      const homeFeaturedLink3Url = await getSettingValue("home_featured_link_3_url");
       const homePostsVariant = await getSettingValue("home_posts_variant");
       const homeShowPostExcerpt = await getSettingValue("home_show_post_excerpt");
       const homeShowPostAuthor = await getSettingValue("home_show_post_author");
@@ -135,6 +159,14 @@ test.describe("settings browser regression", () => {
       );
       expect(homePrimaryCtaLabel).toBe("查看订阅");
       expect(homePrimaryCtaUrl).toBe("/newsletter");
+      expect(homeFeaturedLinksTitle).toBe("精选导航");
+      expect(homeFeaturedLinksDescription).toBe("把重点入口放在首页，帮助访客快速跳转。");
+      expect(homeFeaturedLink1Label).toBe("浏览分类");
+      expect(homeFeaturedLink1Url).toBe("/category");
+      expect(homeFeaturedLink2Label).toBe("浏览标签");
+      expect(homeFeaturedLink2Url).toBe("/tag");
+      expect(homeFeaturedLink3Label).toBe("浏览友链");
+      expect(homeFeaturedLink3Url).toBe("/friend-links");
       expect(homePostsVariant).toBe("compact");
       expect(homeShowPostExcerpt).toBe("false");
       expect(homeShowPostAuthor).toBe("false");
@@ -178,6 +210,17 @@ type SettingsFixture = {
     home_hero_description: string | null;
     home_primary_cta_label: string | null;
     home_primary_cta_url: string | null;
+    home_featured_links_title: string | null;
+    home_featured_links_description: string | null;
+    home_featured_link_1_label: string | null;
+    home_featured_link_1_url: string | null;
+    home_featured_link_1_description: string | null;
+    home_featured_link_2_label: string | null;
+    home_featured_link_2_url: string | null;
+    home_featured_link_2_description: string | null;
+    home_featured_link_3_label: string | null;
+    home_featured_link_3_url: string | null;
+    home_featured_link_3_description: string | null;
     home_posts_variant: string | null;
     home_show_post_excerpt: string | null;
     home_show_post_author: string | null;
@@ -221,6 +264,17 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
       home_hero_description: null,
       home_primary_cta_label: null,
       home_primary_cta_url: null,
+      home_featured_links_title: null,
+      home_featured_links_description: null,
+      home_featured_link_1_label: null,
+      home_featured_link_1_url: null,
+      home_featured_link_1_description: null,
+      home_featured_link_2_label: null,
+      home_featured_link_2_url: null,
+      home_featured_link_2_description: null,
+      home_featured_link_3_label: null,
+      home_featured_link_3_url: null,
+      home_featured_link_3_description: null,
       home_posts_variant: null,
       home_show_post_excerpt: null,
       home_show_post_author: null,
@@ -262,6 +316,17 @@ async function seedSettingsFixture(seed: string): Promise<SettingsFixture> {
     home_hero_description: await getSettingValue("home_hero_description"),
     home_primary_cta_label: await getSettingValue("home_primary_cta_label"),
     home_primary_cta_url: await getSettingValue("home_primary_cta_url"),
+    home_featured_links_title: await getSettingValue("home_featured_links_title"),
+    home_featured_links_description: await getSettingValue("home_featured_links_description"),
+    home_featured_link_1_label: await getSettingValue("home_featured_link_1_label"),
+    home_featured_link_1_url: await getSettingValue("home_featured_link_1_url"),
+    home_featured_link_1_description: await getSettingValue("home_featured_link_1_description"),
+    home_featured_link_2_label: await getSettingValue("home_featured_link_2_label"),
+    home_featured_link_2_url: await getSettingValue("home_featured_link_2_url"),
+    home_featured_link_2_description: await getSettingValue("home_featured_link_2_description"),
+    home_featured_link_3_label: await getSettingValue("home_featured_link_3_label"),
+    home_featured_link_3_url: await getSettingValue("home_featured_link_3_url"),
+    home_featured_link_3_description: await getSettingValue("home_featured_link_3_description"),
     home_posts_variant: await getSettingValue("home_posts_variant"),
     home_show_post_excerpt: await getSettingValue("home_show_post_excerpt"),
     home_show_post_author: await getSettingValue("home_show_post_author"),
@@ -327,6 +392,17 @@ async function cleanupSettingsFixture(
     home_hero_description: string | null;
     home_primary_cta_label: string | null;
     home_primary_cta_url: string | null;
+    home_featured_links_title: string | null;
+    home_featured_links_description: string | null;
+    home_featured_link_1_label: string | null;
+    home_featured_link_1_url: string | null;
+    home_featured_link_1_description: string | null;
+    home_featured_link_2_label: string | null;
+    home_featured_link_2_url: string | null;
+    home_featured_link_2_description: string | null;
+    home_featured_link_3_label: string | null;
+    home_featured_link_3_url: string | null;
+    home_featured_link_3_description: string | null;
     home_posts_variant: string | null;
     home_show_post_excerpt: string | null;
     home_show_post_author: string | null;
@@ -374,6 +450,17 @@ async function cleanupSettingsFixture(
     await restoreSetting(db, "home_hero_description", originalThemeFrameworkSettings.home_hero_description);
     await restoreSetting(db, "home_primary_cta_label", originalThemeFrameworkSettings.home_primary_cta_label);
     await restoreSetting(db, "home_primary_cta_url", originalThemeFrameworkSettings.home_primary_cta_url);
+    await restoreSetting(db, "home_featured_links_title", originalThemeFrameworkSettings.home_featured_links_title);
+    await restoreSetting(db, "home_featured_links_description", originalThemeFrameworkSettings.home_featured_links_description);
+    await restoreSetting(db, "home_featured_link_1_label", originalThemeFrameworkSettings.home_featured_link_1_label);
+    await restoreSetting(db, "home_featured_link_1_url", originalThemeFrameworkSettings.home_featured_link_1_url);
+    await restoreSetting(db, "home_featured_link_1_description", originalThemeFrameworkSettings.home_featured_link_1_description);
+    await restoreSetting(db, "home_featured_link_2_label", originalThemeFrameworkSettings.home_featured_link_2_label);
+    await restoreSetting(db, "home_featured_link_2_url", originalThemeFrameworkSettings.home_featured_link_2_url);
+    await restoreSetting(db, "home_featured_link_2_description", originalThemeFrameworkSettings.home_featured_link_2_description);
+    await restoreSetting(db, "home_featured_link_3_label", originalThemeFrameworkSettings.home_featured_link_3_label);
+    await restoreSetting(db, "home_featured_link_3_url", originalThemeFrameworkSettings.home_featured_link_3_url);
+    await restoreSetting(db, "home_featured_link_3_description", originalThemeFrameworkSettings.home_featured_link_3_description);
     await restoreSetting(db, "home_posts_variant", originalThemeFrameworkSettings.home_posts_variant);
     await restoreSetting(db, "home_show_post_excerpt", originalThemeFrameworkSettings.home_show_post_excerpt);
     await restoreSetting(db, "home_show_post_author", originalThemeFrameworkSettings.home_show_post_author);
@@ -409,6 +496,17 @@ async function restoreSetting(
     | "home_hero_description"
     | "home_primary_cta_label"
     | "home_primary_cta_url"
+    | "home_featured_links_title"
+    | "home_featured_links_description"
+    | "home_featured_link_1_label"
+    | "home_featured_link_1_url"
+    | "home_featured_link_1_description"
+    | "home_featured_link_2_label"
+    | "home_featured_link_2_url"
+    | "home_featured_link_2_description"
+    | "home_featured_link_3_label"
+    | "home_featured_link_3_url"
+    | "home_featured_link_3_description"
     | "home_posts_variant"
     | "home_show_post_excerpt"
     | "home_show_post_author"

@@ -378,6 +378,72 @@ export const settingDefinitions = {
     parse: (value: string) => parseOptionalUrl(value, "home_primary_cta_url"),
     serialize: (value: string) => parseOptionalUrl(value, "home_primary_cta_url"),
   }),
+  home_featured_links_title: defineSetting({
+    defaultValue: "精选入口",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_featured_links_description: defineSetting({
+    defaultValue: "把高频入口放在首页，减少访客寻找内容的成本。",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_featured_link_1_label: defineSetting({
+    defaultValue: "查看分类",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_featured_link_1_url: defineSetting({
+    defaultValue: "/category",
+    isSecret: false,
+    parse: (value: string) => parseOptionalUrl(value, "home_featured_link_1_url"),
+    serialize: (value: string) => parseOptionalUrl(value, "home_featured_link_1_url"),
+  }),
+  home_featured_link_1_description: defineSetting({
+    defaultValue: "按主题浏览已经发布的内容。",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_featured_link_2_label: defineSetting({
+    defaultValue: "查看标签",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_featured_link_2_url: defineSetting({
+    defaultValue: "/tag",
+    isSecret: false,
+    parse: (value: string) => parseOptionalUrl(value, "home_featured_link_2_url"),
+    serialize: (value: string) => parseOptionalUrl(value, "home_featured_link_2_url"),
+  }),
+  home_featured_link_2_description: defineSetting({
+    defaultValue: "通过标签快速找到相关话题。",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_featured_link_3_label: defineSetting({
+    defaultValue: "查看友链",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_featured_link_3_url: defineSetting({
+    defaultValue: "/friend-links",
+    isSecret: false,
+    parse: (value: string) => parseOptionalUrl(value, "home_featured_link_3_url"),
+    serialize: (value: string) => parseOptionalUrl(value, "home_featured_link_3_url"),
+  }),
+  home_featured_link_3_description: defineSetting({
+    defaultValue: "发现更多值得关注的站点与作者。",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
   home_posts_variant: defineSetting({
     defaultValue: "comfortable" as HomePostsVariant,
     isSecret: false,
@@ -555,6 +621,17 @@ export type ThemeFrameworkSettings = Pick<
   | "home_hero_description"
   | "home_primary_cta_label"
   | "home_primary_cta_url"
+  | "home_featured_links_title"
+  | "home_featured_links_description"
+  | "home_featured_link_1_label"
+  | "home_featured_link_1_url"
+  | "home_featured_link_1_description"
+  | "home_featured_link_2_label"
+  | "home_featured_link_2_url"
+  | "home_featured_link_2_description"
+  | "home_featured_link_3_label"
+  | "home_featured_link_3_url"
+  | "home_featured_link_3_description"
   | "home_posts_variant"
   | "home_show_post_excerpt"
   | "home_show_post_author"
@@ -610,6 +687,17 @@ export const DEFAULT_SETTINGS: SettingValues = {
   home_hero_description: settingDefinitions.home_hero_description.defaultValue,
   home_primary_cta_label: settingDefinitions.home_primary_cta_label.defaultValue,
   home_primary_cta_url: settingDefinitions.home_primary_cta_url.defaultValue,
+  home_featured_links_title: settingDefinitions.home_featured_links_title.defaultValue,
+  home_featured_links_description: settingDefinitions.home_featured_links_description.defaultValue,
+  home_featured_link_1_label: settingDefinitions.home_featured_link_1_label.defaultValue,
+  home_featured_link_1_url: settingDefinitions.home_featured_link_1_url.defaultValue,
+  home_featured_link_1_description: settingDefinitions.home_featured_link_1_description.defaultValue,
+  home_featured_link_2_label: settingDefinitions.home_featured_link_2_label.defaultValue,
+  home_featured_link_2_url: settingDefinitions.home_featured_link_2_url.defaultValue,
+  home_featured_link_2_description: settingDefinitions.home_featured_link_2_description.defaultValue,
+  home_featured_link_3_label: settingDefinitions.home_featured_link_3_label.defaultValue,
+  home_featured_link_3_url: settingDefinitions.home_featured_link_3_url.defaultValue,
+  home_featured_link_3_description: settingDefinitions.home_featured_link_3_description.defaultValue,
   home_posts_variant: settingDefinitions.home_posts_variant.defaultValue,
   home_show_post_excerpt: settingDefinitions.home_show_post_excerpt.defaultValue,
   home_show_post_author: settingDefinitions.home_show_post_author.defaultValue,

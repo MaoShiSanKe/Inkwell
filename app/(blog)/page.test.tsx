@@ -81,6 +81,14 @@ describe("blog home page", () => {
     expect(markup).toContain("浏览主题框架驱动的首页内容。");
     expect(markup).toContain("查看订阅");
     expect(markup).toContain('href="/newsletter"');
+    expect(markup).toContain("精选入口");
+    expect(markup).toContain("把高频入口放在首页，减少访客寻找内容的成本。");
+    expect(markup).toContain("查看分类");
+    expect(markup).toContain('href="/category"');
+    expect(markup).toContain("查看标签");
+    expect(markup).toContain('href="/tag"');
+    expect(markup).toContain("查看友链");
+    expect(markup).toContain('href="/friend-links"');
     expect(markup).toContain("Published title");
     expect(markup).toContain("Published excerpt");
     expect(markup).toContain("作者：Author Name");
@@ -135,6 +143,17 @@ function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
     home_hero_description: "浏览主题框架驱动的首页内容。",
     home_primary_cta_label: "查看订阅",
     home_primary_cta_url: "/newsletter",
+    home_featured_links_title: "精选入口",
+    home_featured_links_description: "把高频入口放在首页，减少访客寻找内容的成本。",
+    home_featured_link_1_label: "查看分类",
+    home_featured_link_1_url: "/category",
+    home_featured_link_1_description: "按主题浏览已经发布的内容。",
+    home_featured_link_2_label: "查看标签",
+    home_featured_link_2_url: "/tag",
+    home_featured_link_2_description: "通过标签快速找到相关话题。",
+    home_featured_link_3_label: "查看友链",
+    home_featured_link_3_url: "/friend-links",
+    home_featured_link_3_description: "发现更多值得关注的站点与作者。",
     home_posts_variant: "comfortable",
     home_show_post_excerpt: true,
     home_show_post_author: true,

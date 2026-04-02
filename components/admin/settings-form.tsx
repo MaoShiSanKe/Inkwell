@@ -516,6 +516,97 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
               ) : null}
             </label>
 
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              首页精选入口标题
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="home_featured_links_title"
+                defaultValue={state.values.home_featured_links_title}
+                placeholder="例如：精选入口"
+              />
+              {state.errors.home_featured_links_title ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_links_title}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              首页精选入口说明
+              <textarea
+                className="min-h-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_featured_links_description"
+                defaultValue={state.values.home_featured_links_description}
+                spellCheck={false}
+                placeholder="例如：把高频入口放在首页，减少访客寻找内容的成本。"
+              />
+              {state.errors.home_featured_links_description ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_links_description}</span>
+              ) : null}
+            </label>
+
+            <div className="lg:col-span-2 grid gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">首页精选入口卡片 1</p>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  卡片 1 文案
+                  <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="text" name="home_featured_link_1_label" defaultValue={state.values.home_featured_link_1_label} />
+                  {state.errors.home_featured_link_1_label ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_1_label}</span> : null}
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  卡片 1 链接
+                  <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="text" name="home_featured_link_1_url" defaultValue={state.values.home_featured_link_1_url} />
+                  {state.errors.home_featured_link_1_url ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_1_url}</span> : null}
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+                  卡片 1 说明
+                  <textarea className="min-h-20 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="home_featured_link_1_description" defaultValue={state.values.home_featured_link_1_description} spellCheck={false} />
+                  {state.errors.home_featured_link_1_description ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_1_description}</span> : null}
+                </label>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 grid gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">首页精选入口卡片 2</p>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  卡片 2 文案
+                  <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="text" name="home_featured_link_2_label" defaultValue={state.values.home_featured_link_2_label} />
+                  {state.errors.home_featured_link_2_label ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_2_label}</span> : null}
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  卡片 2 链接
+                  <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="text" name="home_featured_link_2_url" defaultValue={state.values.home_featured_link_2_url} />
+                  {state.errors.home_featured_link_2_url ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_2_url}</span> : null}
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+                  卡片 2 说明
+                  <textarea className="min-h-20 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="home_featured_link_2_description" defaultValue={state.values.home_featured_link_2_description} spellCheck={false} />
+                  {state.errors.home_featured_link_2_description ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_2_description}</span> : null}
+                </label>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2 grid gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">首页精选入口卡片 3</p>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  卡片 3 文案
+                  <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="text" name="home_featured_link_3_label" defaultValue={state.values.home_featured_link_3_label} />
+                  {state.errors.home_featured_link_3_label ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_3_label}</span> : null}
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  卡片 3 链接
+                  <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="text" name="home_featured_link_3_url" defaultValue={state.values.home_featured_link_3_url} />
+                  {state.errors.home_featured_link_3_url ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_3_url}</span> : null}
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+                  卡片 3 说明
+                  <textarea className="min-h-20 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="home_featured_link_3_description" defaultValue={state.values.home_featured_link_3_description} spellCheck={false} />
+                  {state.errors.home_featured_link_3_description ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_3_description}</span> : null}
+                </label>
+              </div>
+            </div>
+
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
               首页文章展示模式
               <select

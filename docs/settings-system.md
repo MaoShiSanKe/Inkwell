@@ -85,6 +85,7 @@ Theme Framework v1 当前建议采用：
 当前 v1 已落地的表现包括：
 - 公开页头品牌区与结构化页脚
 - 首页 Hero 文案与主按钮
+- 首页精选入口区块（标题、说明、三张固定链接卡片）
 - 首页列表 `comfortable | compact` 变体
 - 首页摘要 / 作者 / 分类 / 发布时间开关
 - public/admin 主题切换遵循 `localStorage > backend default > system`

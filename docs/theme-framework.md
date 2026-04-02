@@ -35,6 +35,22 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 - `home_hero_description`
 - `home_primary_cta_label`
 - `home_primary_cta_url`
+- `home_featured_links_title`
+- `home_featured_links_description`
+- `home_featured_link_1_label`
+- `home_featured_link_1_url`
+- `home_featured_link_1_description`
+- `home_featured_link_2_label`
+- `home_featured_link_2_url`
+- `home_featured_link_2_description`
+- `home_featured_link_3_label`
+- `home_featured_link_3_url`
+- `home_featured_link_3_description`
+
+当前行为补充：
+- 首页 Hero 下方可渲染一个固定的精选入口区块
+- 三张入口卡片仅在同时配置了文案与链接时渲染
+- 入口卡片继续复用公开站点的表面样式与强调色映射
 
 当前生效位置：
 - `app/(blog)/page.tsx`
