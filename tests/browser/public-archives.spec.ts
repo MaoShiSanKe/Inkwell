@@ -23,6 +23,8 @@ type ThemeSettingsSnapshot = {
   public_layout_width: string | null;
   public_surface_variant: string | null;
   public_accent_theme: string | null;
+  home_primary_cta_label: string | null;
+  home_primary_cta_url: string | null;
 };
 
 test.describe("public archive pages", () => {
@@ -35,10 +37,14 @@ test.describe("public archive pages", () => {
         public_layout_width: "wide",
         public_surface_variant: "solid",
         public_accent_theme: "blue",
+        home_primary_cta_label: "查看订阅",
+        home_primary_cta_url: "/newsletter",
       });
 
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "最新文章" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "查看订阅" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
+      await expect(page.getByRole("link", { name: "查看订阅" })).toHaveClass(/hover:border-blue-300/);
       await expect(page.getByRole("link", { name: "查看分类" })).toHaveClass(/hover:border-blue-300/);
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
@@ -344,6 +350,8 @@ async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
     public_layout_width: await getSettingValue("public_layout_width"),
     public_surface_variant: await getSettingValue("public_surface_variant"),
     public_accent_theme: await getSettingValue("public_accent_theme"),
+    home_primary_cta_label: await getSettingValue("home_primary_cta_label"),
+    home_primary_cta_url: await getSettingValue("home_primary_cta_url"),
   };
 }
 
@@ -351,20 +359,31 @@ async function applyThemeSettings(values: {
   public_layout_width: "narrow" | "default" | "wide";
   public_surface_variant: "soft" | "solid";
   public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+  home_primary_cta_label: string;
+  home_primary_cta_url: string;
 }) {
   await restoreSetting("public_layout_width", values.public_layout_width);
   await restoreSetting("public_surface_variant", values.public_surface_variant);
   await restoreSetting("public_accent_theme", values.public_accent_theme);
+  await restoreSetting("home_primary_cta_label", values.home_primary_cta_label);
+  await restoreSetting("home_primary_cta_url", values.home_primary_cta_url);
 }
 
 async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
   await restoreSetting("public_layout_width", snapshot.public_layout_width);
   await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
   await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+  await restoreSetting("home_primary_cta_label", snapshot.home_primary_cta_label);
+  await restoreSetting("home_primary_cta_url", snapshot.home_primary_cta_url);
 }
 
 async function getSettingValue(
-  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  key:
+    | "public_layout_width"
+    | "public_surface_variant"
+    | "public_accent_theme"
+    | "home_primary_cta_label"
+    | "home_primary_cta_url",
 ) {
   return withDb(async (db) => {
     const [row] = await db
@@ -378,7 +397,12 @@ async function getSettingValue(
 }
 
 async function restoreSetting(
-  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  key:
+    | "public_layout_width"
+    | "public_surface_variant"
+    | "public_accent_theme"
+    | "home_primary_cta_label"
+    | "home_primary_cta_url",
   value: string | null,
 ) {
   await withDb(async (db) => {

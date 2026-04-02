@@ -74,7 +74,16 @@ export default async function BlogHomePage() {
         : themeFrameworkSettings.public_accent_theme === "amber"
           ? "hover:border-amber-300 dark:hover:border-amber-700"
           : "hover:border-slate-400 dark:hover:border-slate-600";
+  const ctaHoverClass =
+    themeFrameworkSettings.public_accent_theme === "blue"
+      ? "hover:border-blue-300 dark:hover:border-blue-700 focus-visible:ring-blue-500/40"
+      : themeFrameworkSettings.public_accent_theme === "emerald"
+        ? "hover:border-emerald-300 dark:hover:border-emerald-700 focus-visible:ring-emerald-500/40"
+        : themeFrameworkSettings.public_accent_theme === "amber"
+          ? "hover:border-amber-300 dark:hover:border-amber-700 focus-visible:ring-amber-500/40"
+          : "hover:border-slate-400 dark:hover:border-slate-600 focus-visible:ring-slate-500/40";
   const featuredLinkCardClass = `rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${featuredLinkHoverClass}`;
+  const ctaClass = `inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 dark:border-slate-700 ${accentClass} ${ctaHoverClass}`;
   const featuredLinks = [
     {
       label: themeFrameworkSettings.home_featured_link_1_label,
@@ -109,10 +118,7 @@ export default async function BlogHomePage() {
             </p>
           ) : null}
         </div>
-        <Link
-          className={`inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-900 ${accentClass}`}
-          href={themeFrameworkSettings.home_primary_cta_url}
-        >
+        <Link className={ctaClass} href={themeFrameworkSettings.home_primary_cta_url}>
           {themeFrameworkSettings.home_primary_cta_label}
         </Link>
       </div>
