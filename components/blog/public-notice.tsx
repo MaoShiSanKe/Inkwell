@@ -43,7 +43,7 @@ export function PublicNotice({ settings, dismissButton = null }: PublicNoticePro
             {hasLink ? (
               <Link
                 href={settings.public_notice_link_url}
-                className="inline-flex items-center justify-center rounded-lg border border-current/20 px-3 py-2 text-sm font-medium text-current transition hover:bg-white/40 dark:hover:bg-white/5"
+                className="inline-flex items-center justify-center rounded-lg border border-current/20 px-3 py-2 text-sm font-medium text-current transition hover:bg-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30 dark:hover:bg-white/5"
               >
                 {settings.public_notice_link_label}
               </Link>

@@ -85,7 +85,7 @@ export function DismissiblePublicNotice({ settings }: DismissiblePublicNoticePro
           <button
             type="button"
             aria-label="关闭站点公告"
-            className="inline-flex items-center justify-center rounded-lg border border-current/20 px-3 py-2 text-sm font-medium text-current transition hover:bg-white/40 dark:hover:bg-white/5"
+            className="inline-flex items-center justify-center rounded-lg border border-current/20 px-3 py-2 text-sm font-medium text-current transition hover:bg-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/30 dark:hover:bg-white/5"
             onClick={() => {
               if (settings.public_notice_version) {
                 window.localStorage.setItem(

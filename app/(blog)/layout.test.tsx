@@ -110,6 +110,7 @@ describe("blog layout", () => {
     expect(markup).toContain("今晚 23:00-23:30 将进行短暂维护。");
     expect(markup).toContain("查看详情");
     expect(markup).toContain('href="/docs/deployment"');
+    expect(markup).toContain("focus-visible:ring-current/30");
   });
 
   it("renders theme framework shell with configured header, footer, and default mode", async () => {

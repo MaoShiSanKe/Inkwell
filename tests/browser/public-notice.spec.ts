@@ -50,7 +50,9 @@ test.describe("settings browser regression", () => {
 
       await page.goto("/");
       await expect(page.getByRole("heading", { name: "系统维护通知" })).toBeVisible();
+      await expect(page.getByRole("link", { name: "查看详情" })).toHaveClass(/focus-visible:ring-current\/30/);
       await expect(page.getByRole("button", { name: "关闭站点公告" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "关闭站点公告" })).toHaveClass(/focus-visible:ring-current\/30/);
       await page.getByRole("button", { name: "关闭站点公告" }).click();
       await expect(page.getByRole("heading", { name: "系统维护通知" })).toHaveCount(0);
 
