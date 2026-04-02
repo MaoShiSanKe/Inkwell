@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   getSiteBrandNameMock,
   getSiteOriginMock,
+  getThemeFrameworkSettingsMock,
   resolvePublishedPostBySlugMock,
   listRelatedPublishedPostsMock,
   listApprovedCommentsForPostMock,
@@ -13,6 +14,7 @@ const {
 } = vi.hoisted(() => ({
   getSiteBrandNameMock: vi.fn(),
   getSiteOriginMock: vi.fn(),
+  getThemeFrameworkSettingsMock: vi.fn(),
   resolvePublishedPostBySlugMock: vi.fn(),
   listRelatedPublishedPostsMock: vi.fn(),
   listApprovedCommentsForPostMock: vi.fn(),
@@ -77,6 +79,7 @@ vi.mock("@/lib/blog/views", () => ({
 vi.mock("@/lib/settings", () => ({
   getSiteBrandName: getSiteBrandNameMock,
   getSiteOrigin: getSiteOriginMock,
+  getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
 }));
 
 vi.mock("@/components/blog/comment-form", () => ({
@@ -116,6 +119,8 @@ describe("blog post page", () => {
     getSiteBrandNameMock.mockResolvedValue("Inkwell Daily");
     getSiteOriginMock.mockReset();
     getSiteOriginMock.mockReturnValue("https://example.com");
+    getThemeFrameworkSettingsMock.mockReset();
+    getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     resolvePublishedPostBySlugMock.mockReset();
     listRelatedPublishedPostsMock.mockReset();
     listRelatedPublishedPostsMock.mockResolvedValue([]);
@@ -238,6 +243,10 @@ describe("blog post page", () => {
     });
     const markup = renderToStaticMarkup(element);
     const breadcrumbStart = markup.indexOf('aria-label="面包屑"');
+
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
     const postLabelStart = markup.indexOf(">Post<");
     const breadcrumbMarkup =
       breadcrumbStart >= 0 && postLabelStart > breadcrumbStart
@@ -409,6 +418,23 @@ describe("blog post page", () => {
       categoryId: 1,
       tagIds: [1, 2],
     });
+  });
+
+  it("renders themed post classes", async () => {
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData(),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("max-w-6xl");
+    expect(markup).toContain("bg-slate-100/90");
+    expect(markup).toContain("text-blue-700 dark:text-blue-300");
   });
 
   it("renders a clickable category link when the published post has a category", async () => {
@@ -696,6 +722,15 @@ type CreatePostPageDataOverrides = {
     slug: string;
   }>;
 };
+
+function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
+  return {
+    public_layout_width: "wide",
+    public_surface_variant: "solid",
+    public_accent_theme: "blue",
+    ...overrides,
+  };
+}
 
 function createPostPageData(overrides: CreatePostPageDataOverrides = {}) {
   const {

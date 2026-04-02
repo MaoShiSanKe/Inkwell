@@ -26,7 +26,12 @@ import {
 } from "@/lib/blog/post-seo";
 import { parsePostContentForToc } from "@/lib/blog/post-toc";
 import { getPublishedPostViewCount, recordPublishedPostView } from "@/lib/blog/views";
-import { getSiteBrandName, getSiteOrigin } from "@/lib/settings";
+import { getSiteBrandName, getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
+import {
+  resolveAccentClass,
+  resolveContentWidthClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type PostPageProps = {
   params: Promise<{
@@ -168,6 +173,10 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   const canonicalUrl = resolveCanonicalUrl(post, siteOrigin);
   const description = resolvePostDescription(post);
   const imageUrl = resolveImageUrl(post.ogImage, siteOrigin);
+  const themeFrameworkSettings = await getThemeFrameworkSettings();
+  const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
+  const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
+  const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
   const breadcrumbItems = buildBreadcrumbItems(post);
   const articleJsonLd = buildArticleJsonLd(
     post,
@@ -179,7 +188,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   const breadcrumbJsonLd = buildBreadcrumbListJsonLd(breadcrumbItems, siteOrigin);
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-6 py-16">
+    <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-4 px-6 py-16`}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -194,7 +203,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
       />
       <nav
         aria-label="面包屑"
-        className="rounded-2xl border border-slate-200 px-6 py-4 dark:border-slate-800"
+        className={`rounded-2xl border px-6 py-4 ${surfaceClass}`}
       >
         <ol className="flex flex-wrap items-center gap-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
           {breadcrumbItems.map((item, index) => {
@@ -212,10 +221,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
                     {item.name}
                   </span>
                 ) : (
-                  <Link
-                    className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400"
-                    href={item.path}
-                  >
+                  <Link className={`underline underline-offset-4 ${accentClass}`} href={item.path}>
                     {item.name}
                   </Link>
                 )}
@@ -224,7 +230,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           })}
         </ol>
       </nav>
-      <p className="text-sm uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+      <p className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>
         Post
       </p>
       <h1 className="text-3xl font-semibold tracking-tight">{post.title}</h1>
@@ -233,25 +239,16 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           {post.excerpt}
         </p>
       ) : null}
-      <Link
-        className="text-sm text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
-        href={`/author/${post.author.slug}`}
-      >
+      <Link className={`text-sm hover:underline ${accentClass}`} href={`/author/${post.author.slug}`}>
         作者：{post.author.displayName}
       </Link>
       {post.category ? (
-        <Link
-          className="text-sm text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
-          href={`/category/${post.category.slug}`}
-        >
+        <Link className={`text-sm hover:underline ${accentClass}`} href={`/category/${post.category.slug}`}>
           分类：{post.category.name}
         </Link>
       ) : null}
       {post.series ? (
-        <Link
-          className="text-sm text-slate-500 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
-          href={`/series/${post.series.slug}`}
-        >
+        <Link className={`text-sm hover:underline ${accentClass}`} href={`/series/${post.series.slug}`}>
           系列：{post.series.name}
         </Link>
       ) : null}
@@ -275,7 +272,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           {post.tags.map((tag) => (
             <Link
               key={tag.id}
-              className="inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-600 transition hover:border-slate-400 hover:text-slate-900 dark:border-slate-700 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:text-slate-100"
+              className={`inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm transition hover:border-slate-400 ${accentClass}`}
               href={`/tag/${tag.slug}`}
             >
               {tag.name}
@@ -284,7 +281,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         </section>
       ) : null}
       {hasTableOfContents ? <PostTableOfContents items={parsedContent.tocItems} /> : null}
-      <article className="flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 text-base leading-7 dark:border-slate-800">
+      <article className={`flex flex-col gap-4 rounded-2xl border px-6 py-5 text-base leading-7 ${surfaceClass}`}>
         {shouldRenderParsedContent ? (
           parsedContent.blocks.map((block, index) => {
             if (block.type === "heading") {
@@ -305,7 +302,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
 
             if (block.type === "image") {
               return (
-                <figure key={`${index}-${block.url}`} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800">
+                <figure key={`${index}-${block.url}`} className={`overflow-hidden rounded-2xl border ${surfaceClass}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img className="h-auto w-full" src={block.url} alt={block.altText} />
                 </figure>
@@ -325,7 +322,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
 
       <PostLikeButton postId={post.id} postSlug={post.slug} initialLikeCount={likeCount} />
 
-      <section className="mt-6 flex flex-col gap-4 rounded-2xl border border-slate-200 px-6 py-5 dark:border-slate-800">
+      <section className={`mt-6 flex flex-col gap-4 rounded-2xl border px-6 py-5 ${surfaceClass}`}>
         <div className="flex flex-col gap-2">
           <h2 className="text-2xl font-semibold tracking-tight">相关文章</h2>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -340,7 +337,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
             {relatedPosts.map((relatedPost) => (
               <article key={relatedPost.id} className="flex flex-col gap-2">
                 <h3 className="text-lg font-semibold tracking-tight">
-                  <Link className="hover:underline" href={`/post/${relatedPost.slug}`}>
+                  <Link className={`hover:underline ${accentClass}`} href={`/post/${relatedPost.slug}`}>
                     {relatedPost.title}
                   </Link>
                 </h3>

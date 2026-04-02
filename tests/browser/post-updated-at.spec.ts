@@ -8,7 +8,13 @@ import { config as loadEnv } from "dotenv";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
-import { posts, users } from "../../lib/db/schema";
+import { posts, settings, users } from "../../lib/db/schema";
+
+type ThemeSettingsSnapshot = {
+  public_layout_width: string | null;
+  public_surface_variant: string | null;
+  public_accent_theme: string | null;
+};
 
 const testEnvPath = resolveTestEnvPath();
 
@@ -22,16 +28,29 @@ assertSafeTestConnection(testEnvPath, getConnectionInfo(databaseUrl));
 test.describe("post updated timestamp browser regression", () => {
   test("shows the last updated timestamp on the public post page", async ({ page }) => {
     let fixture: PostUpdatedAtFixture | null = null;
+    let originalThemeSettings: ThemeSettingsSnapshot | null = null;
 
     try {
       fixture = await seedPostUpdatedAtFixture(`${Date.now()}-${randomUUID().slice(0, 8)}`);
 
+      originalThemeSettings = await captureThemeSettings();
+      await applyThemeSettings({
+        public_layout_width: "wide",
+        public_surface_variant: "solid",
+        public_accent_theme: "blue",
+      });
+
       await page.goto(`/post/${fixture.slug}`);
 
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
+      await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
+      await expect(page.getByText("Post", { exact: true })).toHaveClass(/text-blue-700/);
       await expect(page.getByText("最后更新：")).toBeVisible();
       await expect(page.locator(`time[datetime="${fixture.updatedAtIso}"]`)).toBeVisible();
     } finally {
+      if (originalThemeSettings) {
+        await cleanupThemeSettings(originalThemeSettings);
+      }
       if (fixture) {
         await cleanupPostUpdatedAtFixture(fixture);
       }
@@ -97,10 +116,77 @@ async function cleanupPostUpdatedAtFixture(fixture: PostUpdatedAtFixture) {
   });
 }
 
+async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
+  return {
+    public_layout_width: await getSettingValue("public_layout_width"),
+    public_surface_variant: await getSettingValue("public_surface_variant"),
+    public_accent_theme: await getSettingValue("public_accent_theme"),
+  };
+}
+
+async function applyThemeSettings(values: {
+  public_layout_width: "narrow" | "default" | "wide";
+  public_surface_variant: "soft" | "solid";
+  public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+}) {
+  await restoreSetting("public_layout_width", values.public_layout_width);
+  await restoreSetting("public_surface_variant", values.public_surface_variant);
+  await restoreSetting("public_accent_theme", values.public_accent_theme);
+}
+
+async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
+  await restoreSetting("public_layout_width", snapshot.public_layout_width);
+  await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
+  await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+}
+
+async function getSettingValue(
+  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+) {
+  return withDb(async (db) => {
+    const [row] = await db
+      .select({ value: settings.value })
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+
+    return row?.value ?? null;
+  });
+}
+
+async function restoreSetting(
+  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  value: string | null,
+) {
+  await withDb(async (db) => {
+    if (value === null) {
+      await db.delete(settings).where(eq(settings.key, key));
+      return;
+    }
+
+    await db
+      .insert(settings)
+      .values({
+        key,
+        value,
+        isSecret: false,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value,
+          isSecret: false,
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
 async function withDb<T>(callback: (db: ReturnType<typeof drizzle>) => Promise<T>) {
   const client = postgres(databaseUrl, { max: 1 });
   const db = drizzle(client, {
-    schema: { posts, users },
+    schema: { posts, settings, users },
     casing: "snake_case",
   });
 
