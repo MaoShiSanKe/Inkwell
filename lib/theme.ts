@@ -83,6 +83,15 @@ export function resolvePostsDensityTokens(variant: "comfortable" | "compact") {
   };
 }
 
+export function resolveFeaturedLinksDensityTokens(variant: "comfortable" | "compact") {
+  return {
+    cardPaddingClass: variant === "compact" ? "px-4 py-3" : "px-5 py-4",
+    gridGapClass: variant === "compact" ? "gap-3" : "gap-4",
+    titleClass: variant === "compact" ? "text-xs" : "text-sm",
+    descriptionClass: variant === "compact" ? "text-xs leading-6" : "text-sm leading-7",
+  };
+}
+
 export function resolveLongformDensityTokens(variant: PublicLongformVariant) {
   return {
     articlePaddingClass: variant === "compact" ? "px-5 py-4" : "px-6 py-5",

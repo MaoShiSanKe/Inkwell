@@ -184,6 +184,7 @@ export async function getThemeFrameworkSettings(): Promise<ThemeFrameworkSetting
     home_featured_link_3_url: values.home_featured_link_3_url,
     home_featured_link_3_description: values.home_featured_link_3_description,
     home_posts_variant: values.home_posts_variant,
+    home_featured_links_variant: values.home_featured_links_variant,
     home_show_post_excerpt: values.home_show_post_excerpt,
     home_show_post_author: values.home_show_post_author,
     home_show_post_category: values.home_show_post_category,

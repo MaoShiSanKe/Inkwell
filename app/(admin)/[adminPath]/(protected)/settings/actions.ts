@@ -109,6 +109,9 @@ export async function saveSettingsAction(
     home_posts_variant: String(formData.get("home_posts_variant") ?? "comfortable") as
       | "comfortable"
       | "compact",
+    home_featured_links_variant: String(formData.get("home_featured_links_variant") ?? "comfortable") as
+      | "comfortable"
+      | "compact",
     home_show_post_excerpt: String(formData.get("home_show_post_excerpt") ?? "true") as
       | "true"
       | "false",

@@ -24,6 +24,7 @@ type ThemeSettingsSnapshot = {
   public_surface_variant: string | null;
   public_accent_theme: string | null;
   public_archive_posts_variant: string | null;
+  home_featured_links_variant: string | null;
   home_primary_cta_label: string | null;
   home_primary_cta_url: string | null;
 };
@@ -39,6 +40,7 @@ test.describe("public archive pages", () => {
         public_surface_variant: "solid",
         public_accent_theme: "blue",
         public_archive_posts_variant: "compact",
+        home_featured_links_variant: "compact",
         home_primary_cta_label: "查看订阅",
         home_primary_cta_url: "/newsletter",
       });
@@ -48,6 +50,8 @@ test.describe("public archive pages", () => {
       await expect(page.getByRole("link", { name: "查看订阅" })).toHaveClass(/focus-visible:ring-blue-500\/40/);
       await expect(page.getByRole("link", { name: "查看订阅" })).toHaveClass(/hover:border-blue-300/);
       await expect(page.getByRole("link", { name: "查看分类" })).toHaveClass(/hover:border-blue-300/);
+      await expect(page.getByRole("link", { name: "查看分类" })).toHaveClass(/px-4/);
+      await expect(page.getByRole("link", { name: "查看分类" })).toHaveClass(/py-3/);
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toHaveClass(/underline-offset-4/);
       await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
@@ -357,6 +361,7 @@ async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
     public_surface_variant: await getSettingValue("public_surface_variant"),
     public_accent_theme: await getSettingValue("public_accent_theme"),
     public_archive_posts_variant: await getSettingValue("public_archive_posts_variant"),
+    home_featured_links_variant: await getSettingValue("home_featured_links_variant"),
     home_primary_cta_label: await getSettingValue("home_primary_cta_label"),
     home_primary_cta_url: await getSettingValue("home_primary_cta_url"),
   };
@@ -367,6 +372,7 @@ async function applyThemeSettings(values: {
   public_surface_variant: "soft" | "solid";
   public_accent_theme: "slate" | "blue" | "emerald" | "amber";
   public_archive_posts_variant: "comfortable" | "compact";
+  home_featured_links_variant: "comfortable" | "compact";
   home_primary_cta_label: string;
   home_primary_cta_url: string;
 }) {
@@ -374,6 +380,7 @@ async function applyThemeSettings(values: {
   await restoreSetting("public_surface_variant", values.public_surface_variant);
   await restoreSetting("public_accent_theme", values.public_accent_theme);
   await restoreSetting("public_archive_posts_variant", values.public_archive_posts_variant);
+  await restoreSetting("home_featured_links_variant", values.home_featured_links_variant);
   await restoreSetting("home_primary_cta_label", values.home_primary_cta_label);
   await restoreSetting("home_primary_cta_url", values.home_primary_cta_url);
 }
@@ -383,6 +390,7 @@ async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
   await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
   await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
   await restoreSetting("public_archive_posts_variant", snapshot.public_archive_posts_variant);
+  await restoreSetting("home_featured_links_variant", snapshot.home_featured_links_variant);
   await restoreSetting("home_primary_cta_label", snapshot.home_primary_cta_label);
   await restoreSetting("home_primary_cta_url", snapshot.home_primary_cta_url);
 }
@@ -393,6 +401,7 @@ async function getSettingValue(
     | "public_surface_variant"
     | "public_accent_theme"
     | "public_archive_posts_variant"
+    | "home_featured_links_variant"
     | "home_primary_cta_label"
     | "home_primary_cta_url",
 ) {
@@ -413,6 +422,7 @@ async function restoreSetting(
     | "public_surface_variant"
     | "public_accent_theme"
     | "public_archive_posts_variant"
+    | "home_featured_links_variant"
     | "home_primary_cta_label"
     | "home_primary_cta_url",
   value: string | null,

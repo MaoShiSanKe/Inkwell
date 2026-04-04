@@ -196,6 +196,7 @@ Theme Framework v1 当前已经覆盖：
 - 页头品牌区 / 页脚说明区
 - 首页 Hero 与主 CTA
 - 首页精选入口区块（三张固定卡片）
+- 首页精选入口区块 `comfortable | compact` 变体
 - 首页文章列表 `comfortable | compact` 变体
 - 首页摘要 / 作者 / 分类 / 发布时间开关
 - 归档 / 搜索结果列表 `comfortable | compact` 变体

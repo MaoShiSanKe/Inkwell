@@ -623,6 +623,21 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
             </label>
 
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+              首页精选入口展示模式
+              <select
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_featured_links_variant"
+                defaultValue={state.values.home_featured_links_variant}
+              >
+                <option value="comfortable">舒展</option>
+                <option value="compact">紧凑</option>
+              </select>
+              {state.errors.home_featured_links_variant ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_links_variant}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
               归档列表展示模式
               <select
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"

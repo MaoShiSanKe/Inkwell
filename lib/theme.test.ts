@@ -5,6 +5,7 @@ import {
   resolveAccentClass,
   resolveContentWidthClass,
   resolveEmptyStateSurfaceClass,
+  resolveFeaturedLinksDensityTokens,
   resolveFieldSurfaceClass,
   resolveLongformDensityTokens,
   resolvePostsDensityTokens,
@@ -67,6 +68,21 @@ describe("theme helpers", () => {
       bodyTextClass: "text-sm leading-6",
       heading2Class: "text-xl",
       heading3Class: "text-lg",
+    });
+  });
+
+  it("resolves featured links density tokens", () => {
+    expect(resolveFeaturedLinksDensityTokens("comfortable")).toEqual({
+      cardPaddingClass: "px-5 py-4",
+      gridGapClass: "gap-4",
+      titleClass: "text-sm",
+      descriptionClass: "text-sm leading-7",
+    });
+    expect(resolveFeaturedLinksDensityTokens("compact")).toEqual({
+      cardPaddingClass: "px-4 py-3",
+      gridGapClass: "gap-3",
+      titleClass: "text-xs",
+      descriptionClass: "text-xs leading-6",
     });
   });
 

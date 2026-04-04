@@ -1,6 +1,7 @@
 export type CommentModerationMode = "pending" | "approved";
 export type PublicNoticeVariant = "info" | "warning" | "success";
 export type HomePostsVariant = "comfortable" | "compact";
+export type HomeFeaturedLinksVariant = "comfortable" | "compact";
 export type PublicArchivePostsVariant = "comfortable" | "compact";
 export type PublicLongformVariant = "comfortable" | "compact";
 export type PublicLayoutWidth = "narrow" | "default" | "wide";
@@ -198,6 +199,14 @@ function parsePublicNoticeVariant(value: string): PublicNoticeVariant {
 function parseHomePostsVariant(value: string): HomePostsVariant {
   if (value !== "comfortable" && value !== "compact") {
     throw new Error("home_posts_variant must be either comfortable or compact.");
+  }
+
+  return value;
+}
+
+function parseHomeFeaturedLinksVariant(value: string): HomeFeaturedLinksVariant {
+  if (value !== "comfortable" && value !== "compact") {
+    throw new Error("home_featured_links_variant must be either comfortable or compact.");
   }
 
   return value;
@@ -468,6 +477,12 @@ export const settingDefinitions = {
     parse: (value: string) => parseHomePostsVariant(value),
     serialize: (value: HomePostsVariant) => parseHomePostsVariant(value),
   }),
+  home_featured_links_variant: defineSetting({
+    defaultValue: "comfortable" as HomeFeaturedLinksVariant,
+    isSecret: false,
+    parse: (value: string) => parseHomeFeaturedLinksVariant(value),
+    serialize: (value: HomeFeaturedLinksVariant) => parseHomeFeaturedLinksVariant(value),
+  }),
   home_show_post_excerpt: defineSetting({
     defaultValue: true,
     isSecret: false,
@@ -663,6 +678,7 @@ export type ThemeFrameworkSettings = Pick<
   | "home_featured_link_3_url"
   | "home_featured_link_3_description"
   | "home_posts_variant"
+  | "home_featured_links_variant"
   | "home_show_post_excerpt"
   | "home_show_post_author"
   | "home_show_post_category"
@@ -731,6 +747,7 @@ export const DEFAULT_SETTINGS: SettingValues = {
   home_featured_link_3_url: settingDefinitions.home_featured_link_3_url.defaultValue,
   home_featured_link_3_description: settingDefinitions.home_featured_link_3_description.defaultValue,
   home_posts_variant: settingDefinitions.home_posts_variant.defaultValue,
+  home_featured_links_variant: settingDefinitions.home_featured_links_variant.defaultValue,
   home_show_post_excerpt: settingDefinitions.home_show_post_excerpt.defaultValue,
   home_show_post_author: settingDefinitions.home_show_post_author.defaultValue,
   home_show_post_category: settingDefinitions.home_show_post_category.defaultValue,

@@ -1,5 +1,6 @@
 import type {
   EmailNotificationScenario,
+  HomeFeaturedLinksVariant,
   HomePostsVariant,
   PublicAccentTheme,
   PublicArchivePostsVariant,
@@ -47,6 +48,7 @@ export type SettingsFormValues = {
   home_featured_link_3_url: string;
   home_featured_link_3_description: string;
   home_posts_variant: HomePostsVariant;
+  home_featured_links_variant: HomeFeaturedLinksVariant;
   home_show_post_excerpt: "true" | "false";
   home_show_post_author: "true" | "false";
   home_show_post_category: "true" | "false";
@@ -125,6 +127,7 @@ export const initialSettingsFormValues: SettingsFormValues = {
   home_featured_link_3_url: "/friend-links",
   home_featured_link_3_description: "发现更多值得关注的站点与作者。",
   home_posts_variant: "comfortable",
+  home_featured_links_variant: "comfortable",
   home_show_post_excerpt: "true",
   home_show_post_author: "true",
   home_show_post_category: "true",

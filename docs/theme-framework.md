@@ -113,7 +113,17 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 - `compact` 使用更紧凑的正文阅读节奏，但不改变文章信息结构、目录逻辑或评论/相关文章模块的存在方式
 - 该 setting 复用 `lib/theme.ts` 中的 `resolveLongformDensityTokens()`，继续保持 v1 的“有限变体、固定结构”边界
 
-### 2.6 默认主题模式
+### 2.6 首页精选入口展示
+由以下 setting 驱动：
+- `home_featured_links_variant` → `comfortable | compact`
+
+当前行为：
+- 首页 Hero 下方三张精选入口卡片共享同一组密度 token
+- `comfortable` 保持更宽松的卡片 padding、网格间距与说明文字节奏
+- `compact` 使用更紧凑的卡片节奏，但不改变固定三卡结构与入口配置方式
+- 该 setting 复用 `lib/theme.ts` 中的 `resolveFeaturedLinksDensityTokens()`，继续维持 v1 的固定结构边界
+
+### 2.7 默认主题模式
 由以下 setting 驱动：
 - `public_theme_default_mode` → `system | light | dark`
 

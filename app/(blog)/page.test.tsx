@@ -126,6 +126,24 @@ describe("blog home page", () => {
     expect(markup).not.toContain("datetime=\"2026-03-26T12:00:00.000Z\"");
   });
 
+  it("renders compact featured link cards", async () => {
+    getThemeFrameworkSettingsMock.mockResolvedValue(
+      createThemeFrameworkSettings({
+        home_featured_links_variant: "compact",
+      }),
+    );
+    listPublishedPostsMock.mockResolvedValue([createPostListItem()]);
+
+    const { default: BlogHomePage } = await import("./page");
+    const element = await BlogHomePage();
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("px-4 py-3");
+    expect(markup).toContain("grid gap-3 md:grid-cols-3");
+    expect(markup).toContain("text-xs uppercase tracking-[0.2em]");
+    expect(markup).toContain("text-xs leading-6 text-slate-600 dark:text-slate-300");
+  });
+
   it("renders the empty state when no published posts exist", async () => {
     listPublishedPostsMock.mockResolvedValue([]);
 
@@ -160,6 +178,7 @@ function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
     home_featured_link_3_url: "/friend-links",
     home_featured_link_3_description: "发现更多值得关注的站点与作者。",
     home_posts_variant: "comfortable",
+    home_featured_links_variant: "comfortable",
     home_show_post_excerpt: true,
     home_show_post_author: true,
     home_show_post_category: true,

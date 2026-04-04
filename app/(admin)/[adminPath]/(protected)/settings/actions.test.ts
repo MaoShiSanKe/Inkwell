@@ -139,6 +139,7 @@ describe("admin settings actions", () => {
         home_primary_cta_label: "立即订阅",
         home_primary_cta_url: "/subscribe",
         home_posts_variant: "compact",
+        home_featured_links_variant: "compact",
         home_show_post_excerpt: "false",
         home_show_post_author: "true",
         home_show_post_category: "true",
@@ -338,6 +339,7 @@ function createFormData(
     home_primary_cta_label: string;
     home_primary_cta_url: string;
     home_posts_variant: string;
+    home_featured_links_variant: string;
     home_show_post_excerpt: string;
     home_show_post_author: string;
     home_show_post_category: string;
@@ -392,6 +394,7 @@ function createFormData(
     home_primary_cta_label: "立即订阅",
     home_primary_cta_url: "/subscribe",
     home_posts_variant: "compact",
+    home_featured_links_variant: "compact",
     home_show_post_excerpt: "false",
     home_show_post_author: "true",
     home_show_post_category: "true",
@@ -447,6 +450,7 @@ function createFormData(
   formData.set("home_primary_cta_label", values.home_primary_cta_label);
   formData.set("home_primary_cta_url", values.home_primary_cta_url);
   formData.set("home_posts_variant", values.home_posts_variant);
+  formData.set("home_featured_links_variant", values.home_featured_links_variant);
   formData.set("home_show_post_excerpt", values.home_show_post_excerpt);
   formData.set("home_show_post_author", values.home_show_post_author);
   formData.set("home_show_post_category", values.home_show_post_category);

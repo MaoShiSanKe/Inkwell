@@ -43,6 +43,7 @@ const SETTINGS_KEYS = [
   "home_featured_link_3_url",
   "home_featured_link_3_description",
   "home_posts_variant",
+  "home_featured_links_variant",
   "home_show_post_excerpt",
   "home_show_post_author",
   "home_show_post_category",
@@ -153,6 +154,9 @@ describe("admin settings write paths", () => {
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ??
         "comfortable",
+      home_featured_links_variant:
+        (originalSettings.home_featured_links_variant as "comfortable" | "compact" | null) ??
+        "comfortable",
       home_show_post_excerpt:
         (originalSettings.home_show_post_excerpt === "false" ? "false" : "true") as "true" | "false",
       home_show_post_author:
@@ -239,6 +243,7 @@ describe("admin settings write paths", () => {
       home_featured_link_3_url: "/friend-links",
       home_featured_link_3_description: "发现更多值得关注的站点与作者。",
       home_posts_variant: "compact",
+      home_featured_links_variant: "compact",
       home_show_post_excerpt: "false",
       home_show_post_author: "true",
       home_show_post_category: "true",
@@ -282,6 +287,7 @@ describe("admin settings write paths", () => {
         expect.objectContaining({ key: "home_featured_links_title", value: "精选入口" }),
         expect.objectContaining({ key: "home_featured_link_1_url", value: "/category" }),
         expect.objectContaining({ key: "home_posts_variant", value: "compact" }),
+        expect.objectContaining({ key: "home_featured_links_variant", value: "compact" }),
         expect.objectContaining({ key: "public_archive_posts_variant", value: "compact" }),
         expect.objectContaining({ key: "public_longform_variant", value: "compact" }),
         expect.objectContaining({ key: "public_layout_width", value: "wide" }),

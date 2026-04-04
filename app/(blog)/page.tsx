@@ -11,6 +11,7 @@ import {
   resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveEmptyStateSurfaceClass,
+  resolveFeaturedLinksDensityTokens,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -76,7 +77,13 @@ export default async function BlogHomePage() {
   );
   const emptyStateClass = `rounded-2xl border border-dashed px-6 py-12 text-center ${emptyStateSurfaceClass}`;
   const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
-  const featuredLinkCardClass = `rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
+  const {
+    cardPaddingClass: featuredLinkCardPaddingClass,
+    gridGapClass: featuredLinksGridGapClass,
+    titleClass: featuredLinkTitleClass,
+    descriptionClass: featuredLinkDescriptionClass,
+  } = resolveFeaturedLinksDensityTokens(themeFrameworkSettings.home_featured_links_variant);
+  const featuredLinkCardClass = `rounded-2xl border ${featuredLinkCardPaddingClass} transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
   const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const ctaClass = `inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 dark:border-slate-700 ${accentClass} ${accentBorderHoverClass} ${accentFocusRingClass}`;
@@ -131,7 +138,7 @@ export default async function BlogHomePage() {
               </p>
             ) : null}
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className={`grid ${featuredLinksGridGapClass} md:grid-cols-3`}>
             {featuredLinks.map((item) => (
               <Link
                 key={item.url}
@@ -139,11 +146,11 @@ export default async function BlogHomePage() {
                 className={featuredLinkCardClass}
               >
                 <div className="flex flex-col gap-2">
-                  <span className={`text-sm uppercase tracking-[0.2em] ${accentClass}`}>
+                  <span className={`${featuredLinkTitleClass} uppercase tracking-[0.2em] ${accentClass}`}>
                     {item.label}
                   </span>
                   {item.description ? (
-                    <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                    <p className={`${featuredLinkDescriptionClass} text-slate-600 dark:text-slate-300`}>
                       {item.description}
                     </p>
                   ) : null}

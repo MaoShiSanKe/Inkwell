@@ -115,6 +115,8 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
       input.home_featured_link_3_description?.trim() ?? "发现更多值得关注的站点与作者。",
     home_posts_variant:
       input.home_posts_variant?.trim() === "compact" ? "compact" : "comfortable",
+    home_featured_links_variant:
+      input.home_featured_links_variant?.trim() === "compact" ? "compact" : "comfortable",
     home_show_post_excerpt:
       input.home_show_post_excerpt?.trim() === "false" ? "false" : "true",
     home_show_post_author:
@@ -221,6 +223,7 @@ function toFormValues(values: SettingValues): SettingsFormValues {
     home_featured_link_3_url: values.home_featured_link_3_url,
     home_featured_link_3_description: values.home_featured_link_3_description,
     home_posts_variant: values.home_posts_variant,
+    home_featured_links_variant: values.home_featured_links_variant,
     home_show_post_excerpt: values.home_show_post_excerpt ? "true" : "false",
     home_show_post_author: values.home_show_post_author ? "true" : "false",
     home_show_post_category: values.home_show_post_category ? "true" : "false",
@@ -317,6 +320,8 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
       return "首页精选入口说明格式无效。";
     case "home_posts_variant":
       return "首页文章展示模式无效。";
+    case "home_featured_links_variant":
+      return "首页精选入口展示模式无效。";
     case "home_show_post_excerpt":
       return "首页摘要开关无效。";
     case "home_show_post_author":
@@ -421,6 +426,7 @@ function validateSettingsInput(values: SettingsFormValues):
     home_featured_link_3_url: values.home_featured_link_3_url,
     home_featured_link_3_description: values.home_featured_link_3_description,
     home_posts_variant: values.home_posts_variant,
+    home_featured_links_variant: values.home_featured_links_variant,
     home_show_post_excerpt: values.home_show_post_excerpt,
     home_show_post_author: values.home_show_post_author,
     home_show_post_category: values.home_show_post_category,
@@ -675,6 +681,7 @@ export async function updateAdminSettings(
         nextSettings.home_featured_link_3_url !== currentSettings.home_featured_link_3_url ||
         nextSettings.home_featured_link_3_description !== currentSettings.home_featured_link_3_description ||
         nextSettings.home_posts_variant !== currentSettings.home_posts_variant ||
+        nextSettings.home_featured_links_variant !== currentSettings.home_featured_links_variant ||
         nextSettings.home_show_post_excerpt !== currentSettings.home_show_post_excerpt ||
         nextSettings.home_show_post_author !== currentSettings.home_show_post_author ||
         nextSettings.home_show_post_category !== currentSettings.home_show_post_category ||
