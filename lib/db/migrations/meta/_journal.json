@@ -29,6 +29,13 @@
       "when": 1774880950602,
       "tag": "0003_fine_jean_grey",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775320650917,
+      "tag": "0004_sharp_thunderbolts",
+      "breakpoints": true
     }
   ]
 }
