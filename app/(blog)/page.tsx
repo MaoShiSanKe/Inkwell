@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-seo";
 import { listPublishedPosts } from "@/lib/blog/posts";
+import { listRecommendedStandalonePages } from "@/lib/blog/pages";
 import { getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
 import {
   resolveAccentBorderHoverClass,
@@ -56,6 +57,11 @@ export default async function BlogHomePage() {
   const [posts, themeFrameworkSettings] = await Promise.all([
     listPublishedPosts(),
     getThemeFrameworkSettings(),
+  ]);
+  const recommendedPages = await listRecommendedStandalonePages([
+    themeFrameworkSettings.home_recommended_page_1_id,
+    themeFrameworkSettings.home_recommended_page_2_id,
+    themeFrameworkSettings.home_recommended_page_3_id,
   ]);
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
@@ -148,6 +154,37 @@ export default async function BlogHomePage() {
                 <div className="flex flex-col gap-2">
                   <span className={`${featuredLinkTitleClass} uppercase tracking-[0.2em] ${accentClass}`}>
                     {item.label}
+                  </span>
+                  {item.description ? (
+                    <p className={`${featuredLinkDescriptionClass} text-slate-600 dark:text-slate-300`}>
+                      {item.description}
+                    </p>
+                  ) : null}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {recommendedPages.length > 0 ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {themeFrameworkSettings.home_recommended_pages_title}
+            </h2>
+            {themeFrameworkSettings.home_recommended_pages_description ? (
+              <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
+                {themeFrameworkSettings.home_recommended_pages_description}
+              </p>
+            ) : null}
+          </div>
+          <div className={`grid ${featuredLinksGridGapClass} md:grid-cols-3`}>
+            {recommendedPages.map((item) => (
+              <Link key={item.id} href={`/${item.slug}`} className={featuredLinkCardClass}>
+                <div className="flex flex-col gap-2">
+                  <span className={`${featuredLinkTitleClass} uppercase tracking-[0.2em] ${accentClass}`}>
+                    {item.title}
                   </span>
                   {item.description ? (
                     <p className={`${featuredLinkDescriptionClass} text-slate-600 dark:text-slate-300`}>

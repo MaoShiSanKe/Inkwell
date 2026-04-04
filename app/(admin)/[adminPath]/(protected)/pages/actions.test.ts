@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getAdminPathMock, getAdminSessionMock, redirectMock } = vi.hoisted(() => ({
+const { getAdminPathMock, getAdminSessionMock, redirectMock, revalidatePathMock } = vi.hoisted(() => ({
   getAdminPathMock: vi.fn(),
   getAdminSessionMock: vi.fn(),
   redirectMock: vi.fn((destination: string) => {
     throw new RedirectSignal(destination);
   }),
+  revalidatePathMock: vi.fn(),
 }));
 
 class RedirectSignal extends Error {
@@ -19,7 +20,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("next/cache", () => ({
-  revalidatePath: vi.fn(),
+  revalidatePath: revalidatePathMock,
 }));
 
 vi.mock("@/lib/settings", () => ({
@@ -43,6 +44,7 @@ describe("admin custom page actions", () => {
     getAdminPathMock.mockResolvedValue("admin");
     getAdminSessionMock.mockReset();
     redirectMock.mockClear();
+    revalidatePathMock.mockClear();
   });
 
   it("redirects unauthenticated users to admin login on create", async () => {
@@ -55,5 +57,23 @@ describe("admin custom page actions", () => {
     await expect(createPageAction({ values: {} as never, errors: {} }, formData)).rejects.toMatchObject({
       destination: "/admin/login?redirect=%2Fadmin%2Fpages%2Fnew",
     });
+  });
+
+  it("revalidates homepage after creating a page", async () => {
+    getAdminSessionMock.mockResolvedValue({ isAuthenticated: true });
+    const formData = new FormData();
+    formData.set("adminPath", "admin");
+    formData.set("title", "About");
+    formData.set("slug", "about");
+    formData.set("content", "Body");
+    formData.set("status", "published");
+
+    const { createPageAction } = await import("./actions");
+
+    await expect(createPageAction({ values: {} as never, errors: {} }, formData)).rejects.toMatchObject({
+      destination: "/admin/pages?created=1",
+    });
+
+    expect(revalidatePathMock).toHaveBeenCalledWith("/");
   });
 });

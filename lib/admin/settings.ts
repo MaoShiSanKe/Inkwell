@@ -113,6 +113,12 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
     home_featured_link_3_url: input.home_featured_link_3_url?.trim() ?? "/friend-links",
     home_featured_link_3_description:
       input.home_featured_link_3_description?.trim() ?? "发现更多值得关注的站点与作者。",
+    home_recommended_pages_title: input.home_recommended_pages_title?.trim() ?? "推荐页面",
+    home_recommended_pages_description:
+      input.home_recommended_pages_description?.trim() ?? "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+    home_recommended_page_1_id: input.home_recommended_page_1_id?.trim() ?? "",
+    home_recommended_page_2_id: input.home_recommended_page_2_id?.trim() ?? "",
+    home_recommended_page_3_id: input.home_recommended_page_3_id?.trim() ?? "",
     home_posts_variant:
       input.home_posts_variant?.trim() === "compact" ? "compact" : "comfortable",
     home_featured_links_variant:
@@ -222,6 +228,11 @@ function toFormValues(values: SettingValues): SettingsFormValues {
     home_featured_link_3_label: values.home_featured_link_3_label,
     home_featured_link_3_url: values.home_featured_link_3_url,
     home_featured_link_3_description: values.home_featured_link_3_description,
+    home_recommended_pages_title: values.home_recommended_pages_title,
+    home_recommended_pages_description: values.home_recommended_pages_description,
+    home_recommended_page_1_id: values.home_recommended_page_1_id ? String(values.home_recommended_page_1_id) : "",
+    home_recommended_page_2_id: values.home_recommended_page_2_id ? String(values.home_recommended_page_2_id) : "",
+    home_recommended_page_3_id: values.home_recommended_page_3_id ? String(values.home_recommended_page_3_id) : "",
     home_posts_variant: values.home_posts_variant,
     home_featured_links_variant: values.home_featured_links_variant,
     home_show_post_excerpt: values.home_show_post_excerpt ? "true" : "false",
@@ -318,6 +329,14 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
     case "home_featured_link_2_description":
     case "home_featured_link_3_description":
       return "首页精选入口说明格式无效。";
+    case "home_recommended_pages_title":
+      return "首页推荐页面标题格式无效。";
+    case "home_recommended_pages_description":
+      return "首页推荐页面说明格式无效。";
+    case "home_recommended_page_1_id":
+    case "home_recommended_page_2_id":
+    case "home_recommended_page_3_id":
+      return "首页推荐页面选择无效。";
     case "home_posts_variant":
       return "首页文章展示模式无效。";
     case "home_featured_links_variant":
@@ -425,6 +444,11 @@ function validateSettingsInput(values: SettingsFormValues):
     home_featured_link_3_label: values.home_featured_link_3_label,
     home_featured_link_3_url: values.home_featured_link_3_url,
     home_featured_link_3_description: values.home_featured_link_3_description,
+    home_recommended_pages_title: values.home_recommended_pages_title,
+    home_recommended_pages_description: values.home_recommended_pages_description,
+    home_recommended_page_1_id: values.home_recommended_page_1_id,
+    home_recommended_page_2_id: values.home_recommended_page_2_id,
+    home_recommended_page_3_id: values.home_recommended_page_3_id,
     home_posts_variant: values.home_posts_variant,
     home_featured_links_variant: values.home_featured_links_variant,
     home_show_post_excerpt: values.home_show_post_excerpt,
@@ -484,6 +508,18 @@ function validateSettingsInput(values: SettingsFormValues):
 
   if (!parsed.home_primary_cta_url) {
     errors.home_primary_cta_url = "首页主按钮链接不能为空。";
+  }
+
+  const recommendedPageIds = [
+    parsed.home_recommended_page_1_id,
+    parsed.home_recommended_page_2_id,
+    parsed.home_recommended_page_3_id,
+  ].filter((value): value is number => value !== null);
+
+  if (new Set(recommendedPageIds).size !== recommendedPageIds.length) {
+    errors.home_recommended_page_1_id = "首页推荐页面不能重复选择同一页面。";
+    errors.home_recommended_page_2_id = "首页推荐页面不能重复选择同一页面。";
+    errors.home_recommended_page_3_id = "首页推荐页面不能重复选择同一页面。";
   }
 
   if (
@@ -680,6 +716,11 @@ export async function updateAdminSettings(
         nextSettings.home_featured_link_3_label !== currentSettings.home_featured_link_3_label ||
         nextSettings.home_featured_link_3_url !== currentSettings.home_featured_link_3_url ||
         nextSettings.home_featured_link_3_description !== currentSettings.home_featured_link_3_description ||
+        nextSettings.home_recommended_pages_title !== currentSettings.home_recommended_pages_title ||
+        nextSettings.home_recommended_pages_description !== currentSettings.home_recommended_pages_description ||
+        nextSettings.home_recommended_page_1_id !== currentSettings.home_recommended_page_1_id ||
+        nextSettings.home_recommended_page_2_id !== currentSettings.home_recommended_page_2_id ||
+        nextSettings.home_recommended_page_3_id !== currentSettings.home_recommended_page_3_id ||
         nextSettings.home_posts_variant !== currentSettings.home_posts_variant ||
         nextSettings.home_featured_links_variant !== currentSettings.home_featured_links_variant ||
         nextSettings.home_show_post_excerpt !== currentSettings.home_show_post_excerpt ||

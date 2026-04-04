@@ -2,11 +2,12 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getSiteOriginMock, getThemeFrameworkSettingsMock, listPublishedPostsMock } = vi.hoisted(
+const { getSiteOriginMock, getThemeFrameworkSettingsMock, listPublishedPostsMock, listRecommendedStandalonePagesMock } = vi.hoisted(
   () => ({
     getSiteOriginMock: vi.fn(),
     getThemeFrameworkSettingsMock: vi.fn(),
     listPublishedPostsMock: vi.fn(),
+    listRecommendedStandalonePagesMock: vi.fn(),
   }),
 );
 
@@ -32,6 +33,10 @@ vi.mock("@/lib/blog/posts", () => ({
   listPublishedPosts: listPublishedPostsMock,
 }));
 
+vi.mock("@/lib/blog/pages", () => ({
+  listRecommendedStandalonePages: listRecommendedStandalonePagesMock,
+}));
+
 describe("blog home page", () => {
   beforeEach(() => {
     getSiteOriginMock.mockReset();
@@ -39,6 +44,8 @@ describe("blog home page", () => {
     getThemeFrameworkSettingsMock.mockReset();
     getThemeFrameworkSettingsMock.mockResolvedValue(createThemeFrameworkSettings());
     listPublishedPostsMock.mockReset();
+    listRecommendedStandalonePagesMock.mockReset();
+    listRecommendedStandalonePagesMock.mockResolvedValue([]);
   });
 
   it("returns metadata for the homepage including configured brand and RSS alternate", async () => {
@@ -144,6 +151,34 @@ describe("blog home page", () => {
     expect(markup).toContain("text-xs leading-6 text-slate-600 dark:text-slate-300");
   });
 
+  it("renders recommended standalone pages when configured", async () => {
+    listPublishedPostsMock.mockResolvedValue([createPostListItem()]);
+    listRecommendedStandalonePagesMock.mockResolvedValue([
+      {
+        id: 11,
+        title: "关于我们",
+        slug: "about",
+        description: "站点长期说明。",
+      },
+      {
+        id: 12,
+        title: "开始使用",
+        slug: "getting-started",
+        description: "快速了解站点结构。",
+      },
+    ]);
+
+    const { default: BlogHomePage } = await import("./page");
+    const element = await BlogHomePage();
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("推荐页面");
+    expect(markup).toContain("关于我们");
+    expect(markup).toContain('href="/about"');
+    expect(markup).toContain("开始使用");
+    expect(markup).toContain('href="/getting-started"');
+  });
+
   it("renders the empty state when no published posts exist", async () => {
     listPublishedPostsMock.mockResolvedValue([]);
 
@@ -177,6 +212,11 @@ function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
     home_featured_link_3_label: "查看友链",
     home_featured_link_3_url: "/friend-links",
     home_featured_link_3_description: "发现更多值得关注的站点与作者。",
+    home_recommended_pages_title: "推荐页面",
+    home_recommended_pages_description: "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+    home_recommended_page_1_id: null,
+    home_recommended_page_2_id: null,
+    home_recommended_page_3_id: null,
     home_posts_variant: "comfortable",
     home_featured_links_variant: "comfortable",
     home_show_post_excerpt: true,

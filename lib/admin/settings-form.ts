@@ -47,6 +47,11 @@ export type SettingsFormValues = {
   home_featured_link_3_label: string;
   home_featured_link_3_url: string;
   home_featured_link_3_description: string;
+  home_recommended_pages_title: string;
+  home_recommended_pages_description: string;
+  home_recommended_page_1_id: string;
+  home_recommended_page_2_id: string;
+  home_recommended_page_3_id: string;
   home_posts_variant: HomePostsVariant;
   home_featured_links_variant: HomeFeaturedLinksVariant;
   home_show_post_excerpt: "true" | "false";
@@ -126,6 +131,11 @@ export const initialSettingsFormValues: SettingsFormValues = {
   home_featured_link_3_label: "查看友链",
   home_featured_link_3_url: "/friend-links",
   home_featured_link_3_description: "发现更多值得关注的站点与作者。",
+  home_recommended_pages_title: "推荐页面",
+  home_recommended_pages_description: "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+  home_recommended_page_1_id: "",
+  home_recommended_page_2_id: "",
+  home_recommended_page_3_id: "",
   home_posts_variant: "comfortable",
   home_featured_links_variant: "comfortable",
   home_show_post_excerpt: "true",

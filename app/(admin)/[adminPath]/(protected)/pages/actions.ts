@@ -21,6 +21,7 @@ function revalidatePagePaths(slugs: string[]) {
     revalidatePath(`/standalone/${slug}`);
   }
 
+  revalidatePath("/");
   revalidatePath("/sitemap.xml");
 }
 

@@ -21,6 +21,7 @@ import { getAdminPath } from "@/lib/settings";
 
 function revalidatePublicLayoutPaths() {
   revalidatePath("/", "layout");
+  revalidatePath("/");
 }
 
 function revalidateSettingsPaths(currentAdminPath: string, nextAdminPath: string) {
@@ -106,6 +107,11 @@ export async function saveSettingsAction(
     home_featured_link_3_label: String(formData.get("home_featured_link_3_label") ?? ""),
     home_featured_link_3_url: String(formData.get("home_featured_link_3_url") ?? ""),
     home_featured_link_3_description: String(formData.get("home_featured_link_3_description") ?? ""),
+    home_recommended_pages_title: String(formData.get("home_recommended_pages_title") ?? ""),
+    home_recommended_pages_description: String(formData.get("home_recommended_pages_description") ?? ""),
+    home_recommended_page_1_id: String(formData.get("home_recommended_page_1_id") ?? ""),
+    home_recommended_page_2_id: String(formData.get("home_recommended_page_2_id") ?? ""),
+    home_recommended_page_3_id: String(formData.get("home_recommended_page_3_id") ?? ""),
     home_posts_variant: String(formData.get("home_posts_variant") ?? "comfortable") as
       | "comfortable"
       | "compact",

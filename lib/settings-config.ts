@@ -46,6 +46,24 @@ function parseNonNegativeInteger(value: string, key: string): number {
   return parsed;
 }
 
+function parseOptionalPositiveInteger(value: string, key: string): number | null {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  return parsePositiveInteger(normalized, key);
+}
+
+function serializeOptionalPositiveInteger(value: number | null, key: string): string {
+  if (value === null) {
+    return "";
+  }
+
+  return String(parsePositiveInteger(String(value), key));
+}
+
 function parseBooleanString(value: string, key: string) {
   const normalized = value.trim().toLowerCase();
 
@@ -471,6 +489,36 @@ export const settingDefinitions = {
     parse: (value: string) => parseOptionalText(value),
     serialize: (value: string) => parseOptionalText(value),
   }),
+  home_recommended_pages_title: defineSetting({
+    defaultValue: "推荐页面",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_recommended_pages_description: defineSetting({
+    defaultValue: "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+    isSecret: false,
+    parse: (value: string) => parseOptionalText(value),
+    serialize: (value: string) => parseOptionalText(value),
+  }),
+  home_recommended_page_1_id: defineSetting({
+    defaultValue: null,
+    isSecret: false,
+    parse: (value: string) => parseOptionalPositiveInteger(value, "home_recommended_page_1_id"),
+    serialize: (value: number | null) => serializeOptionalPositiveInteger(value, "home_recommended_page_1_id"),
+  }),
+  home_recommended_page_2_id: defineSetting({
+    defaultValue: null,
+    isSecret: false,
+    parse: (value: string) => parseOptionalPositiveInteger(value, "home_recommended_page_2_id"),
+    serialize: (value: number | null) => serializeOptionalPositiveInteger(value, "home_recommended_page_2_id"),
+  }),
+  home_recommended_page_3_id: defineSetting({
+    defaultValue: null,
+    isSecret: false,
+    parse: (value: string) => parseOptionalPositiveInteger(value, "home_recommended_page_3_id"),
+    serialize: (value: number | null) => serializeOptionalPositiveInteger(value, "home_recommended_page_3_id"),
+  }),
   home_posts_variant: defineSetting({
     defaultValue: "comfortable" as HomePostsVariant,
     isSecret: false,
@@ -677,6 +725,11 @@ export type ThemeFrameworkSettings = Pick<
   | "home_featured_link_3_label"
   | "home_featured_link_3_url"
   | "home_featured_link_3_description"
+  | "home_recommended_pages_title"
+  | "home_recommended_pages_description"
+  | "home_recommended_page_1_id"
+  | "home_recommended_page_2_id"
+  | "home_recommended_page_3_id"
   | "home_posts_variant"
   | "home_featured_links_variant"
   | "home_show_post_excerpt"
@@ -746,6 +799,11 @@ export const DEFAULT_SETTINGS: SettingValues = {
   home_featured_link_3_label: settingDefinitions.home_featured_link_3_label.defaultValue,
   home_featured_link_3_url: settingDefinitions.home_featured_link_3_url.defaultValue,
   home_featured_link_3_description: settingDefinitions.home_featured_link_3_description.defaultValue,
+  home_recommended_pages_title: settingDefinitions.home_recommended_pages_title.defaultValue,
+  home_recommended_pages_description: settingDefinitions.home_recommended_pages_description.defaultValue,
+  home_recommended_page_1_id: settingDefinitions.home_recommended_page_1_id.defaultValue,
+  home_recommended_page_2_id: settingDefinitions.home_recommended_page_2_id.defaultValue,
+  home_recommended_page_3_id: settingDefinitions.home_recommended_page_3_id.defaultValue,
   home_posts_variant: settingDefinitions.home_posts_variant.defaultValue,
   home_featured_links_variant: settingDefinitions.home_featured_links_variant.defaultValue,
   home_show_post_excerpt: settingDefinitions.home_show_post_excerpt.defaultValue,

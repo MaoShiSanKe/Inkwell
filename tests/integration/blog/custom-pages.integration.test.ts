@@ -73,6 +73,73 @@ describe("blog custom pages", () => {
       },
     ]);
   });
+
+  it("lists recommended standalone pages by selected ids in slot order", async () => {
+    const author = await createAuthor();
+    const db = await getDb();
+
+    const [aboutPage] = await db
+      .insert(customPages)
+      .values({
+        authorId: author.id,
+        title: "About",
+        slug: "about",
+        content: "About body",
+        status: "published",
+        publishedAt: new Date("2026-03-30T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-30T12:10:00.000Z"),
+      })
+      .returning({ id: customPages.id });
+
+    const [guidePage] = await db
+      .insert(customPages)
+      .values({
+        authorId: author.id,
+        title: "Guide",
+        slug: "guide",
+        content: "Guide body",
+        status: "published",
+        publishedAt: new Date("2026-03-31T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-31T12:10:00.000Z"),
+      })
+      .returning({ id: customPages.id });
+
+    await db.insert(customPageMeta).values({
+      pageId: guidePage.id,
+      metaDescription: "Guide description",
+      noindex: false,
+      nofollow: false,
+      updatedAt: new Date("2026-03-31T12:10:00.000Z"),
+    });
+
+    await db.insert(customPages).values({
+      authorId: author.id,
+      title: "Draft page",
+      slug: "draft-page",
+      content: "Draft body",
+      status: "draft",
+      publishedAt: null,
+      updatedAt: new Date("2026-03-31T12:10:00.000Z"),
+    });
+
+    const { listRecommendedStandalonePages } = await import("@/lib/blog/pages");
+    const recommendedPages = await listRecommendedStandalonePages([guidePage.id, aboutPage.id, null]);
+
+    expect(recommendedPages).toEqual([
+      {
+        id: guidePage.id,
+        title: "Guide",
+        slug: "guide",
+        description: "Guide description",
+      },
+      {
+        id: aboutPage.id,
+        title: "About",
+        slug: "about",
+        description: "About body",
+      },
+    ]);
+  });
 });
 
 async function getDb() {

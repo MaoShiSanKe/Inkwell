@@ -138,6 +138,11 @@ describe("admin settings actions", () => {
         home_hero_description: "浏览站点中已经发布的文章、专题与长期归档。",
         home_primary_cta_label: "立即订阅",
         home_primary_cta_url: "/subscribe",
+        home_recommended_pages_title: "推荐页面",
+        home_recommended_pages_description: "优先展示长期页面入口。",
+        home_recommended_page_1_id: "11",
+        home_recommended_page_2_id: "12",
+        home_recommended_page_3_id: "",
         home_posts_variant: "compact",
         home_featured_links_variant: "compact",
         home_show_post_excerpt: "false",
@@ -212,6 +217,7 @@ describe("admin settings actions", () => {
     });
 
     expect(revalidatePathMock).toHaveBeenCalledWith("/", "layout");
+    expect(revalidatePathMock).toHaveBeenCalledWith("/");
   });
 
   it("redirects back to same admin path when settings save does not change admin_path", async () => {
@@ -338,6 +344,22 @@ function createFormData(
     home_hero_description: string;
     home_primary_cta_label: string;
     home_primary_cta_url: string;
+    home_featured_links_title: string;
+    home_featured_links_description: string;
+    home_featured_link_1_label: string;
+    home_featured_link_1_url: string;
+    home_featured_link_1_description: string;
+    home_featured_link_2_label: string;
+    home_featured_link_2_url: string;
+    home_featured_link_2_description: string;
+    home_featured_link_3_label: string;
+    home_featured_link_3_url: string;
+    home_featured_link_3_description: string;
+    home_recommended_pages_title: string;
+    home_recommended_pages_description: string;
+    home_recommended_page_1_id: string;
+    home_recommended_page_2_id: string;
+    home_recommended_page_3_id: string;
     home_posts_variant: string;
     home_featured_links_variant: string;
     home_show_post_excerpt: string;
@@ -393,6 +415,22 @@ function createFormData(
     home_hero_description: "浏览站点中已经发布的文章、专题与长期归档。",
     home_primary_cta_label: "立即订阅",
     home_primary_cta_url: "/subscribe",
+    home_featured_links_title: "精选入口",
+    home_featured_links_description: "把高频入口放在首页，减少访客寻找内容的成本。",
+    home_featured_link_1_label: "查看分类",
+    home_featured_link_1_url: "/category",
+    home_featured_link_1_description: "按主题浏览已经发布的内容。",
+    home_featured_link_2_label: "查看标签",
+    home_featured_link_2_url: "/tag",
+    home_featured_link_2_description: "通过标签快速找到相关话题。",
+    home_featured_link_3_label: "查看友链",
+    home_featured_link_3_url: "/friend-links",
+    home_featured_link_3_description: "发现更多值得关注的站点与作者。",
+    home_recommended_pages_title: "推荐页面",
+    home_recommended_pages_description: "优先展示长期页面入口。",
+    home_recommended_page_1_id: "11",
+    home_recommended_page_2_id: "12",
+    home_recommended_page_3_id: "",
     home_posts_variant: "compact",
     home_featured_links_variant: "compact",
     home_show_post_excerpt: "false",
@@ -449,6 +487,22 @@ function createFormData(
   formData.set("home_hero_description", values.home_hero_description);
   formData.set("home_primary_cta_label", values.home_primary_cta_label);
   formData.set("home_primary_cta_url", values.home_primary_cta_url);
+  formData.set("home_featured_links_title", values.home_featured_links_title);
+  formData.set("home_featured_links_description", values.home_featured_links_description);
+  formData.set("home_featured_link_1_label", values.home_featured_link_1_label);
+  formData.set("home_featured_link_1_url", values.home_featured_link_1_url);
+  formData.set("home_featured_link_1_description", values.home_featured_link_1_description);
+  formData.set("home_featured_link_2_label", values.home_featured_link_2_label);
+  formData.set("home_featured_link_2_url", values.home_featured_link_2_url);
+  formData.set("home_featured_link_2_description", values.home_featured_link_2_description);
+  formData.set("home_featured_link_3_label", values.home_featured_link_3_label);
+  formData.set("home_featured_link_3_url", values.home_featured_link_3_url);
+  formData.set("home_featured_link_3_description", values.home_featured_link_3_description);
+  formData.set("home_recommended_pages_title", values.home_recommended_pages_title);
+  formData.set("home_recommended_pages_description", values.home_recommended_pages_description);
+  formData.set("home_recommended_page_1_id", values.home_recommended_page_1_id);
+  formData.set("home_recommended_page_2_id", values.home_recommended_page_2_id);
+  formData.set("home_recommended_page_3_id", values.home_recommended_page_3_id);
   formData.set("home_posts_variant", values.home_posts_variant);
   formData.set("home_featured_links_variant", values.home_featured_links_variant);
   formData.set("home_show_post_excerpt", values.home_show_post_excerpt);

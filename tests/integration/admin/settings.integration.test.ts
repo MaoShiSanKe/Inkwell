@@ -42,6 +42,11 @@ const SETTINGS_KEYS = [
   "home_featured_link_3_label",
   "home_featured_link_3_url",
   "home_featured_link_3_description",
+  "home_recommended_pages_title",
+  "home_recommended_pages_description",
+  "home_recommended_page_1_id",
+  "home_recommended_page_2_id",
+  "home_recommended_page_3_id",
   "home_posts_variant",
   "home_featured_links_variant",
   "home_show_post_excerpt",
@@ -151,6 +156,12 @@ describe("admin settings write paths", () => {
       home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
       home_featured_link_3_description:
         originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
+      home_recommended_pages_title: originalSettings.home_recommended_pages_title ?? "推荐页面",
+      home_recommended_pages_description:
+        originalSettings.home_recommended_pages_description ?? "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+      home_recommended_page_1_id: originalSettings.home_recommended_page_1_id ?? "",
+      home_recommended_page_2_id: originalSettings.home_recommended_page_2_id ?? "",
+      home_recommended_page_3_id: originalSettings.home_recommended_page_3_id ?? "",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ??
         "comfortable",
@@ -242,6 +253,11 @@ describe("admin settings write paths", () => {
       home_featured_link_3_label: "查看友链",
       home_featured_link_3_url: "/friend-links",
       home_featured_link_3_description: "发现更多值得关注的站点与作者。",
+      home_recommended_pages_title: "推荐页面",
+      home_recommended_pages_description: "优先展示长期页面入口。",
+      home_recommended_page_1_id: "11",
+      home_recommended_page_2_id: "12",
+      home_recommended_page_3_id: "",
       home_posts_variant: "compact",
       home_featured_links_variant: "compact",
       home_show_post_excerpt: "false",
@@ -286,6 +302,8 @@ describe("admin settings write paths", () => {
         expect.objectContaining({ key: "home_hero_title", value: "最新文章与精选内容" }),
         expect.objectContaining({ key: "home_featured_links_title", value: "精选入口" }),
         expect.objectContaining({ key: "home_featured_link_1_url", value: "/category" }),
+        expect.objectContaining({ key: "home_recommended_pages_title", value: "推荐页面" }),
+        expect.objectContaining({ key: "home_recommended_page_1_id", value: "11" }),
         expect.objectContaining({ key: "home_posts_variant", value: "compact" }),
         expect.objectContaining({ key: "home_featured_links_variant", value: "compact" }),
         expect.objectContaining({ key: "public_archive_posts_variant", value: "compact" }),
@@ -339,6 +357,12 @@ describe("admin settings write paths", () => {
       home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
       home_featured_link_3_description:
         originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
+      home_recommended_pages_title: originalSettings.home_recommended_pages_title ?? "推荐页面",
+      home_recommended_pages_description:
+        originalSettings.home_recommended_pages_description ?? "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+      home_recommended_page_1_id: originalSettings.home_recommended_page_1_id ?? "",
+      home_recommended_page_2_id: originalSettings.home_recommended_page_2_id ?? "",
+      home_recommended_page_3_id: originalSettings.home_recommended_page_3_id ?? "",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:
@@ -458,6 +482,12 @@ describe("admin settings write paths", () => {
       home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
       home_featured_link_3_description:
         originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
+      home_recommended_pages_title: originalSettings.home_recommended_pages_title ?? "推荐页面",
+      home_recommended_pages_description:
+        originalSettings.home_recommended_pages_description ?? "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+      home_recommended_page_1_id: originalSettings.home_recommended_page_1_id ?? "",
+      home_recommended_page_2_id: originalSettings.home_recommended_page_2_id ?? "",
+      home_recommended_page_3_id: originalSettings.home_recommended_page_3_id ?? "",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:
@@ -543,6 +573,12 @@ describe("admin settings write paths", () => {
       home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
       home_featured_link_3_description:
         originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
+      home_recommended_pages_title: originalSettings.home_recommended_pages_title ?? "推荐页面",
+      home_recommended_pages_description:
+        originalSettings.home_recommended_pages_description ?? "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+      home_recommended_page_1_id: originalSettings.home_recommended_page_1_id ?? "",
+      home_recommended_page_2_id: originalSettings.home_recommended_page_2_id ?? "",
+      home_recommended_page_3_id: originalSettings.home_recommended_page_3_id ?? "",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:
@@ -637,6 +673,12 @@ describe("admin settings write paths", () => {
       home_featured_link_3_url: originalSettings.home_featured_link_3_url ?? "/friend-links",
       home_featured_link_3_description:
         originalSettings.home_featured_link_3_description ?? "发现更多值得关注的站点与作者。",
+      home_recommended_pages_title: originalSettings.home_recommended_pages_title ?? "推荐页面",
+      home_recommended_pages_description:
+        originalSettings.home_recommended_pages_description ?? "把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。",
+      home_recommended_page_1_id: originalSettings.home_recommended_page_1_id ?? "",
+      home_recommended_page_2_id: originalSettings.home_recommended_page_2_id ?? "",
+      home_recommended_page_3_id: originalSettings.home_recommended_page_3_id ?? "",
       home_posts_variant:
         (originalSettings.home_posts_variant as "comfortable" | "compact" | null) ?? "comfortable",
       home_show_post_excerpt:

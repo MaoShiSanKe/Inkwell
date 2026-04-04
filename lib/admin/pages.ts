@@ -541,6 +541,81 @@ export async function resolvePublishedCustomPageBySlug(slug: string): Promise<Pu
   };
 }
 
+export async function listPublishedCustomPagesByIds(pageIds: number[]): Promise<PublishedCustomPageData[]> {
+  const uniqueIds = Array.from(new Set(pageIds.filter((value) => Number.isInteger(value) && value > 0)));
+
+  if (uniqueIds.length === 0) {
+    return [];
+  }
+
+  const rows = await db
+    .select({
+      id: customPages.id,
+      title: customPages.title,
+      slug: customPages.slug,
+      content: customPages.content,
+      publishedAt: customPages.publishedAt,
+      updatedAt: customPages.updatedAt,
+      metaTitle: customPageMeta.metaTitle,
+      metaDescription: customPageMeta.metaDescription,
+      ogTitle: customPageMeta.ogTitle,
+      ogDescription: customPageMeta.ogDescription,
+      canonicalUrl: customPageMeta.canonicalUrl,
+      noindex: customPageMeta.noindex,
+      nofollow: customPageMeta.nofollow,
+      ogImageSource: media.source,
+      ogImageStoragePath: media.storagePath,
+      ogImageThumbnailPath: media.thumbnailPath,
+      ogImageExternalUrl: media.externalUrl,
+      ogImageAltText: media.altText,
+      ogImageWidth: media.width,
+      ogImageHeight: media.height,
+    })
+    .from(customPages)
+    .leftJoin(customPageMeta, eq(customPageMeta.pageId, customPages.id))
+    .leftJoin(media, eq(media.id, customPageMeta.ogImageMediaId))
+    .where(and(inArray(customPages.id, uniqueIds), eq(customPages.status, "published")));
+
+  const pageMap = new Map(
+    rows.map((row) => [
+      row.id,
+      {
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        content: row.content,
+        publishedAt: row.publishedAt,
+        updatedAt: row.updatedAt,
+        seo: {
+          metaTitle: row.metaTitle ?? null,
+          metaDescription: row.metaDescription ?? null,
+          ogTitle: row.ogTitle ?? null,
+          ogDescription: row.ogDescription ?? null,
+          canonicalUrl: row.canonicalUrl ?? null,
+          noindex: row.noindex ?? false,
+          nofollow: row.nofollow ?? false,
+        },
+        ogImage: row.ogImageSource
+          ? {
+              source: row.ogImageSource,
+              storagePath: row.ogImageStoragePath,
+              thumbnailPath: row.ogImageThumbnailPath,
+              externalUrl: row.ogImageExternalUrl,
+              altText: row.ogImageAltText,
+              width: row.ogImageWidth,
+              height: row.ogImageHeight,
+            }
+          : null,
+      } satisfies PublishedCustomPageData,
+    ]),
+  );
+
+  return uniqueIds.flatMap((id) => {
+    const page = pageMap.get(id);
+    return page ? [page] : [];
+  });
+}
+
 export async function listPublishedCustomPageSitemapEntries() {
   return db
     .select({

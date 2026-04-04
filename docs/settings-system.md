@@ -36,7 +36,7 @@
 - `excerpt_length`
 - SMTP 设置
 - Umami 设置
-- Theme Framework v1（站点品牌、首页 hero、首页展示变体、归档 / 搜索列表变体、公开布局外壳、默认主题模式）
+- Theme Framework v1（站点品牌、首页 hero、首页固定推荐区块、首页展示变体、归档 / 搜索列表变体、公开布局外壳、默认主题模式）
 - 全站公开公告（含可关闭、版本控制与时间窗口）
 
 ## 2. 当前设置系统的结构
@@ -88,6 +88,7 @@ Theme Framework v1 当前建议采用：
 - 公开页头品牌区与结构化页脚
 - 首页 Hero 文案与主按钮
 - 首页精选入口区块（标题、说明、三张固定链接卡片）
+- 首页推荐页面区块（标题、说明、三个固定 page id 槽位）
 - 首页列表 `comfortable | compact` 变体
 - 首页摘要 / 作者 / 分类 / 发布时间开关
 - 归档 / 搜索结果列表 `comfortable | compact` 变体
@@ -96,8 +97,11 @@ Theme Framework v1 当前建议采用：
 
 设计原则：
 - 优先有限枚举与结构化字段，而不是任意 JSON blob
+- 首页 portal 能力优先做成固定槽位，而不是 section builder
+- 当区块内容来自现有 CMS 实体时，优先存稳定引用（例如 page id），不要存易漂移的 slug/url
 - 优先“单主题、多变体”，而不是多主题注册系统
 - 优先复用 `publicLayoutChanged` + `revalidatePath("/", "layout")`
+- 若首页直接依赖实体内容，还要补 `revalidatePath("/")` 覆盖实体更新
 - 保留 `public_custom_css` 作为 escape hatch，但不要让它反客为主
 
 这类设置适合第一阶段解决：

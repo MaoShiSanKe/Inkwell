@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SettingsForm } from "@/components/admin/settings-form";
+import { listAdminPages } from "@/lib/admin/pages";
 import {
   getAdminEmailNotifications,
   getAdminSettingsFormValues,
@@ -24,9 +25,10 @@ export default async function AdminSettingsPage({
     params,
     searchParams,
   ]);
-  const [initialValues, emailNotifications] = await Promise.all([
+  const [initialValues, emailNotifications, pageOptions] = await Promise.all([
     getAdminSettingsFormValues(),
     getAdminEmailNotifications(),
+    listAdminPages(),
   ]);
 
   return (
@@ -66,6 +68,7 @@ export default async function AdminSettingsPage({
         adminPath={adminPath}
         initialValues={initialValues}
         emailNotifications={emailNotifications}
+        pageOptions={pageOptions}
       />
     </main>
   );

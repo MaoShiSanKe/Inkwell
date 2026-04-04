@@ -12,15 +12,17 @@ import {
   createSettingsFormState,
   type SettingsFormValues,
 } from "@/lib/admin/settings-form";
+import type { AdminPageListItem } from "@/lib/admin/pages";
 import type { EmailNotificationScenario } from "@/lib/settings-config";
 
 type SettingsFormProps = {
   adminPath: string;
   initialValues: SettingsFormValues;
   emailNotifications: EmailNotificationScenario[];
+  pageOptions: AdminPageListItem[];
 };
 
-export function SettingsForm({ adminPath, initialValues, emailNotifications }: SettingsFormProps) {
+export function SettingsForm({ adminPath, initialValues, emailNotifications, pageOptions }: SettingsFormProps) {
   const initialState = createSettingsFormState(initialValues);
   const [state = initialState, formAction, isPending] = useActionState(
     saveSettingsAction,
@@ -42,6 +44,16 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
   const publicNoticeEndAtIso = useMemo(
     () => toScheduledAtIso(publicNoticeEndAtValue),
     [publicNoticeEndAtValue],
+  );
+  const recommendedPageOptions = useMemo(
+    () =>
+      pageOptions.map((page) => ({
+        value: String(page.id),
+        label: `${page.title} (/${page.slug}) · ${
+          page.status === "published" ? "已发布" : page.status === "draft" ? "草稿" : "回收站"
+        }`,
+      })),
+    [pageOptions],
   );
 
   return (
@@ -605,6 +617,75 @@ export function SettingsForm({ adminPath, initialValues, emailNotifications }: S
                   {state.errors.home_featured_link_3_description ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_featured_link_3_description}</span> : null}
                 </label>
               </div>
+            </div>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              首页推荐页面标题
+              <input
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                type="text"
+                name="home_recommended_pages_title"
+                defaultValue={state.values.home_recommended_pages_title}
+                placeholder="例如：推荐页面"
+              />
+              {state.errors.home_recommended_pages_title ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_recommended_pages_title}</span>
+              ) : null}
+            </label>
+
+            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200 lg:col-span-2">
+              首页推荐页面说明
+              <textarea
+                className="min-h-24 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-7 outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                name="home_recommended_pages_description"
+                defaultValue={state.values.home_recommended_pages_description}
+                spellCheck={false}
+                placeholder="例如：把值得长期展示的独立页面放在首页，帮助访客更快进入核心内容。"
+              />
+              <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                使用固定槽位选择独立页面；仅已发布页面会在首页显示，全部留空时整个区块隐藏。
+              </span>
+              {state.errors.home_recommended_pages_description ? (
+                <span className="text-sm text-red-600 dark:text-red-300">{state.errors.home_recommended_pages_description}</span>
+              ) : null}
+            </label>
+
+            <div className="lg:col-span-2 grid gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-200">首页推荐页面槽位</p>
+              <div className="grid gap-4 lg:grid-cols-3">
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  推荐页面 1
+                  <select className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="home_recommended_page_1_id" defaultValue={state.values.home_recommended_page_1_id}>
+                    <option value="">不显示</option>
+                    {recommendedPageOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  推荐页面 2
+                  <select className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="home_recommended_page_2_id" defaultValue={state.values.home_recommended_page_2_id}>
+                    <option value="">不显示</option>
+                    {recommendedPageOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+                  推荐页面 3
+                  <select className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="home_recommended_page_3_id" defaultValue={state.values.home_recommended_page_3_id}>
+                    <option value="">不显示</option>
+                    {recommendedPageOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {state.errors.home_recommended_page_1_id || state.errors.home_recommended_page_2_id || state.errors.home_recommended_page_3_id ? (
+                <span className="text-sm text-red-600 dark:text-red-300">
+                  {state.errors.home_recommended_page_1_id ?? state.errors.home_recommended_page_2_id ?? state.errors.home_recommended_page_3_id}
+                </span>
+              ) : null}
             </div>
 
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
