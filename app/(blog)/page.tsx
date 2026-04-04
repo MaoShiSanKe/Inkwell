@@ -10,6 +10,7 @@ import {
   resolveAccentFocusRingClass,
   resolveAccentLinkClass,
   resolveContentWidthClass,
+  resolveEmptyStateSurfaceClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -70,10 +71,10 @@ export default async function BlogHomePage() {
   const metaTextClass = compact ? "text-xs" : "text-sm";
   const titleClass = compact ? "text-xl" : "text-2xl";
   const excerptClass = compact ? "text-sm leading-6" : "text-base leading-7";
-  const emptyStateClass =
-    themeFrameworkSettings.public_surface_variant === "solid"
-      ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
-      : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
+  const emptyStateSurfaceClass = resolveEmptyStateSurfaceClass(
+    themeFrameworkSettings.public_surface_variant,
+  );
+  const emptyStateClass = `rounded-2xl border border-dashed px-6 py-12 text-center ${emptyStateSurfaceClass}`;
   const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
   const featuredLinkCardClass = `rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
   const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);

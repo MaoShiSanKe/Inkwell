@@ -13,6 +13,7 @@ import {
   resolveAccentClass,
   resolveAccentLinkClass,
   resolveContentWidthClass,
+  resolveEmptyStateSurfaceClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -81,10 +82,10 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
   const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
-  const emptyStateClass =
-    themeFrameworkSettings.public_surface_variant === "solid"
-      ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
-      : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
+  const emptyStateSurfaceClass = resolveEmptyStateSurfaceClass(
+    themeFrameworkSettings.public_surface_variant,
+  );
+  const emptyStateClass = `rounded-2xl border border-dashed px-6 py-12 text-center ${emptyStateSurfaceClass}`;
 
   return (
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-8 px-6 py-16`}>

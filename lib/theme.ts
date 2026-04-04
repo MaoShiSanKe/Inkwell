@@ -76,6 +76,15 @@ export function resolveAccentLinkClass(theme: PublicAccentTheme) {
   return `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${resolveAccentClass(theme)}`;
 }
 
+export function resolveEmptyStateSurfaceClass(variant: PublicSurfaceVariant) {
+  switch (variant) {
+    case "solid":
+      return "border-slate-300 bg-slate-100/70 text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300";
+    default:
+      return "border-slate-300 bg-white/80 text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
+  }
+}
+
 export function resolveAccentBorderHoverClass(theme: PublicAccentTheme) {
   switch (theme) {
     case "blue":

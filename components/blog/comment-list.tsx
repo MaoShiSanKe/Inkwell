@@ -2,7 +2,12 @@ import Link from "next/link";
 
 import type { ApprovedComment } from "@/lib/blog/comments";
 import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
-import { resolveAccentClass, resolveAccentLinkClass, resolveSurfaceClass } from "@/lib/theme";
+import {
+  resolveAccentClass,
+  resolveAccentLinkClass,
+  resolveEmptyStateSurfaceClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type CommentListProps = {
   comments: ApprovedComment[];
@@ -46,10 +51,8 @@ export function CommentList({
   const accentClass = resolveAccentClass(accentTheme);
   const accentLinkClass = resolveAccentLinkClass(accentTheme);
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
-  const emptyStateClass =
-    surfaceVariant === "solid"
-      ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-10 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
-      : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-10 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
+  const emptyStateSurfaceClass = resolveEmptyStateSurfaceClass(surfaceVariant);
+  const emptyStateClass = `rounded-2xl border border-dashed px-6 py-10 text-center ${emptyStateSurfaceClass}`;
   const replyLinkClass = `text-sm font-medium ${accentLinkClass}`;
   const replySurfaceClass =
     surfaceVariant === "solid"

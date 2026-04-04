@@ -14,6 +14,7 @@ import {
   resolveAccentFocusRingClass,
   resolveAccentLinkClass,
   resolveContentWidthClass,
+  resolveEmptyStateSurfaceClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -77,10 +78,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
   const buttonSurfaceClass =
     "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
-  const emptyStateSurfaceClass =
-    themeFrameworkSettings.public_surface_variant === "solid"
-      ? "border-slate-300 bg-slate-100/70 text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
-      : "border-slate-300 bg-white/80 text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
+  const emptyStateSurfaceClass = resolveEmptyStateSurfaceClass(
+    themeFrameworkSettings.public_surface_variant,
+  );
   const resultCountClass = `text-sm ${accentClass}`;
   const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const postTitleLinkClass = accentLinkClass;
