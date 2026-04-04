@@ -72,3 +72,41 @@ export function resolveAccentClass(theme: PublicAccentTheme) {
   }
 }
 
+export function resolveAccentBorderHoverClass(theme: PublicAccentTheme) {
+  switch (theme) {
+    case "blue":
+      return "hover:border-blue-300 dark:hover:border-blue-700";
+    case "emerald":
+      return "hover:border-emerald-300 dark:hover:border-emerald-700";
+    case "amber":
+      return "hover:border-amber-300 dark:hover:border-amber-700";
+    default:
+      return "hover:border-slate-400 dark:hover:border-slate-600";
+  }
+}
+
+export function resolveAccentFocusRingClass(theme: PublicAccentTheme) {
+  switch (theme) {
+    case "blue":
+      return "focus-visible:ring-blue-500/40";
+    case "emerald":
+      return "focus-visible:ring-emerald-500/40";
+    case "amber":
+      return "focus-visible:ring-amber-500/40";
+    default:
+      return "focus-visible:ring-slate-500/40";
+  }
+}
+
+export function resolveAccentFocusBorderClass(theme: PublicAccentTheme) {
+  switch (theme) {
+    case "blue":
+      return "focus:border-blue-500";
+    case "emerald":
+      return "focus:border-emerald-500";
+    case "amber":
+      return "focus:border-amber-500";
+    default:
+      return "focus:border-slate-500";
+  }
+}

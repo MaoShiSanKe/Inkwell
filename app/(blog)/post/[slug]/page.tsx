@@ -28,6 +28,7 @@ import { parsePostContentForToc } from "@/lib/blog/post-toc";
 import { getPublishedPostViewCount, recordPublishedPostView } from "@/lib/blog/views";
 import { getSiteBrandName, getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
 import {
+  resolveAccentBorderHoverClass,
   resolveAccentClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
@@ -177,26 +178,13 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
-  const relatedCardHoverClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "hover:border-blue-300 dark:hover:border-blue-700"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "hover:border-emerald-300 dark:hover:border-emerald-700"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "hover:border-amber-300 dark:hover:border-amber-700"
-          : "hover:border-slate-400 dark:hover:border-slate-600";
-  const relatedCardClass = `flex flex-col gap-2 rounded-2xl border px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${relatedCardHoverClass}`;
-  const tagHoverBorderClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "hover:border-blue-300 dark:hover:border-blue-700"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "hover:border-emerald-300 dark:hover:border-emerald-700"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "hover:border-amber-300 dark:hover:border-amber-700"
-          : "hover:border-slate-400 dark:hover:border-slate-600";
+  const accentBorderHoverClass = resolveAccentBorderHoverClass(
+    themeFrameworkSettings.public_accent_theme,
+  );
+  const relatedCardClass = `flex flex-col gap-2 rounded-2xl border px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
   const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
-  const tagLinkClass = `inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm transition ${tagHoverBorderClass} ${accentClass}`;
+  const tagLinkClass = `inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm transition ${accentBorderHoverClass} ${accentClass}`;
   const breadcrumbItems = buildBreadcrumbItems(post);
   const articleJsonLd = buildArticleJsonLd(
     post,

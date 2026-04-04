@@ -4,7 +4,11 @@ import { useState, useTransition } from "react";
 
 import { likePostAction } from "@/app/(blog)/post/[slug]/actions";
 import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
-import { resolveAccentClass, resolveSurfaceClass } from "@/lib/theme";
+import {
+  resolveAccentClass,
+  resolveAccentFocusRingClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type PostLikeButtonProps = {
   postId: number;
@@ -26,16 +30,9 @@ export function PostLikeButton({
   const [isPending, startTransition] = useTransition();
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
   const accentClass = resolveAccentClass(accentTheme);
+  const buttonAccentRingClass = resolveAccentFocusRingClass(accentTheme);
   const buttonSurfaceClass =
     "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
-  const buttonAccentRingClass =
-    accentTheme === "blue"
-      ? "focus-visible:ring-blue-500/40"
-      : accentTheme === "emerald"
-        ? "focus-visible:ring-emerald-500/40"
-        : accentTheme === "amber"
-          ? "focus-visible:ring-amber-500/40"
-          : "focus-visible:ring-slate-500/40";
   const buttonClass = `rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
   const messageClass = `text-sm ${accentClass}`;
 

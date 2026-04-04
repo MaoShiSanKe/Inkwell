@@ -5,7 +5,9 @@ import { DEFAULT_DESCRIPTION, SITE_NAME, buildSiteUrl } from "@/lib/blog/post-se
 import { listPublishedPosts } from "@/lib/blog/posts";
 import { getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
 import {
+  resolveAccentBorderHoverClass,
   resolveAccentClass,
+  resolveAccentFocusRingClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -55,6 +57,12 @@ export default async function BlogHomePage() {
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const accentBorderHoverClass = resolveAccentBorderHoverClass(
+    themeFrameworkSettings.public_accent_theme,
+  );
+  const accentFocusRingClass = resolveAccentFocusRingClass(
+    themeFrameworkSettings.public_accent_theme,
+  );
   const compact = themeFrameworkSettings.home_posts_variant === "compact";
   const articlePaddingClass = compact ? "px-5 py-4" : "px-6 py-5";
   const listGapClass = compact ? "gap-3" : "gap-4";
@@ -66,26 +74,10 @@ export default async function BlogHomePage() {
       ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
       : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
   const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
-  const featuredLinkHoverClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "hover:border-blue-300 dark:hover:border-blue-700"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "hover:border-emerald-300 dark:hover:border-emerald-700"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "hover:border-amber-300 dark:hover:border-amber-700"
-          : "hover:border-slate-400 dark:hover:border-slate-600";
-  const ctaHoverClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "hover:border-blue-300 dark:hover:border-blue-700 focus-visible:ring-blue-500/40"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "hover:border-emerald-300 dark:hover:border-emerald-700 focus-visible:ring-emerald-500/40"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "hover:border-amber-300 dark:hover:border-amber-700 focus-visible:ring-amber-500/40"
-          : "hover:border-slate-400 dark:hover:border-slate-600 focus-visible:ring-slate-500/40";
-  const featuredLinkCardClass = `rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${featuredLinkHoverClass}`;
+  const featuredLinkCardClass = `rounded-2xl border px-5 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
   const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
-  const ctaClass = `inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 dark:border-slate-700 ${accentClass} ${ctaHoverClass}`;
+  const ctaClass = `inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 dark:border-slate-700 ${accentClass} ${accentBorderHoverClass} ${accentFocusRingClass}`;
   const featuredLinks = [
     {
       label: themeFrameworkSettings.home_featured_link_1_label,

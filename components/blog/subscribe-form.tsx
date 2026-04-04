@@ -5,7 +5,11 @@ import { useActionState } from "react";
 import { subscribeAction } from "@/app/(blog)/subscribe/actions";
 import { initialSubscriptionFormState } from "@/lib/blog/subscription-form";
 import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
-import { resolveSurfaceClass } from "@/lib/theme";
+import {
+  resolveAccentFocusBorderClass,
+  resolveAccentFocusRingClass,
+  resolveSurfaceClass,
+} from "@/lib/theme";
 
 type SubscribeFormProps = {
   initialEmail?: string;
@@ -29,28 +33,14 @@ export function SubscribeForm({
     },
   );
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
+  const inputAccentBorderClass = resolveAccentFocusBorderClass(accentTheme);
+  const buttonAccentRingClass = resolveAccentFocusRingClass(accentTheme);
   const fieldSurfaceClass =
     surfaceVariant === "solid"
       ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
       : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
   const buttonSurfaceClass =
     "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
-  const inputAccentBorderClass =
-    accentTheme === "blue"
-      ? "focus:border-blue-500"
-      : accentTheme === "emerald"
-        ? "focus:border-emerald-500"
-        : accentTheme === "amber"
-          ? "focus:border-amber-500"
-          : "focus:border-slate-500";
-  const buttonAccentRingClass =
-    accentTheme === "blue"
-      ? "focus-visible:ring-blue-500/40"
-      : accentTheme === "emerald"
-        ? "focus-visible:ring-emerald-500/40"
-        : accentTheme === "amber"
-          ? "focus-visible:ring-amber-500/40"
-          : "focus-visible:ring-slate-500/40";
   const inputClass = `rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
   const buttonClass = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
 

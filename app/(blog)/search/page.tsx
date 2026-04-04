@@ -10,6 +10,8 @@ import {
 } from "@/lib/settings";
 import {
   resolveAccentClass,
+  resolveAccentFocusBorderClass,
+  resolveAccentFocusRingClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -62,14 +64,18 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const accentFocusRingClass = resolveAccentFocusRingClass(
+    themeFrameworkSettings.public_accent_theme,
+  );
+  const accentFocusBorderClass = resolveAccentFocusBorderClass(
+    themeFrameworkSettings.public_accent_theme,
+  );
   const fieldSurfaceClass =
     themeFrameworkSettings.public_surface_variant === "solid"
       ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
       : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
   const buttonSurfaceClass =
-    themeFrameworkSettings.public_surface_variant === "solid"
-      ? "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
-      : "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+    "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
   const emptyStateSurfaceClass =
     themeFrameworkSettings.public_surface_variant === "solid"
       ? "border-slate-300 bg-slate-100/70 text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
@@ -81,32 +87,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const metaTextClass = "text-sm text-slate-500 dark:text-slate-400";
   const excerptClass = "text-base leading-7 text-slate-600 dark:text-slate-300";
   const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
-  const buttonAccentRingClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "focus-visible:ring-blue-500/40"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "focus-visible:ring-emerald-500/40"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "focus-visible:ring-amber-500/40"
-          : "focus-visible:ring-slate-500/40";
-  const inputAccentBorderClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "focus:border-blue-500"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "focus:border-emerald-500"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "focus:border-amber-500"
-          : "focus:border-slate-500";
-  const inputAccentTextClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "text-blue-700 dark:text-blue-300"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "text-emerald-700 dark:text-emerald-300"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "text-amber-700 dark:text-amber-300"
-          : "text-slate-700 dark:text-slate-200";
-  const inputClass = `min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
-  const buttonClass = `inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
+  const inputAccentTextClass = accentClass;
+  const inputClass = `min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${accentFocusBorderClass}`;
+  const buttonClass = `inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 ${buttonSurfaceClass} ${accentFocusRingClass}`;
   const emptyStateClass = `rounded-2xl border border-dashed px-6 py-12 text-center ${emptyStateSurfaceClass}`;
 
   return (

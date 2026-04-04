@@ -3,22 +3,15 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 import type { PublicAccentTheme, PublicThemeDefaultMode } from "@/lib/settings-config";
-import { THEME_STORAGE_KEY, type ThemeMode, resolveThemeMode } from "@/lib/theme";
+import {
+  THEME_STORAGE_KEY,
+  type ThemeMode,
+  resolveAccentBorderHoverClass,
+  resolveAccentFocusRingClass,
+  resolveThemeMode,
+} from "@/lib/theme";
 
 const THEME_CHANGE_EVENT = "inkwell-theme-change";
-
-function resolveAccentInteractionClass(accentTheme?: PublicAccentTheme) {
-  switch (accentTheme) {
-    case "blue":
-      return "hover:border-blue-300 dark:hover:border-blue-700 focus-visible:ring-blue-500/40";
-    case "emerald":
-      return "hover:border-emerald-300 dark:hover:border-emerald-700 focus-visible:ring-emerald-500/40";
-    case "amber":
-      return "hover:border-amber-300 dark:hover:border-amber-700 focus-visible:ring-amber-500/40";
-    default:
-      return "hover:border-slate-400 dark:hover:border-slate-600 focus-visible:ring-slate-500/40";
-  }
-}
 
 function applyTheme(theme: ThemeMode) {
   const root = document.documentElement;
@@ -73,7 +66,8 @@ export function ThemeToggle({
   defaultMode?: PublicThemeDefaultMode;
   accentTheme?: PublicAccentTheme;
 }) {
-  const accentInteractionClass = resolveAccentInteractionClass(accentTheme);
+  const effectiveAccentTheme = accentTheme ?? "slate";
+  const accentInteractionClass = `${resolveAccentBorderHoverClass(effectiveAccentTheme)} ${resolveAccentFocusRingClass(effectiveAccentTheme)}`;
   const getThemeSnapshot = useCallback(() => resolveThemeSnapshot(defaultMode), [defaultMode]);
   const getServerSnapshot = useCallback(() => resolveInitialTheme(defaultMode), [defaultMode]);
   const theme = useSyncExternalStore(subscribeToThemeChanges, getThemeSnapshot, getServerSnapshot);

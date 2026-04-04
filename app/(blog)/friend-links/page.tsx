@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { listPublicFriendLinks, getFriendLinksPageMetadata } from "@/lib/blog/friend-links";
 import { getThemeFrameworkSettings } from "@/lib/settings";
 import {
+  resolveAccentBorderHoverClass,
   resolveAccentClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
@@ -39,19 +40,14 @@ export default async function FriendLinksPage() {
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
+  const accentBorderHoverClass = resolveAccentBorderHoverClass(
+    themeFrameworkSettings.public_accent_theme,
+  );
   const emptyStateClass =
     themeFrameworkSettings.public_surface_variant === "solid"
       ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
       : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
-  const cardHoverClass =
-    themeFrameworkSettings.public_accent_theme === "blue"
-      ? "hover:border-blue-300 dark:hover:border-blue-700"
-      : themeFrameworkSettings.public_accent_theme === "emerald"
-        ? "hover:border-emerald-300 dark:hover:border-emerald-700"
-        : themeFrameworkSettings.public_accent_theme === "amber"
-          ? "hover:border-amber-300 dark:hover:border-amber-700"
-          : "hover:border-slate-400 dark:hover:border-slate-600";
-  const cardClass = `flex h-full flex-col gap-4 rounded-2xl border p-6 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${cardHoverClass}`;
+  const cardClass = `flex h-full flex-col gap-4 rounded-2xl border p-6 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
   const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
   const urlTextClass = `truncate text-sm ${accentLinkClass}`;
   const logoImageClass = `h-14 w-14 rounded-xl border object-cover ${surfaceClass}`;
