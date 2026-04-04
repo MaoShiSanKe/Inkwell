@@ -15,6 +15,8 @@ import {
   resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveEmptyStateSurfaceClass,
+  resolveFieldSurfaceClass,
+  resolvePrimaryButtonSurfaceClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -72,12 +74,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const accentFocusBorderClass = resolveAccentFocusBorderClass(
     themeFrameworkSettings.public_accent_theme,
   );
-  const fieldSurfaceClass =
-    themeFrameworkSettings.public_surface_variant === "solid"
-      ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
-      : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
-  const buttonSurfaceClass =
-    "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+  const fieldSurfaceClass = resolveFieldSurfaceClass(
+    themeFrameworkSettings.public_surface_variant,
+  );
+  const buttonSurfaceClass = resolvePrimaryButtonSurfaceClass();
   const emptyStateSurfaceClass = resolveEmptyStateSurfaceClass(
     themeFrameworkSettings.public_surface_variant,
   );

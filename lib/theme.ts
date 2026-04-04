@@ -59,6 +59,19 @@ export function resolveSurfaceClass(variant: PublicSurfaceVariant) {
   }
 }
 
+export function resolveFieldSurfaceClass(variant: PublicSurfaceVariant) {
+  switch (variant) {
+    case "solid":
+      return "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90";
+    default:
+      return "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
+  }
+}
+
+export function resolvePrimaryButtonSurfaceClass() {
+  return "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+}
+
 export function resolveAccentClass(theme: PublicAccentTheme) {
   switch (theme) {
     case "blue":

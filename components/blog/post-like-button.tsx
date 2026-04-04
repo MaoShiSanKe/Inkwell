@@ -7,6 +7,7 @@ import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-con
 import {
   resolveAccentClass,
   resolveAccentFocusRingClass,
+  resolvePrimaryButtonSurfaceClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -31,8 +32,7 @@ export function PostLikeButton({
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
   const accentClass = resolveAccentClass(accentTheme);
   const buttonAccentRingClass = resolveAccentFocusRingClass(accentTheme);
-  const buttonSurfaceClass =
-    "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+  const buttonSurfaceClass = resolvePrimaryButtonSurfaceClass();
   const buttonClass = `rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
   const messageClass = `text-sm ${accentClass}`;
 

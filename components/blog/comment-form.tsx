@@ -11,6 +11,8 @@ import {
   resolveAccentFocusBorderClass,
   resolveAccentFocusRingClass,
   resolveAccentLinkClass,
+  resolveFieldSurfaceClass,
+  resolvePrimaryButtonSurfaceClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -45,12 +47,8 @@ export function CommentForm({
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
   const inputAccentBorderClass = resolveAccentFocusBorderClass(accentTheme);
   const buttonAccentRingClass = resolveAccentFocusRingClass(accentTheme);
-  const fieldSurfaceClass =
-    surfaceVariant === "solid"
-      ? "border-slate-300 bg-slate-100/90 dark:border-slate-700 dark:bg-slate-900/90"
-      : "border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950";
-  const buttonSurfaceClass =
-    "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
+  const fieldSurfaceClass = resolveFieldSurfaceClass(surfaceVariant);
+  const buttonSurfaceClass = resolvePrimaryButtonSurfaceClass();
   const inputClass = `rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
   const textAreaClass = `min-h-36 rounded-lg border px-3 py-2 text-sm leading-7 outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
   const buttonClass = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${buttonSurfaceClass} ${buttonAccentRingClass}`;

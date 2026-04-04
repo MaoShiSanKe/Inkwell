@@ -4,6 +4,9 @@ import {
   parseThemeMode,
   resolveAccentClass,
   resolveContentWidthClass,
+  resolveEmptyStateSurfaceClass,
+  resolveFieldSurfaceClass,
+  resolvePrimaryButtonSurfaceClass,
   resolveSurfaceClass,
   resolveThemeMode,
 } from "./theme";
@@ -17,6 +20,21 @@ describe("theme helpers", () => {
   it("resolves surface classes", () => {
     expect(resolveSurfaceClass("solid")).toContain("bg-slate-100/90");
     expect(resolveSurfaceClass("soft")).toContain("bg-white/80");
+  });
+
+  it("resolves field surface classes", () => {
+    expect(resolveFieldSurfaceClass("solid")).toContain("bg-slate-100/90");
+    expect(resolveFieldSurfaceClass("soft")).toContain("bg-white");
+  });
+
+  it("resolves primary button surface classes", () => {
+    expect(resolvePrimaryButtonSurfaceClass()).toContain("text-white");
+    expect(resolvePrimaryButtonSurfaceClass()).toContain("dark:text-slate-900");
+  });
+
+  it("resolves empty state surface classes", () => {
+    expect(resolveEmptyStateSurfaceClass("solid")).toContain("bg-slate-100/70");
+    expect(resolveEmptyStateSurfaceClass("soft")).toContain("bg-white/80");
   });
 
   it("resolves accent classes", () => {
