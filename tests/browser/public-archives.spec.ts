@@ -23,6 +23,7 @@ type ThemeSettingsSnapshot = {
   public_layout_width: string | null;
   public_surface_variant: string | null;
   public_accent_theme: string | null;
+  public_archive_posts_variant: string | null;
   home_primary_cta_label: string | null;
   home_primary_cta_url: string | null;
 };
@@ -37,6 +38,7 @@ test.describe("public archive pages", () => {
         public_layout_width: "wide",
         public_surface_variant: "solid",
         public_accent_theme: "blue",
+        public_archive_posts_variant: "compact",
         home_primary_cta_label: "查看订阅",
         home_primary_cta_url: "/newsletter",
       });
@@ -61,6 +63,8 @@ test.describe("public archive pages", () => {
       await page.goto(`/category/${fixture.categorySlug}`);
       await expect(page.getByRole("heading", { name: fixture.categoryName })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.publishedTitle })).toBeVisible();
+      await expect(page.locator("main article").first()).toHaveClass(/px-5/);
+      await expect(page.locator("main article").first()).toHaveClass(/py-4/);
       await expect(page.getByRole("link", { name: `作者：${fixture.authorName}` })).toBeVisible();
       await expect(page.getByText(fixture.draftTitle)).toHaveCount(0);
 
@@ -352,6 +356,7 @@ async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
     public_layout_width: await getSettingValue("public_layout_width"),
     public_surface_variant: await getSettingValue("public_surface_variant"),
     public_accent_theme: await getSettingValue("public_accent_theme"),
+    public_archive_posts_variant: await getSettingValue("public_archive_posts_variant"),
     home_primary_cta_label: await getSettingValue("home_primary_cta_label"),
     home_primary_cta_url: await getSettingValue("home_primary_cta_url"),
   };
@@ -361,12 +366,14 @@ async function applyThemeSettings(values: {
   public_layout_width: "narrow" | "default" | "wide";
   public_surface_variant: "soft" | "solid";
   public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+  public_archive_posts_variant: "comfortable" | "compact";
   home_primary_cta_label: string;
   home_primary_cta_url: string;
 }) {
   await restoreSetting("public_layout_width", values.public_layout_width);
   await restoreSetting("public_surface_variant", values.public_surface_variant);
   await restoreSetting("public_accent_theme", values.public_accent_theme);
+  await restoreSetting("public_archive_posts_variant", values.public_archive_posts_variant);
   await restoreSetting("home_primary_cta_label", values.home_primary_cta_label);
   await restoreSetting("home_primary_cta_url", values.home_primary_cta_url);
 }
@@ -375,6 +382,7 @@ async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
   await restoreSetting("public_layout_width", snapshot.public_layout_width);
   await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
   await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+  await restoreSetting("public_archive_posts_variant", snapshot.public_archive_posts_variant);
   await restoreSetting("home_primary_cta_label", snapshot.home_primary_cta_label);
   await restoreSetting("home_primary_cta_url", snapshot.home_primary_cta_url);
 }
@@ -384,6 +392,7 @@ async function getSettingValue(
     | "public_layout_width"
     | "public_surface_variant"
     | "public_accent_theme"
+    | "public_archive_posts_variant"
     | "home_primary_cta_label"
     | "home_primary_cta_url",
 ) {
@@ -403,6 +412,7 @@ async function restoreSetting(
     | "public_layout_width"
     | "public_surface_variant"
     | "public_accent_theme"
+    | "public_archive_posts_variant"
     | "home_primary_cta_label"
     | "home_primary_cta_url",
   value: string | null,

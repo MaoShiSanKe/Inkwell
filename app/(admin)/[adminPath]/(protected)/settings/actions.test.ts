@@ -143,6 +143,7 @@ describe("admin settings actions", () => {
         home_show_post_author: "true",
         home_show_post_category: "true",
         home_show_post_date: "false",
+        public_archive_posts_variant: "compact",
         public_layout_width: "wide",
         public_surface_variant: "solid",
         public_accent_theme: "blue",
@@ -340,6 +341,7 @@ function createFormData(
     home_show_post_author: string;
     home_show_post_category: string;
     home_show_post_date: string;
+    public_archive_posts_variant: string;
     public_layout_width: string;
     public_surface_variant: string;
     public_accent_theme: string;
@@ -392,6 +394,7 @@ function createFormData(
     home_show_post_author: "true",
     home_show_post_category: "true",
     home_show_post_date: "false",
+    public_archive_posts_variant: "compact",
     public_layout_width: "wide",
     public_surface_variant: "solid",
     public_accent_theme: "blue",
@@ -445,6 +448,7 @@ function createFormData(
   formData.set("home_show_post_author", values.home_show_post_author);
   formData.set("home_show_post_category", values.home_show_post_category);
   formData.set("home_show_post_date", values.home_show_post_date);
+  formData.set("public_archive_posts_variant", values.public_archive_posts_variant);
   formData.set("public_layout_width", values.public_layout_width);
   formData.set("public_surface_variant", values.public_surface_variant);
   formData.set("public_accent_theme", values.public_accent_theme);

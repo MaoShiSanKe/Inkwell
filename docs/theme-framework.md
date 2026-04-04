@@ -93,7 +93,17 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 - 公开展示层的重复主题映射正在持续收敛到 `lib/theme.ts`，避免各页面重新写一套颜色 / 边框 / 交互态分支
 - `public_custom_css` 仍保留为 escape hatch
 
-### 2.4 默认主题模式
+### 2.4 归档 / 搜索列表展示
+由以下 setting 驱动：
+- `public_archive_posts_variant` → `comfortable | compact`
+
+当前行为：
+- 分类 / 标签 / 系列 / 作者归档页与搜索结果页共享同一组列表密度 token
+- `comfortable` 使用更宽松的卡片 padding、列表间距、元信息字号与摘要节奏
+- `compact` 使用更紧凑的列表节奏，但不改变页面结构与 metadata 组合
+- 该 setting 复用 `lib/theme.ts` 中的 `resolvePostsDensityTokens()`，与首页 `home_posts_variant` 保持一致的密度模型
+
+### 2.5 默认主题模式
 由以下 setting 驱动：
 - `public_theme_default_mode` → `system | light | dark`
 

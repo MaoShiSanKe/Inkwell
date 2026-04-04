@@ -2,6 +2,7 @@ import type {
   EmailNotificationScenario,
   HomePostsVariant,
   PublicAccentTheme,
+  PublicArchivePostsVariant,
   PublicLayoutWidth,
   PublicNoticeVariant,
   PublicSurfaceVariant,
@@ -49,6 +50,7 @@ export type SettingsFormValues = {
   home_show_post_author: "true" | "false";
   home_show_post_category: "true" | "false";
   home_show_post_date: "true" | "false";
+  public_archive_posts_variant: PublicArchivePostsVariant;
   public_layout_width: PublicLayoutWidth;
   public_surface_variant: PublicSurfaceVariant;
   public_accent_theme: PublicAccentTheme;
@@ -125,6 +127,7 @@ export const initialSettingsFormValues: SettingsFormValues = {
   home_show_post_author: "true",
   home_show_post_category: "true",
   home_show_post_date: "true",
+  public_archive_posts_variant: "comfortable",
   public_layout_width: "default",
   public_surface_variant: "soft",
   public_accent_theme: "slate",

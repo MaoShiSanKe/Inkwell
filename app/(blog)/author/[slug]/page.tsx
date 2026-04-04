@@ -14,6 +14,7 @@ import {
   resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveEmptyStateSurfaceClass,
+  resolvePostsDensityTokens,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -73,7 +74,9 @@ export default async function AuthorPage({ params }: AuthorPageProps) {
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
   const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
-  const metadataLinkClass = `text-sm ${accentLinkClass}`;
+  const { articlePaddingClass, listGapClass, metaTextClass, titleClass, excerptClass } =
+    resolvePostsDensityTokens(themeFrameworkSettings.public_archive_posts_variant);
+  const metadataLinkClass = `${metaTextClass} ${accentLinkClass}`;
   const emptyStateSurfaceClass = resolveEmptyStateSurfaceClass(
     themeFrameworkSettings.public_surface_variant,
   );
@@ -97,14 +100,14 @@ export default async function AuthorPage({ params }: AuthorPageProps) {
           <p className="mt-2 text-sm">该作者发布文章后，会自动出现在这个作者归档页。</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className={`flex flex-col ${listGapClass}`}>
           {posts.map((post) => (
             <article
               key={post.id}
-              className={`rounded-2xl border px-6 py-5 ${surfaceClass}`}
+              className={`rounded-2xl border ${articlePaddingClass} ${surfaceClass}`}
             >
               <div className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500 dark:text-slate-400">
+                <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${metaTextClass} text-slate-500 dark:text-slate-400`}>
                   {post.publishedAt ? (
                     <time dateTime={post.publishedAt.toISOString()}>
                       {post.publishedAt.toLocaleDateString("zh-CN")}
@@ -116,13 +119,13 @@ export default async function AuthorPage({ params }: AuthorPageProps) {
                     </Link>
                   ) : null}
                 </div>
-                <h2 className="text-2xl font-semibold tracking-tight">
+                <h2 className={`${titleClass} font-semibold tracking-tight`}>
                   <Link className={accentLinkClass} href={`/post/${post.slug}`}>
                     {post.title}
                   </Link>
                 </h2>
                 {post.excerpt ? (
-                  <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
+                  <p className={`${excerptClass} text-slate-600 dark:text-slate-300`}>
                     {post.excerpt}
                   </p>
                 ) : null}

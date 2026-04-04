@@ -36,7 +36,7 @@
 - `excerpt_length`
 - SMTP 设置
 - Umami 设置
-- Theme Framework v1（站点品牌、首页 hero、首页展示变体、公开布局外壳、默认主题模式）
+- Theme Framework v1（站点品牌、首页 hero、首页展示变体、归档 / 搜索列表变体、公开布局外壳、默认主题模式）
 - 全站公开公告（含可关闭、版本控制与时间窗口）
 
 ## 2. 当前设置系统的结构
@@ -79,6 +79,7 @@ Theme Framework v1 当前建议采用：
 - 品牌名称 / 副标题
 - 首页标题 / 简介 / 主 CTA
 - 首页列表展示模式与元信息开关
+- 归档 / 搜索结果列表展示模式
 - 公开布局宽度 / 表面风格 / 强调色
 - 默认主题模式（`system | light | dark`）
 
@@ -88,6 +89,7 @@ Theme Framework v1 当前建议采用：
 - 首页精选入口区块（标题、说明、三张固定链接卡片）
 - 首页列表 `comfortable | compact` 变体
 - 首页摘要 / 作者 / 分类 / 发布时间开关
+- 归档 / 搜索结果列表 `comfortable | compact` 变体
 - 根布局 metadata、公开页面 `Open Graph siteName`、RSS 标题与文章 JSON-LD publisher 会跟随 `site_brand_name`
 - public/admin 主题切换遵循 `localStorage > backend default > system`
 

@@ -59,6 +59,9 @@ describe("blog series page", () => {
   });
 
   it("renders themed archive classes", async () => {
+    getThemeFrameworkSettingsMock.mockResolvedValue(
+      createThemeFrameworkSettings({ public_archive_posts_variant: "compact" }),
+    );
     resolvePublishedSeriesArchiveBySlugMock.mockResolvedValue({
       kind: "archive",
       series: {
@@ -79,6 +82,11 @@ describe("blog series page", () => {
     expect(markup).toContain("max-w-6xl");
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("text-blue-700 dark:text-blue-300");
+    expect(markup).toContain("gap-3");
+    expect(markup).toContain("px-5 py-4");
+    expect(markup).toContain("text-xs");
+    expect(markup).toContain("text-xl");
+    expect(markup).toContain("text-sm leading-6");
   });
 
   it("returns empty metadata when the series slug does not exist", async () => {
@@ -206,6 +214,7 @@ function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
     public_layout_width: "wide",
     public_surface_variant: "solid",
     public_accent_theme: "blue",
+    public_archive_posts_variant: "comfortable",
     ...overrides,
   };
 }

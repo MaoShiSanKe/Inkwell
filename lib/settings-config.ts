@@ -1,6 +1,7 @@
 export type CommentModerationMode = "pending" | "approved";
 export type PublicNoticeVariant = "info" | "warning" | "success";
 export type HomePostsVariant = "comfortable" | "compact";
+export type PublicArchivePostsVariant = "comfortable" | "compact";
 export type PublicLayoutWidth = "narrow" | "default" | "wide";
 export type PublicSurfaceVariant = "soft" | "solid";
 export type PublicAccentTheme = "slate" | "blue" | "emerald" | "amber";
@@ -196,6 +197,14 @@ function parsePublicNoticeVariant(value: string): PublicNoticeVariant {
 function parseHomePostsVariant(value: string): HomePostsVariant {
   if (value !== "comfortable" && value !== "compact") {
     throw new Error("home_posts_variant must be either comfortable or compact.");
+  }
+
+  return value;
+}
+
+function parsePublicArchivePostsVariant(value: string): PublicArchivePostsVariant {
+  if (value !== "comfortable" && value !== "compact") {
+    throw new Error("public_archive_posts_variant must be either comfortable or compact.");
   }
 
   return value;
@@ -474,6 +483,12 @@ export const settingDefinitions = {
     parse: (value: string) => parseBooleanString(value, "home_show_post_date"),
     serialize: (value: boolean) => String(value),
   }),
+  public_archive_posts_variant: defineSetting({
+    defaultValue: "comfortable" as PublicArchivePostsVariant,
+    isSecret: false,
+    parse: (value: string) => parsePublicArchivePostsVariant(value),
+    serialize: (value: PublicArchivePostsVariant) => parsePublicArchivePostsVariant(value),
+  }),
   public_layout_width: defineSetting({
     defaultValue: "default" as PublicLayoutWidth,
     isSecret: false,
@@ -637,6 +652,7 @@ export type ThemeFrameworkSettings = Pick<
   | "home_show_post_author"
   | "home_show_post_category"
   | "home_show_post_date"
+  | "public_archive_posts_variant"
   | "public_layout_width"
   | "public_surface_variant"
   | "public_accent_theme"
@@ -703,6 +719,7 @@ export const DEFAULT_SETTINGS: SettingValues = {
   home_show_post_author: settingDefinitions.home_show_post_author.defaultValue,
   home_show_post_category: settingDefinitions.home_show_post_category.defaultValue,
   home_show_post_date: settingDefinitions.home_show_post_date.defaultValue,
+  public_archive_posts_variant: settingDefinitions.public_archive_posts_variant.defaultValue,
   public_layout_width: settingDefinitions.public_layout_width.defaultValue,
   public_surface_variant: settingDefinitions.public_surface_variant.defaultValue,
   public_accent_theme: settingDefinitions.public_accent_theme.defaultValue,

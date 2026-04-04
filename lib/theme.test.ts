@@ -6,6 +6,7 @@ import {
   resolveContentWidthClass,
   resolveEmptyStateSurfaceClass,
   resolveFieldSurfaceClass,
+  resolvePostsDensityTokens,
   resolvePrimaryButtonSurfaceClass,
   resolveSurfaceClass,
   resolveThemeMode,
@@ -30,6 +31,23 @@ describe("theme helpers", () => {
   it("resolves primary button surface classes", () => {
     expect(resolvePrimaryButtonSurfaceClass()).toContain("text-white");
     expect(resolvePrimaryButtonSurfaceClass()).toContain("dark:text-slate-900");
+  });
+
+  it("resolves posts density tokens", () => {
+    expect(resolvePostsDensityTokens("comfortable")).toEqual({
+      articlePaddingClass: "px-6 py-5",
+      listGapClass: "gap-4",
+      metaTextClass: "text-sm",
+      titleClass: "text-2xl",
+      excerptClass: "text-base leading-7",
+    });
+    expect(resolvePostsDensityTokens("compact")).toEqual({
+      articlePaddingClass: "px-5 py-4",
+      listGapClass: "gap-3",
+      metaTextClass: "text-xs",
+      titleClass: "text-xl",
+      excerptClass: "text-sm leading-6",
+    });
   });
 
   it("resolves empty state surface classes", () => {

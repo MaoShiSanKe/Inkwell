@@ -198,6 +198,7 @@ Theme Framework v1 当前已经覆盖：
 - 首页精选入口区块（三张固定卡片）
 - 首页文章列表 `comfortable | compact` 变体
 - 首页摘要 / 作者 / 分类 / 发布时间开关
+- 归档 / 搜索结果列表 `comfortable | compact` 变体
 - 搜索页、友情链接页、独立页面与分类 / 标签 / 作者 / 系列归档页的宽度 / 表面 / 强调色映射
 - `localStorage > backend default > system` 的默认主题模式优先级
 - 公开主题 helper 的集中收口（accent interaction、accent link、empty state surface、field surface、primary button surface）

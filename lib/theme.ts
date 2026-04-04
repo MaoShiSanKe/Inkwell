@@ -72,6 +72,16 @@ export function resolvePrimaryButtonSurfaceClass() {
   return "bg-slate-900 text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300";
 }
 
+export function resolvePostsDensityTokens(variant: "comfortable" | "compact") {
+  return {
+    articlePaddingClass: variant === "compact" ? "px-5 py-4" : "px-6 py-5",
+    listGapClass: variant === "compact" ? "gap-3" : "gap-4",
+    metaTextClass: variant === "compact" ? "text-xs" : "text-sm",
+    titleClass: variant === "compact" ? "text-xl" : "text-2xl",
+    excerptClass: variant === "compact" ? "text-sm leading-6" : "text-base leading-7",
+  };
+}
+
 export function resolveAccentClass(theme: PublicAccentTheme) {
   switch (theme) {
     case "blue":

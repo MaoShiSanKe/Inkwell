@@ -121,6 +121,9 @@ export async function saveSettingsAction(
     home_show_post_date: String(formData.get("home_show_post_date") ?? "true") as
       | "true"
       | "false",
+    public_archive_posts_variant: String(formData.get("public_archive_posts_variant") ?? "comfortable") as
+      | "comfortable"
+      | "compact",
     public_layout_width: String(formData.get("public_layout_width") ?? "default") as
       | "narrow"
       | "default"

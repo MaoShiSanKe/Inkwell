@@ -16,6 +16,7 @@ import {
   resolveContentWidthClass,
   resolveEmptyStateSurfaceClass,
   resolveFieldSurfaceClass,
+  resolvePostsDensityTokens,
   resolvePrimaryButtonSurfaceClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -81,12 +82,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const emptyStateSurfaceClass = resolveEmptyStateSurfaceClass(
     themeFrameworkSettings.public_surface_variant,
   );
-  const resultCountClass = `text-sm ${accentClass}`;
+  const { articlePaddingClass, listGapClass, metaTextClass, titleClass, excerptClass } =
+    resolvePostsDensityTokens(themeFrameworkSettings.public_archive_posts_variant);
+  const resultCountClass = `${metaTextClass} ${accentClass}`;
   const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const postTitleLinkClass = accentLinkClass;
-  const metadataLinkClass = `text-sm ${accentLinkClass}`;
-  const metaTextClass = "text-sm text-slate-500 dark:text-slate-400";
-  const excerptClass = "text-base leading-7 text-slate-600 dark:text-slate-300";
+  const metadataLinkClass = `${metaTextClass} ${accentLinkClass}`;
+  const metaRowClass = `flex flex-wrap items-center gap-x-3 gap-y-1 ${metaTextClass} text-slate-500 dark:text-slate-400`;
+  const themedExcerptClass = `${excerptClass} text-slate-600 dark:text-slate-300`;
   const emptyStateHeadingClass = `text-lg font-medium ${accentClass}`;
   const inputAccentTextClass = accentClass;
   const inputClass = `min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${accentFocusBorderClass}`;
@@ -129,17 +132,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <p className="mt-2 text-sm">请尝试更换关键词，或缩短查询词后重新搜索。</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className={`flex flex-col ${listGapClass}`}>
           <p className={resultCountClass}>
             共找到 {posts.length} 篇与 “{query}” 相关的已发布文章。
           </p>
           {posts.map((post) => (
             <article
               key={post.id}
-              className={`rounded-2xl border px-6 py-5 ${surfaceClass}`}
+              className={`rounded-2xl border ${articlePaddingClass} ${surfaceClass}`}
             >
               <div className="flex flex-col gap-3">
-                <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 ${metaTextClass}`}>
+                <div className={metaRowClass}>
                   <Link className={metadataLinkClass} href={`/author/${post.author.slug}`}>
                     作者：{post.author.displayName}
                   </Link>
@@ -154,12 +157,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     </Link>
                   ) : null}
                 </div>
-                <h2 className="text-2xl font-semibold tracking-tight">
+                <h2 className={`${titleClass} font-semibold tracking-tight`}>
                   <Link className={postTitleLinkClass} href={`/post/${post.slug}`}>
                     {post.title}
                   </Link>
                 </h2>
-                {post.excerpt ? <p className={excerptClass}>{post.excerpt}</p> : null}
+                {post.excerpt ? <p className={themedExcerptClass}>{post.excerpt}</p> : null}
               </div>
             </article>
           ))}
