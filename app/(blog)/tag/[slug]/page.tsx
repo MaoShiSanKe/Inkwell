@@ -11,6 +11,7 @@ import {
 } from "@/lib/settings";
 import {
   resolveAccentClass,
+  resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -76,7 +77,7 @@ export default async function TagPage({ params }: TagPageProps) {
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(themeFrameworkSettings.public_surface_variant);
   const accentClass = resolveAccentClass(themeFrameworkSettings.public_accent_theme);
-  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const emptyStateClass =
     themeFrameworkSettings.public_surface_variant === "solid"

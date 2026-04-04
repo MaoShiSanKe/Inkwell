@@ -30,6 +30,7 @@ import { getSiteBrandName, getSiteOrigin, getThemeFrameworkSettings } from "@/li
 import {
   resolveAccentBorderHoverClass,
   resolveAccentClass,
+  resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -182,7 +183,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
     themeFrameworkSettings.public_accent_theme,
   );
   const relatedCardClass = `flex flex-col gap-2 rounded-2xl border px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
-  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const tagLinkClass = `inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm transition ${accentBorderHoverClass} ${accentClass}`;
   const breadcrumbItems = buildBreadcrumbItems(post);

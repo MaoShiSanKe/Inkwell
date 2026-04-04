@@ -72,6 +72,10 @@ export function resolveAccentClass(theme: PublicAccentTheme) {
   }
 }
 
+export function resolveAccentLinkClass(theme: PublicAccentTheme) {
+  return `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${resolveAccentClass(theme)}`;
+}
+
 export function resolveAccentBorderHoverClass(theme: PublicAccentTheme) {
   switch (theme) {
     case "blue":

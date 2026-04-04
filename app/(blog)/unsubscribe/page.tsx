@@ -7,6 +7,7 @@ import { getSiteBrandName, getSiteOrigin, getThemeFrameworkSettings } from "@/li
 import {
   resolveAccentClass,
   resolveAccentFocusRingClass,
+  resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -64,7 +65,7 @@ export default async function UnsubscribePage({ searchParams }: UnsubscribePageP
   const accentFocusRingClass = resolveAccentFocusRingClass(
     themeFrameworkSettings.public_accent_theme,
   );
-  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const destructiveButtonClass = `inline-flex items-center justify-center rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40 ${accentFocusRingClass}`;
 
   return (

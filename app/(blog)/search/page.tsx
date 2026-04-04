@@ -12,6 +12,7 @@ import {
   resolveAccentClass,
   resolveAccentFocusBorderClass,
   resolveAccentFocusRingClass,
+  resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -81,7 +82,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       ? "border-slate-300 bg-slate-100/70 text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
       : "border-slate-300 bg-white/80 text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
   const resultCountClass = `text-sm ${accentClass}`;
-  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const postTitleLinkClass = accentLinkClass;
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const metaTextClass = "text-sm text-slate-500 dark:text-slate-400";

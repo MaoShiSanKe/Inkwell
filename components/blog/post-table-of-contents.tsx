@@ -1,6 +1,6 @@
 import type { PostTocItem } from "@/lib/blog/post-toc";
 import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
-import { resolveAccentClass, resolveSurfaceClass } from "@/lib/theme";
+import { resolveAccentLinkClass, resolveSurfaceClass } from "@/lib/theme";
 
 type PostTableOfContentsProps = {
   items: PostTocItem[];
@@ -13,7 +13,7 @@ export function PostTableOfContents({
   accentTheme = "slate",
   surfaceVariant = "soft",
 }: PostTableOfContentsProps) {
-  const accentClass = resolveAccentClass(accentTheme);
+  const accentLinkClass = resolveAccentLinkClass(accentTheme);
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
 
   if (items.length === 0) {
@@ -28,7 +28,7 @@ export function PostTableOfContents({
           {items.map((item) => (
             <li key={item.id} className={item.level === 3 ? "pl-4" : undefined}>
               <a
-                className={`underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`}
+                className={accentLinkClass}
                 href={`#${item.id}`}
               >
                 {item.title}

@@ -5,6 +5,7 @@ import { getThemeFrameworkSettings } from "@/lib/settings";
 import {
   resolveAccentBorderHoverClass,
   resolveAccentClass,
+  resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -48,7 +49,7 @@ export default async function FriendLinksPage() {
       ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
       : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-12 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
   const cardClass = `flex h-full flex-col gap-4 rounded-2xl border p-6 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
-  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
   const urlTextClass = `truncate text-sm ${accentLinkClass}`;
   const logoImageClass = `h-14 w-14 rounded-xl border object-cover ${surfaceClass}`;
   const logoTileClass = `flex h-14 w-14 items-center justify-center rounded-xl border ${surfaceClass}`;

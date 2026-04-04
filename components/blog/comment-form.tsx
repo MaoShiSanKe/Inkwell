@@ -8,9 +8,9 @@ import { submitCommentAction } from "@/app/(blog)/post/[slug]/actions";
 import { createCommentFormState } from "@/lib/blog/comment-form";
 import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
 import {
-  resolveAccentClass,
   resolveAccentFocusBorderClass,
   resolveAccentFocusRingClass,
+  resolveAccentLinkClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -43,7 +43,6 @@ export function CommentForm({
   );
   const formKey = `${state.submissionStatus}:${replyTarget?.id ?? "top-level"}:${state.message ?? "idle"}`;
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
-  const accentClass = resolveAccentClass(accentTheme);
   const inputAccentBorderClass = resolveAccentFocusBorderClass(accentTheme);
   const buttonAccentRingClass = resolveAccentFocusRingClass(accentTheme);
   const fieldSurfaceClass =
@@ -55,7 +54,7 @@ export function CommentForm({
   const inputClass = `rounded-lg border px-3 py-2 text-sm outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
   const textAreaClass = `min-h-36 rounded-lg border px-3 py-2 text-sm leading-7 outline-none placeholder:text-slate-400 dark:text-slate-100 ${fieldSurfaceClass} ${inputAccentBorderClass}`;
   const buttonClass = `inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-60 ${buttonSurfaceClass} ${buttonAccentRingClass}`;
-  const replyLinkClass = `text-sm font-medium underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const replyLinkClass = `text-sm font-medium ${resolveAccentLinkClass(accentTheme)}`;
 
   useEffect(() => {
     if (state.submissionStatus === "approved") {

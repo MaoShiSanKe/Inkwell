@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import type { ThemeFrameworkSettings } from "@/lib/settings-config";
 import {
-  resolveAccentClass,
+  resolveAccentLinkClass,
   resolveContentWidthClass,
   resolveSurfaceClass,
 } from "@/lib/theme";
@@ -10,8 +10,7 @@ import {
 export function SiteHeader({ settings }: { settings: ThemeFrameworkSettings }) {
   const widthClass = resolveContentWidthClass(settings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(settings.public_surface_variant);
-  const accentClass = resolveAccentClass(settings.public_accent_theme);
-  const accentLinkClass = `underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const accentLinkClass = resolveAccentLinkClass(settings.public_accent_theme);
 
   return (
     <header className={`mx-auto w-full ${widthClass} px-6 pt-6`}>

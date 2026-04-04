@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import type { ApprovedComment } from "@/lib/blog/comments";
 import type { PublicAccentTheme, PublicSurfaceVariant } from "@/lib/settings-config";
-import { resolveAccentClass, resolveSurfaceClass } from "@/lib/theme";
+import { resolveAccentClass, resolveAccentLinkClass, resolveSurfaceClass } from "@/lib/theme";
 
 type CommentListProps = {
   comments: ApprovedComment[];
@@ -14,11 +14,11 @@ type CommentListProps = {
 function AuthorLink({
   authorName,
   authorUrl,
-  accentClass,
+  accentTheme,
 }: {
   authorName: string;
   authorUrl: string | null;
-  accentClass: string;
+  accentTheme: PublicAccentTheme;
 }) {
   if (!authorUrl) {
     return <span>{authorName}</span>;
@@ -26,7 +26,7 @@ function AuthorLink({
 
   return (
     <a
-      className={`underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`}
+      className={resolveAccentLinkClass(accentTheme)}
       href={authorUrl}
       rel="noopener noreferrer"
       target="_blank"
@@ -44,12 +44,13 @@ export function CommentList({
   surfaceVariant = "soft",
 }: CommentListProps) {
   const accentClass = resolveAccentClass(accentTheme);
+  const accentLinkClass = resolveAccentLinkClass(accentTheme);
   const surfaceClass = resolveSurfaceClass(surfaceVariant);
   const emptyStateClass =
     surfaceVariant === "solid"
       ? "rounded-2xl border border-dashed border-slate-300 bg-slate-100/70 px-6 py-10 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-900/70 dark:text-slate-300"
       : "rounded-2xl border border-dashed border-slate-300 bg-white/80 px-6 py-10 text-center text-slate-600 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300";
-  const replyLinkClass = `text-sm font-medium underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400 ${accentClass}`;
+  const replyLinkClass = `text-sm font-medium ${accentLinkClass}`;
   const replySurfaceClass =
     surfaceVariant === "solid"
       ? "rounded-2xl border border-slate-300 bg-slate-100/70 p-4 dark:border-slate-700 dark:bg-slate-900/70"
@@ -74,7 +75,7 @@ export function CommentList({
                 <AuthorLink
                   authorName={comment.authorName}
                   authorUrl={comment.authorUrl}
-                  accentClass={accentClass}
+                  accentTheme={accentTheme}
                 />
               </p>
               <p>
@@ -103,7 +104,7 @@ export function CommentList({
                         <AuthorLink
                           authorName={reply.authorName}
                           authorUrl={reply.authorUrl}
-                          accentClass={accentClass}
+                          accentTheme={accentTheme}
                         />
                       </p>
                       <p>
