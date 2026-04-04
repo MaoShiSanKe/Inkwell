@@ -1,6 +1,7 @@
 import type {
   PublicAccentTheme,
   PublicLayoutWidth,
+  PublicLongformVariant,
   PublicSurfaceVariant,
   PublicThemeDefaultMode,
 } from "@/lib/settings-config";
@@ -79,6 +80,17 @@ export function resolvePostsDensityTokens(variant: "comfortable" | "compact") {
     metaTextClass: variant === "compact" ? "text-xs" : "text-sm",
     titleClass: variant === "compact" ? "text-xl" : "text-2xl",
     excerptClass: variant === "compact" ? "text-sm leading-6" : "text-base leading-7",
+  };
+}
+
+export function resolveLongformDensityTokens(variant: PublicLongformVariant) {
+  return {
+    articlePaddingClass: variant === "compact" ? "px-5 py-4" : "px-6 py-5",
+    articleGapClass: variant === "compact" ? "gap-3" : "gap-4",
+    excerptClass: variant === "compact" ? "text-sm leading-6" : "text-base leading-7",
+    bodyTextClass: variant === "compact" ? "text-sm leading-6" : "text-base leading-7",
+    heading2Class: variant === "compact" ? "text-xl" : "text-2xl",
+    heading3Class: variant === "compact" ? "text-lg" : "text-xl",
   };
 }
 

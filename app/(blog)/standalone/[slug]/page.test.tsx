@@ -62,6 +62,76 @@ describe("standalone page", () => {
     expect(markup).toContain("max-w-6xl");
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("text-blue-700 dark:text-blue-300");
+    expect(markup).toContain("px-6 py-5");
+    expect(markup).toContain("text-base leading-7");
+  });
+
+  it("renders compact longform classes", async () => {
+    getThemeFrameworkSettingsMock.mockResolvedValue(
+      createThemeFrameworkSettings({ public_longform_variant: "compact" }),
+    );
+    resolveStandalonePageBySlugMock.mockResolvedValue({
+      id: 1,
+      title: "About",
+      slug: "about",
+      content: ["Intro", "", "## Section", "Body"].join("\n"),
+      publishedAt: new Date("2026-03-30T12:00:00.000Z"),
+      updatedAt: new Date("2026-03-30T12:10:00.000Z"),
+      seo: {
+        metaTitle: null,
+        metaDescription: null,
+        ogTitle: null,
+        ogDescription: null,
+        canonicalUrl: null,
+        noindex: false,
+        nofollow: false,
+      },
+      ogImage: null,
+    });
+
+    const { default: StandalonePage } = await import("./page");
+    const element = await StandalonePage({
+      params: Promise.resolve({ slug: "about" }),
+    });
+    const markup = await import("react-dom/server").then(({ renderToStaticMarkup }) =>
+      renderToStaticMarkup(element),
+    );
+
+    expect(markup).toContain("px-5 py-4");
+    expect(markup).toContain("text-sm leading-6");
+    expect(markup).toContain("text-xl font-semibold tracking-tight");
+  });
+
+  it("renders comfortable longform classes by default", async () => {
+    resolveStandalonePageBySlugMock.mockResolvedValue({
+      id: 1,
+      title: "About",
+      slug: "about",
+      content: ["Intro", "", "## Section", "Body"].join("\n"),
+      publishedAt: new Date("2026-03-30T12:00:00.000Z"),
+      updatedAt: new Date("2026-03-30T12:10:00.000Z"),
+      seo: {
+        metaTitle: null,
+        metaDescription: null,
+        ogTitle: null,
+        ogDescription: null,
+        canonicalUrl: null,
+        noindex: false,
+        nofollow: false,
+      },
+      ogImage: null,
+    });
+
+    const { default: StandalonePage } = await import("./page");
+    const element = await StandalonePage({
+      params: Promise.resolve({ slug: "about" }),
+    });
+    const markup = await import("react-dom/server").then(({ renderToStaticMarkup }) =>
+      renderToStaticMarkup(element),
+    );
+
+    expect(markup).toContain("px-6 py-5");
+    expect(markup).toContain("text-2xl font-semibold tracking-tight");
   });
 
   it("returns metadata for a published standalone page", async () => {
@@ -143,6 +213,7 @@ function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
     public_layout_width: "wide",
     public_surface_variant: "solid",
     public_accent_theme: "blue",
+    public_longform_variant: "comfortable",
     ...overrides,
   };
 }

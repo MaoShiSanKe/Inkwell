@@ -30,6 +30,7 @@ test.describe("custom pages browser regression", () => {
         public_layout_width: "wide",
         public_surface_variant: "solid",
         public_accent_theme: "blue",
+        public_longform_variant: "compact",
       });
 
       await page.goto(
@@ -65,6 +66,8 @@ test.describe("custom pages browser regression", () => {
       await expect(page.locator("main")).toHaveClass(/max-w-6xl/);
       await expect(page.getByText("Page", { exact: true })).toHaveClass(/text-blue-700/);
       await expect(page.locator("article")).toHaveClass(/bg-slate-100\/90/);
+      await expect(page.locator("article")).toHaveClass(/px-5/);
+      await expect(page.locator("article")).toHaveClass(/py-4/);
       await expect(page.getByText("文章目录")).toBeVisible();
       await expect(page.getByRole("heading", { name: "Section" })).toBeVisible();
 
@@ -83,6 +86,7 @@ type ThemeSettingsSnapshot = {
   public_layout_width: string | null;
   public_surface_variant: string | null;
   public_accent_theme: string | null;
+  public_longform_variant: string | null;
 };
 
 type CustomPageFixture = {
@@ -178,6 +182,7 @@ async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
     public_layout_width: await getSettingValue("public_layout_width"),
     public_surface_variant: await getSettingValue("public_surface_variant"),
     public_accent_theme: await getSettingValue("public_accent_theme"),
+    public_longform_variant: await getSettingValue("public_longform_variant"),
   };
 }
 
@@ -185,16 +190,19 @@ async function applyThemeSettings(values: {
   public_layout_width: "narrow" | "default" | "wide";
   public_surface_variant: "soft" | "solid";
   public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+  public_longform_variant: "comfortable" | "compact";
 }) {
   await restoreSetting("public_layout_width", values.public_layout_width);
   await restoreSetting("public_surface_variant", values.public_surface_variant);
   await restoreSetting("public_accent_theme", values.public_accent_theme);
+  await restoreSetting("public_longform_variant", values.public_longform_variant);
 }
 
 async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
   await restoreSetting("public_layout_width", snapshot.public_layout_width);
   await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
   await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+  await restoreSetting("public_longform_variant", snapshot.public_longform_variant);
 }
 
 async function getConfiguredAdminPath() {
@@ -203,7 +211,12 @@ async function getConfiguredAdminPath() {
 }
 
 async function getSettingValue(
-  key: "admin_path" | "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  key:
+    | "admin_path"
+    | "public_layout_width"
+    | "public_surface_variant"
+    | "public_accent_theme"
+    | "public_longform_variant",
 ) {
   return withDb(async (db) => {
     const [row] = await db
@@ -217,7 +230,11 @@ async function getSettingValue(
 }
 
 async function restoreSetting(
-  key: "public_layout_width" | "public_surface_variant" | "public_accent_theme",
+  key:
+    | "public_layout_width"
+    | "public_surface_variant"
+    | "public_accent_theme"
+    | "public_longform_variant",
   value: string | null,
 ) {
   await withDb(async (db) => {

@@ -472,6 +472,28 @@ describe("blog post page", () => {
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("text-blue-700 dark:text-blue-300");
     expect(markup).toContain("comment-form:blue:solid top-level");
+    expect(markup).toContain("px-6 py-5");
+    expect(markup).toContain("text-base leading-7");
+  });
+
+  it("renders compact longform post classes", async () => {
+    getThemeFrameworkSettingsMock.mockResolvedValue(
+      createThemeFrameworkSettings({ public_longform_variant: "compact" }),
+    );
+    resolvePublishedPostBySlugMock.mockResolvedValue({
+      kind: "post",
+      post: createPostPageData(),
+    });
+
+    const { default: PostPage } = await import("./page");
+    const element = await PostPage({
+      params: Promise.resolve({ slug: "canonical-slug" }),
+    });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain("px-5 py-4");
+    expect(markup).toContain("text-sm leading-6");
+    expect(markup).toContain("text-xl font-semibold tracking-tight");
   });
 
   it("renders a clickable category link when the published post has a category", async () => {
@@ -771,6 +793,7 @@ function createThemeFrameworkSettings(overrides: Record<string, unknown> = {}) {
     public_layout_width: "wide",
     public_surface_variant: "solid",
     public_accent_theme: "blue",
+    public_longform_variant: "comfortable",
     ...overrides,
   };
 }

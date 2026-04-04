@@ -125,6 +125,8 @@ function getInitialValues(input: Partial<SettingsFormValues>): SettingsFormValue
       input.home_show_post_date?.trim() === "false" ? "false" : "true",
     public_archive_posts_variant:
       input.public_archive_posts_variant?.trim() === "compact" ? "compact" : "comfortable",
+    public_longform_variant:
+      input.public_longform_variant?.trim() === "compact" ? "compact" : "comfortable",
     public_layout_width:
       input.public_layout_width?.trim() === "narrow"
         ? "narrow"
@@ -224,6 +226,7 @@ function toFormValues(values: SettingValues): SettingsFormValues {
     home_show_post_category: values.home_show_post_category ? "true" : "false",
     home_show_post_date: values.home_show_post_date ? "true" : "false",
     public_archive_posts_variant: values.public_archive_posts_variant,
+    public_longform_variant: values.public_longform_variant,
     public_layout_width: values.public_layout_width,
     public_surface_variant: values.public_surface_variant,
     public_accent_theme: values.public_accent_theme,
@@ -324,6 +327,8 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
       return "首页发布时间开关无效。";
     case "public_archive_posts_variant":
       return "公开归档列表展示模式无效。";
+    case "public_longform_variant":
+      return "长文页展示模式无效。";
     case "public_layout_width":
       return "公开布局宽度配置无效。";
     case "public_surface_variant":
@@ -421,6 +426,7 @@ function validateSettingsInput(values: SettingsFormValues):
     home_show_post_category: values.home_show_post_category,
     home_show_post_date: values.home_show_post_date,
     public_archive_posts_variant: values.public_archive_posts_variant,
+    public_longform_variant: values.public_longform_variant,
     public_layout_width: values.public_layout_width,
     public_surface_variant: values.public_surface_variant,
     public_accent_theme: values.public_accent_theme,
@@ -674,6 +680,7 @@ export async function updateAdminSettings(
         nextSettings.home_show_post_category !== currentSettings.home_show_post_category ||
         nextSettings.home_show_post_date !== currentSettings.home_show_post_date ||
         nextSettings.public_archive_posts_variant !== currentSettings.public_archive_posts_variant ||
+        nextSettings.public_longform_variant !== currentSettings.public_longform_variant ||
         nextSettings.public_layout_width !== currentSettings.public_layout_width ||
         nextSettings.public_surface_variant !== currentSettings.public_surface_variant ||
         nextSettings.public_accent_theme !== currentSettings.public_accent_theme ||

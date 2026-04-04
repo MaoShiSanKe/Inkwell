@@ -103,7 +103,17 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 - `compact` 使用更紧凑的列表节奏，但不改变页面结构与 metadata 组合
 - 该 setting 复用 `lib/theme.ts` 中的 `resolvePostsDensityTokens()`，与首页 `home_posts_variant` 保持一致的密度模型
 
-### 2.5 默认主题模式
+### 2.5 长文页展示
+由以下 setting 驱动：
+- `public_longform_variant` → `comfortable | compact`
+
+当前行为：
+- 文章页与独立页面共享同一组长文节奏 token
+- `comfortable` 使用更宽松的正文卡片 padding、段落节奏与标题字号
+- `compact` 使用更紧凑的正文阅读节奏，但不改变文章信息结构、目录逻辑或评论/相关文章模块的存在方式
+- 该 setting 复用 `lib/theme.ts` 中的 `resolveLongformDensityTokens()`，继续保持 v1 的“有限变体、固定结构”边界
+
+### 2.6 默认主题模式
 由以下 setting 驱动：
 - `public_theme_default_mode` → `system | light | dark`
 

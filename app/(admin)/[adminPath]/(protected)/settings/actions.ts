@@ -124,6 +124,9 @@ export async function saveSettingsAction(
     public_archive_posts_variant: String(formData.get("public_archive_posts_variant") ?? "comfortable") as
       | "comfortable"
       | "compact",
+    public_longform_variant: String(formData.get("public_longform_variant") ?? "comfortable") as
+      | "comfortable"
+      | "compact",
     public_layout_width: String(formData.get("public_layout_width") ?? "default") as
       | "narrow"
       | "default"

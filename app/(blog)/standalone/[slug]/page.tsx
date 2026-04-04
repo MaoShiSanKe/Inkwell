@@ -9,6 +9,7 @@ import { getSiteOrigin, getThemeFrameworkSettings } from "@/lib/settings";
 import {
   resolveAccentClass,
   resolveContentWidthClass,
+  resolveLongformDensityTokens,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -79,6 +80,13 @@ export default async function StandalonePage({ params }: StandalonePageProps) {
   const hasTableOfContents = parsedContent.tocItems.length > 0;
   const hasParsedImages = parsedContent.blocks.some((block) => block.type === "image");
   const shouldRenderParsedContent = hasTableOfContents || hasParsedImages;
+  const {
+    articlePaddingClass,
+    articleGapClass,
+    bodyTextClass,
+    heading2Class,
+    heading3Class,
+  } = resolveLongformDensityTokens(themeFrameworkSettings.public_longform_variant);
 
   return (
     <main className={`mx-auto flex w-full ${widthClass} flex-1 flex-col gap-6 px-6 py-16`}>
@@ -91,20 +99,20 @@ export default async function StandalonePage({ params }: StandalonePageProps) {
           surfaceVariant={themeFrameworkSettings.public_surface_variant}
         />
       ) : null}
-      <article className={`flex flex-col gap-4 rounded-2xl border px-6 py-5 text-base leading-7 ${surfaceClass}`}>
+      <article className={`flex flex-col ${articleGapClass} rounded-2xl border ${articlePaddingClass} ${bodyTextClass} ${surfaceClass}`}>
         {shouldRenderParsedContent ? (
           parsedContent.blocks.map((block, index) => {
             if (block.type === "heading") {
               if (block.level === 2) {
                 return (
-                  <h2 id={block.id} key={block.id} className="text-2xl font-semibold tracking-tight">
+                  <h2 id={block.id} key={block.id} className={`${heading2Class} font-semibold tracking-tight`}>
                     {block.title}
                   </h2>
                 );
               }
 
               return (
-                <h3 id={block.id} key={block.id} className="text-xl font-semibold tracking-tight">
+                <h3 id={block.id} key={block.id} className={`${heading3Class} font-semibold tracking-tight`}>
                   {block.title}
                 </h3>
               );

@@ -13,6 +13,7 @@ import { posts, settings, users } from "../../lib/db/schema";
 type ThemeSettingsSnapshot = {
   public_surface_variant: string | null;
   public_accent_theme: string | null;
+  public_longform_variant: string | null;
 };
 
 const testEnvPath = resolveTestEnvPath();
@@ -33,12 +34,15 @@ test.describe("post toc browser regression", () => {
       await applyThemeSettings({
         public_surface_variant: "solid",
         public_accent_theme: "blue",
+        public_longform_variant: "compact",
       });
 
       await page.goto(`/post/${fixture.slug}`);
       await expect(page.getByRole("heading", { name: fixture.title })).toBeVisible();
       await expect(page.getByRole("navigation", { name: "文章目录" })).toBeVisible();
       await expect(page.getByRole("navigation", { name: "文章目录" })).toHaveClass(/bg-slate-100\/90/);
+      await expect(page.locator("main article").first()).toHaveClass(/px-5/);
+      await expect(page.locator("main article").first()).toHaveClass(/py-4/);
       await expect(page.getByRole("link", { name: fixture.sectionHeading })).toBeVisible();
       await expect(page.getByRole("link", { name: fixture.sectionHeading })).toHaveClass(/text-blue-700/);
       await expect(page.getByRole("link", { name: fixture.subsectionHeading })).toBeVisible();
@@ -61,6 +65,7 @@ test.describe("post toc browser regression", () => {
       await applyThemeSettings({
         public_surface_variant: "solid",
         public_accent_theme: "blue",
+        public_longform_variant: "compact",
       });
 
       await page.setViewportSize({ width: 390, height: 844 });
@@ -145,20 +150,24 @@ async function captureThemeSettings(): Promise<ThemeSettingsSnapshot> {
   return {
     public_surface_variant: await getSettingValue("public_surface_variant"),
     public_accent_theme: await getSettingValue("public_accent_theme"),
+    public_longform_variant: await getSettingValue("public_longform_variant"),
   };
 }
 
 async function applyThemeSettings(values: {
   public_surface_variant: "soft" | "solid";
   public_accent_theme: "slate" | "blue" | "emerald" | "amber";
+  public_longform_variant: "comfortable" | "compact";
 }) {
   await restoreSetting("public_surface_variant", values.public_surface_variant);
   await restoreSetting("public_accent_theme", values.public_accent_theme);
+  await restoreSetting("public_longform_variant", values.public_longform_variant);
 }
 
 async function cleanupThemeSettings(snapshot: ThemeSettingsSnapshot) {
   await restoreSetting("public_surface_variant", snapshot.public_surface_variant);
   await restoreSetting("public_accent_theme", snapshot.public_accent_theme);
+  await restoreSetting("public_longform_variant", snapshot.public_longform_variant);
 }
 
 async function cleanupPostTocFixture() {
@@ -197,7 +206,7 @@ async function cleanupPostTocFixture() {
 }
 
 async function getSettingValue(
-  key: "public_surface_variant" | "public_accent_theme",
+  key: "public_surface_variant" | "public_accent_theme" | "public_longform_variant",
 ) {
   return withDb(async (db) => {
     const [row] = await db
@@ -211,7 +220,7 @@ async function getSettingValue(
 }
 
 async function restoreSetting(
-  key: "public_surface_variant" | "public_accent_theme",
+  key: "public_surface_variant" | "public_accent_theme" | "public_longform_variant",
   value: string | null,
 ) {
   await withDb(async (db) => {

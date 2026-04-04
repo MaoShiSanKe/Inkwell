@@ -32,6 +32,7 @@ import {
   resolveAccentClass,
   resolveAccentLinkClass,
   resolveContentWidthClass,
+  resolveLongformDensityTokens,
   resolveSurfaceClass,
 } from "@/lib/theme";
 
@@ -184,6 +185,14 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   );
   const relatedCardClass = `flex flex-col gap-2 rounded-2xl border px-4 py-4 transition hover:-translate-y-0.5 hover:shadow-sm ${surfaceClass} ${accentBorderHoverClass}`;
   const accentLinkClass = resolveAccentLinkClass(themeFrameworkSettings.public_accent_theme);
+  const {
+    articlePaddingClass,
+    articleGapClass,
+    excerptClass,
+    bodyTextClass,
+    heading2Class,
+    heading3Class,
+  } = resolveLongformDensityTokens(themeFrameworkSettings.public_longform_variant);
   const metadataLinkClass = `text-sm ${accentLinkClass}`;
   const tagLinkClass = `inline-flex items-center rounded-full border border-slate-300 px-3 py-1 text-sm transition ${accentBorderHoverClass} ${accentClass}`;
   const breadcrumbItems = buildBreadcrumbItems(post);
@@ -244,7 +253,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
       </p>
       <h1 className="text-3xl font-semibold tracking-tight">{post.title}</h1>
       {post.excerpt ? (
-        <p className="text-base leading-7 text-slate-600 dark:text-slate-300">
+        <p className={`${excerptClass} text-slate-600 dark:text-slate-300`}>
           {post.excerpt}
         </p>
       ) : null}
@@ -296,20 +305,20 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
           surfaceVariant={themeFrameworkSettings.public_surface_variant}
         />
       ) : null}
-      <article className={`flex flex-col gap-4 rounded-2xl border px-6 py-5 text-base leading-7 ${surfaceClass}`}>
+      <article className={`flex flex-col ${articleGapClass} rounded-2xl border ${articlePaddingClass} ${bodyTextClass} ${surfaceClass}`}>
         {shouldRenderParsedContent ? (
           parsedContent.blocks.map((block, index) => {
             if (block.type === "heading") {
               if (block.level === 2) {
                 return (
-                  <h2 id={block.id} key={block.id} className="text-2xl font-semibold tracking-tight">
+                  <h2 id={block.id} key={block.id} className={`${heading2Class} font-semibold tracking-tight`}>
                     {block.title}
                   </h2>
                 );
               }
 
               return (
-                <h3 id={block.id} key={block.id} className="text-xl font-semibold tracking-tight">
+                <h3 id={block.id} key={block.id} className={`${heading3Class} font-semibold tracking-tight`}>
                   {block.title}
                 </h3>
               );
@@ -345,7 +354,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
 
       <section className={`mt-6 flex flex-col gap-4 rounded-2xl border px-6 py-5 ${surfaceClass}`}>
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight">相关文章</h2>
+          <h2 className={`${heading2Class} font-semibold tracking-tight`}>相关文章</h2>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
             {relatedPosts.length > 0
               ? "基于当前文章的分类与标签，为你推荐以下已发布内容。"
@@ -363,7 +372,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
                   </Link>
                 </h3>
                 {relatedPost.excerpt ? (
-                  <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                  <p className={`${excerptClass} text-slate-600 dark:text-slate-300`}>
                     {relatedPost.excerpt}
                   </p>
                 ) : null}
@@ -375,7 +384,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
 
       <section className="mt-6 flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight">评论</h2>
+          <h2 className={`${heading2Class} font-semibold tracking-tight`}>评论</h2>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
             {publicCommentCount > 0
               ? `当前共有 ${publicCommentCount} 条已公开评论。`

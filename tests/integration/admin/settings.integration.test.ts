@@ -48,6 +48,7 @@ const SETTINGS_KEYS = [
   "home_show_post_category",
   "home_show_post_date",
   "public_archive_posts_variant",
+  "public_longform_variant",
   "public_layout_width",
   "public_surface_variant",
   "public_accent_theme",
@@ -163,6 +164,9 @@ describe("admin settings write paths", () => {
       public_archive_posts_variant:
         (originalSettings.public_archive_posts_variant as "comfortable" | "compact" | null) ??
         "comfortable",
+      public_longform_variant:
+        (originalSettings.public_longform_variant as "comfortable" | "compact" | null) ??
+        "comfortable",
       public_layout_width:
         (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ??
         "default",
@@ -240,6 +244,7 @@ describe("admin settings write paths", () => {
       home_show_post_category: "true",
       home_show_post_date: "false",
       public_archive_posts_variant: "compact",
+      public_longform_variant: "compact",
       public_layout_width: "wide",
       public_surface_variant: "solid",
       public_accent_theme: "blue",
@@ -278,6 +283,7 @@ describe("admin settings write paths", () => {
         expect.objectContaining({ key: "home_featured_link_1_url", value: "/category" }),
         expect.objectContaining({ key: "home_posts_variant", value: "compact" }),
         expect.objectContaining({ key: "public_archive_posts_variant", value: "compact" }),
+        expect.objectContaining({ key: "public_longform_variant", value: "compact" }),
         expect.objectContaining({ key: "public_layout_width", value: "wide" }),
         expect.objectContaining({ key: "public_theme_default_mode", value: "dark" }),
       ]),
@@ -339,6 +345,9 @@ describe("admin settings write paths", () => {
         (originalSettings.home_show_post_date === "false" ? "false" : "true") as "true" | "false",
       public_archive_posts_variant:
         (originalSettings.public_archive_posts_variant as "comfortable" | "compact" | null) ??
+        "comfortable",
+      public_longform_variant:
+        (originalSettings.public_longform_variant as "comfortable" | "compact" | null) ??
         "comfortable",
       public_layout_width:
         (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ?? "default",
@@ -541,6 +550,9 @@ describe("admin settings write paths", () => {
       public_archive_posts_variant:
         (originalSettings.public_archive_posts_variant as "comfortable" | "compact" | null) ??
         "comfortable",
+      public_longform_variant:
+        (originalSettings.public_longform_variant as "comfortable" | "compact" | null) ??
+        "comfortable",
       public_layout_width:
         (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ?? "default",
       public_surface_variant:
@@ -631,6 +643,9 @@ describe("admin settings write paths", () => {
         (originalSettings.home_show_post_date === "false" ? "false" : "true") as "true" | "false",
       public_archive_posts_variant:
         (originalSettings.public_archive_posts_variant as "comfortable" | "compact" | null) ??
+        "comfortable",
+      public_longform_variant:
+        (originalSettings.public_longform_variant as "comfortable" | "compact" | null) ??
         "comfortable",
       public_layout_width:
         (originalSettings.public_layout_width as "narrow" | "default" | "wide" | null) ?? "default",

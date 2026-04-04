@@ -189,6 +189,7 @@ export async function getThemeFrameworkSettings(): Promise<ThemeFrameworkSetting
     home_show_post_category: values.home_show_post_category,
     home_show_post_date: values.home_show_post_date,
     public_archive_posts_variant: values.public_archive_posts_variant,
+    public_longform_variant: values.public_longform_variant,
     public_layout_width: values.public_layout_width,
     public_surface_variant: values.public_surface_variant,
     public_accent_theme: values.public_accent_theme,

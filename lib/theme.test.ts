@@ -6,6 +6,7 @@ import {
   resolveContentWidthClass,
   resolveEmptyStateSurfaceClass,
   resolveFieldSurfaceClass,
+  resolveLongformDensityTokens,
   resolvePostsDensityTokens,
   resolvePrimaryButtonSurfaceClass,
   resolveSurfaceClass,
@@ -47,6 +48,25 @@ describe("theme helpers", () => {
       metaTextClass: "text-xs",
       titleClass: "text-xl",
       excerptClass: "text-sm leading-6",
+    });
+  });
+
+  it("resolves longform density tokens", () => {
+    expect(resolveLongformDensityTokens("comfortable")).toEqual({
+      articlePaddingClass: "px-6 py-5",
+      articleGapClass: "gap-4",
+      excerptClass: "text-base leading-7",
+      bodyTextClass: "text-base leading-7",
+      heading2Class: "text-2xl",
+      heading3Class: "text-xl",
+    });
+    expect(resolveLongformDensityTokens("compact")).toEqual({
+      articlePaddingClass: "px-5 py-4",
+      articleGapClass: "gap-3",
+      excerptClass: "text-sm leading-6",
+      bodyTextClass: "text-sm leading-6",
+      heading2Class: "text-xl",
+      heading3Class: "text-lg",
     });
   });
 
