@@ -200,6 +200,7 @@ Theme Framework v1 当前已经覆盖：
 - 首页摘要 / 作者 / 分类 / 发布时间开关
 - 搜索页、友情链接页、独立页面与分类 / 标签 / 作者 / 系列归档页的宽度 / 表面 / 强调色映射
 - `localStorage > backend default > system` 的默认主题模式优先级
+- 公开主题 helper 的集中收口（accent interaction、accent link、empty state surface、field surface、primary button surface）
 
 这类改动通常不只是单个 `page.tsx` 文案变化，而是会同时影响 settings、公开布局和浏览器端主题状态。
 
@@ -215,6 +216,7 @@ npm run test:integration
 ```
 
 建议优先参考：
+- `lib/theme.ts`
 - `app/(blog)/page.test.tsx`
 - `app/(blog)/layout.test.tsx`
 - `tests/browser/settings.spec.ts`

@@ -111,7 +111,7 @@
 - [`settings-system.md`](settings-system.md)
   - 如何新增 DB-backed setting，哪些配置不该进 `settings`
 - [`theme-framework.md`](theme-framework.md)
-  - Theme Framework v1 的能力边界、优先级规则与后续扩展建议
+  - Theme Framework v1 的能力边界、helper 扩展路径、优先级规则与后续扩展建议
 - [`schema-and-migrations.md`](schema-and-migrations.md)
   - schema 改动的 blast radius、迁移流程、连带影响
 - [`execution-boundaries.md`](execution-boundaries.md)

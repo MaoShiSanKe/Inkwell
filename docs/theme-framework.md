@@ -90,6 +90,7 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 当前行为：
 - 页头品牌区与页脚说明区已结构化
 - 首页、公开布局、搜索页、友情链接页、独立页面与分类 / 标签 / 作者 / 系列归档页共享宽度 / 表面 / 强调色映射
+- 公开展示层的重复主题映射正在持续收敛到 `lib/theme.ts`，避免各页面重新写一套颜色 / 边框 / 交互态分支
 - `public_custom_css` 仍保留为 escape hatch
 
 ### 2.4 默认主题模式
@@ -119,6 +120,24 @@ Theme Framework v1 不是多主题市场、也不是页面搭建器。
 - `components/blog/site-footer.tsx` — 结构化页脚
 - `app/(blog)/layout.tsx` — 公开布局壳层接线
 - `app/(blog)/page.tsx` — 首页主题化
+
+### 3.1 当前 helper 收口现状
+
+`lib/theme.ts` 当前已经集中维护以下高频主题映射：
+- 内容宽度：`resolveContentWidthClass()`
+- 通用表面：`resolveSurfaceClass()`
+- 表单输入表面：`resolveFieldSurfaceClass()`
+- 主按钮表面：`resolvePrimaryButtonSurfaceClass()`
+- 强调色文本：`resolveAccentClass()`
+- 强调色链接：`resolveAccentLinkClass()`
+- 空状态表面：`resolveEmptyStateSurfaceClass()`
+- 强调色 hover / focus 交互：`resolveAccentBorderHoverClass()`、`resolveAccentFocusRingClass()`、`resolveAccentFocusBorderClass()`
+
+这意味着未来继续扩展 Theme Framework v1 时，优先路径不是在页面里继续写 `public_accent_theme === "blue" ? ...` 这类分支，而是：
+1. 先判断是否只是复用现有 helper
+2. 如果多个 public 页面 / 组件重复出现同一类主题映射，再把它收口进 `lib/theme.ts`
+3. helper 优先只收口颜色、边框、背景、交互态
+4. spacing、gap、grid、文案与结构仍由具体页面自己控制
 
 ## 4. 为什么当前只做到 v1
 
@@ -168,6 +187,7 @@ npm run test:browser
 - 列表页 / 归档页的有限展示变体
 - 更清晰的公共容器与卡片样式映射
 - 文档中补更明确的“主题配置 → 页面效果”示例
+- 继续把 public 主题映射从页面内分支收敛到 `lib/theme.ts`
 
 当前不建议优先做：
 - 多主题注册系统
