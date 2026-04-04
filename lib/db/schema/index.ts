@@ -6,6 +6,7 @@ import { customPageMeta } from "./custom-page-meta";
 import { customPages } from "./custom-pages";
 import { friendLinks } from "./friend-links";
 import { ipBlacklist } from "./ip-blacklist";
+import { siteNavigation } from "./site-navigation";
 import { media } from "./media";
 import { postLikes } from "./post-likes";
 import { postMeta } from "./post-meta";
@@ -30,6 +31,7 @@ export * from "./enums";
 export * from "./friend-links";
 export * from "./ip-blacklist";
 export * from "./media";
+export * from "./site-navigation";
 export * from "./post-likes";
 export * from "./post-meta";
 export * from "./post-revisions";
@@ -52,6 +54,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   comments: many(comments),
   media: many(media),
   ipBlacklistEntries: many(ipBlacklist),
+  siteNavigation: many(siteNavigation),
 }));
 
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
@@ -96,6 +99,13 @@ export const friendLinksRelations = relations(friendLinks, ({ one }) => ({
   logo: one(media, {
     fields: [friendLinks.logoMediaId],
     references: [media.id],
+  }),
+}));
+
+export const siteNavigationRelations = relations(siteNavigation, ({ one }) => ({
+  author: one(users, {
+    fields: [siteNavigation.authorId],
+    references: [users.id],
   }),
 }));
 

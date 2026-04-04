@@ -6,8 +6,10 @@ const {
   getPublicNoticeSettingsMock,
   getThemeFrameworkSettingsMock,
   getUmamiSettingsMock,
+  listPublicSiteNavigationItemsMock,
   useServerInsertedHTMLMock,
 } = vi.hoisted(() => ({
+  listPublicSiteNavigationItemsMock: vi.fn(),
   getPublicCodeSettingsMock: vi.fn(),
   getPublicNoticeSettingsMock: vi.fn(),
   getThemeFrameworkSettingsMock: vi.fn(),
@@ -20,6 +22,10 @@ vi.mock("@/lib/settings", () => ({
   getPublicNoticeSettings: getPublicNoticeSettingsMock,
   getThemeFrameworkSettings: getThemeFrameworkSettingsMock,
   getUmamiSettings: getUmamiSettingsMock,
+}));
+
+vi.mock("@/lib/blog/site-navigation", () => ({
+  listPublicSiteNavigationItems: listPublicSiteNavigationItemsMock,
 }));
 
 vi.mock("@/components/theme-toggle", () => ({
@@ -69,6 +75,7 @@ describe("blog layout", () => {
       home_primary_cta_label: "订阅新文章",
       home_primary_cta_url: "/subscribe",
       home_posts_variant: "comfortable",
+      home_featured_links_variant: "comfortable",
       home_show_post_excerpt: true,
       home_show_post_author: true,
       home_show_post_category: true,
@@ -86,6 +93,7 @@ describe("blog layout", () => {
       umami_website_id: "",
       umami_script_url: "",
     });
+    listPublicSiteNavigationItemsMock.mockResolvedValue([]);
   });
 
   it("renders public notice content when notice is enabled inside the active window", async () => {
@@ -120,6 +128,7 @@ describe("blog layout", () => {
 
     expect(markup).toContain("Inkwell Daily");
     expect(markup).toContain("A configurable publishing shell.");
+    expect(markup).not.toContain('aria-label="站点导航"');
     expect(markup).toContain("独立写作，持续发布。");
     expect(markup).toContain("© Inkwell");
     expect(markup).toContain("theme-toggle:dark");
@@ -128,6 +137,23 @@ describe("blog layout", () => {
     expect(markup).toContain("underline decoration-slate-300 underline-offset-4 hover:decoration-slate-500 dark:decoration-slate-700 dark:hover:decoration-slate-400");
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("Visible public content");
+  });
+
+  it("renders public header navigation items", async () => {
+    listPublicSiteNavigationItemsMock.mockResolvedValue([
+      { id: 1, label: "关于", url: "/about", openInNewTab: false },
+      { id: 2, label: "友链", url: "/friend-links", openInNewTab: true },
+    ]);
+
+    const { default: BlogLayout } = await import("./layout");
+    const element = await BlogLayout({ children: <div>Visible public content</div> });
+    const markup = renderToStaticMarkup(element);
+
+    expect(markup).toContain('aria-label="站点导航"');
+    expect(markup).toContain('href="/about"');
+    expect(markup).toContain('href="/friend-links"');
+    expect(markup).toContain('target="_blank"');
+    expect(markup).toContain('rel="noreferrer noopener"');
   });
 
   it("renders public notice when only the start boundary has passed", async () => {

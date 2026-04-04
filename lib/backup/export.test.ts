@@ -88,6 +88,7 @@ describe("backup export helpers", () => {
       "custom_pages",
       "custom_page_meta",
       "friend_links",
+      "site_navigation",
       "sitemap_entries",
     ]);
 

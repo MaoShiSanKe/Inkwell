@@ -31,6 +31,7 @@ export async function cleanupIntegrationTables() {
       friendLinks,
       ipBlacklist,
       media,
+      siteNavigation,
       postSeries,
       postTags,
       posts,
@@ -114,6 +115,25 @@ export async function cleanupIntegrationTables() {
     .from(ipBlacklist)
     .where(like(ipBlacklist.reason, `${INTEGRATION_PREFIX}%`));
 
+  const integrationSiteNavigationIds = await db
+    .select({ id: siteNavigation.id })
+    .from(siteNavigation)
+    .where(
+      integrationUserIds.length > 0
+        ? or(
+            like(siteNavigation.label, `${INTEGRATION_PREFIX}%`),
+            like(siteNavigation.url, `${INTEGRATION_PREFIX}%`),
+            inArray(
+              siteNavigation.authorId,
+              integrationUserIds.map((user) => user.id),
+            ),
+          )
+        : or(
+            like(siteNavigation.label, `${INTEGRATION_PREFIX}%`),
+            like(siteNavigation.url, `${INTEGRATION_PREFIX}%`),
+          ),
+    );
+
   if (integrationPosts.length > 0) {
     await db.delete(postSeries).where(
       inArray(
@@ -183,6 +203,15 @@ export async function cleanupIntegrationTables() {
       inArray(
         ipBlacklist.id,
         integrationBlacklistRows.map((row) => row.id),
+      ),
+    );
+  }
+
+  if (integrationSiteNavigationIds.length > 0) {
+    await db.delete(siteNavigation).where(
+      inArray(
+        siteNavigation.id,
+        integrationSiteNavigationIds.map((item) => item.id),
       ),
     );
   }

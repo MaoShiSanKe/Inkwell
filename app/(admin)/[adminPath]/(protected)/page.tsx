@@ -128,6 +128,16 @@ export default async function AdminPage({ params }: AdminPageProps) {
 
         <Link
           className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
+          href={`/${adminPath}/site-navigation`}
+        >
+          <span className="text-lg font-semibold">站点导航</span>
+          <span className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+            管理公开页头导航入口，控制文案、顺序、是否显示与打开方式。
+          </span>
+        </Link>
+
+        <Link
+          className="flex flex-col gap-2 rounded-2xl border border-slate-200 p-6 transition hover:border-slate-400 dark:border-slate-800 dark:hover:border-slate-600"
           href={`/${adminPath}/settings`}
         >
           <span className="text-lg font-semibold">后台设置</span>

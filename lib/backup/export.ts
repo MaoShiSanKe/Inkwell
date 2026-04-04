@@ -17,6 +17,7 @@ import {
   friendLinks,
   ipBlacklist,
   media,
+  siteNavigation,
   postLikes,
   postMeta,
   postRevisions,
@@ -211,6 +212,12 @@ const TABLE_EXPORTS: TableExportDefinition[] = [
     orderBy: [asc(friendLinks.id)],
   },
   {
+    key: "site_navigation",
+    fileName: "site_navigation.json",
+    table: siteNavigation,
+    orderBy: [asc(siteNavigation.id)],
+  },
+  {
     key: "sitemap_entries",
     fileName: "sitemap_entries.json",
     table: sitemapEntries,
@@ -279,6 +286,7 @@ function createDbContext() {
       customPages,
       customPageMeta,
       friendLinks,
+      siteNavigation,
       sitemapEntries,
     },
     casing: "snake_case",

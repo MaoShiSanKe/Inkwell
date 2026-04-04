@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/blog/site-footer";
 import { SiteHeader } from "@/components/blog/site-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UmamiTracker } from "@/components/blog/umami-tracker";
+import { listPublicSiteNavigationItems } from "@/lib/blog/site-navigation";
 import {
   getPublicCodeSettings,
   getPublicNoticeSettings,
@@ -20,12 +21,13 @@ type BlogLayoutProps = {
 };
 
 export default async function BlogLayout({ children }: BlogLayoutProps) {
-  const [tracker, publicCodeSettings, publicNoticeSettings, themeFrameworkSettings] =
+  const [tracker, publicCodeSettings, publicNoticeSettings, themeFrameworkSettings, navigationItems] =
     await Promise.all([
       UmamiTracker(),
       getPublicCodeSettings(),
       getPublicNoticeSettings(),
       getThemeFrameworkSettings(),
+      listPublicSiteNavigationItems(),
     ]);
   const widthClass = resolveContentWidthClass(themeFrameworkSettings.public_layout_width);
 
@@ -33,7 +35,7 @@ export default async function BlogLayout({ children }: BlogLayoutProps) {
     <>
       <PublicHeadHtml html={publicCodeSettings.public_head_html} />
       <PublicCustomCss css={publicCodeSettings.public_custom_css} />
-      <SiteHeader settings={themeFrameworkSettings} />
+      <SiteHeader settings={themeFrameworkSettings} navigationItems={navigationItems} />
       <div className={`mx-auto flex w-full ${widthClass} justify-end px-6 pt-4`}>
         <ThemeToggle
           defaultMode={themeFrameworkSettings.public_theme_default_mode}

@@ -7,7 +7,20 @@ import {
   resolveSurfaceClass,
 } from "@/lib/theme";
 
-export function SiteHeader({ settings }: { settings: ThemeFrameworkSettings }) {
+type SiteHeaderNavigationItem = {
+  id: number;
+  label: string;
+  url: string;
+  openInNewTab: boolean;
+};
+
+export function SiteHeader({
+  settings,
+  navigationItems = [],
+}: {
+  settings: ThemeFrameworkSettings;
+  navigationItems?: SiteHeaderNavigationItem[];
+}) {
   const widthClass = resolveContentWidthClass(settings.public_layout_width);
   const surfaceClass = resolveSurfaceClass(settings.public_surface_variant);
   const accentLinkClass = resolveAccentLinkClass(settings.public_accent_theme);
@@ -15,7 +28,7 @@ export function SiteHeader({ settings }: { settings: ThemeFrameworkSettings }) {
   return (
     <header className={`mx-auto w-full ${widthClass} px-6 pt-6`}>
       <div className={`rounded-2xl border px-5 py-4 ${surfaceClass}`}>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-1">
             <Link
               href="/"
@@ -29,6 +42,22 @@ export function SiteHeader({ settings }: { settings: ThemeFrameworkSettings }) {
               </p>
             ) : null}
           </div>
+
+          {navigationItems.length > 0 ? (
+            <nav aria-label="站点导航" className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {navigationItems.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.url}
+                  className={`text-sm ${accentLinkClass}`}
+                  target={item.openInNewTab ? "_blank" : undefined}
+                  rel={item.openInNewTab ? "noreferrer noopener" : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
         </div>
       </div>
     </header>
