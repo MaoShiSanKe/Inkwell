@@ -185,7 +185,7 @@ export function CommentForm({
 
       <div className="flex items-center gap-3">
         <button className={buttonClass} type="submit" disabled={isPending}>
-          <span className={accentClass}>{isPending ? "提交中..." : replyTarget ? "提交回复" : "提交评论"}</span>
+          {isPending ? "提交中..." : replyTarget ? "提交回复" : "提交评论"}
         </button>
       </div>
     </form>

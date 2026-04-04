@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import type { PublicNoticeSettings } from "@/lib/settings-config";
 
 import { PublicNotice } from "./public-notice";
 
 const DISMISSED_NOTICE_VERSION_KEY = "inkwell-public-notice-dismissed-version";
+const DISMISSED_NOTICE_CHANGE_EVENT = "inkwell-public-notice-dismissed-change";
 
 type DismissiblePublicNoticeProps = {
   settings: PublicNoticeSettings;
@@ -60,20 +61,48 @@ function shouldRenderNotice(
   return dismissedVersion !== settings.public_notice_version;
 }
 
-export function DismissiblePublicNotice({ settings }: DismissiblePublicNoticeProps) {
-  const [dismissedVersion, setDismissedVersion] = useState<string | null>(null);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    setDismissedVersion(window.localStorage.getItem(DISMISSED_NOTICE_VERSION_KEY));
-    setHydrated(true);
-  }, []);
-
-  if (!hydrated) {
-    return shouldRenderNotice(settings, null) ? <PublicNotice settings={settings} /> : null;
+function subscribeToDismissedVersion(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
   }
 
-  if (!shouldRenderNotice(settings, dismissedVersion)) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === DISMISSED_NOTICE_VERSION_KEY) {
+      callback();
+    }
+  };
+  const handleDismissedVersionChange = () => callback();
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(DISMISSED_NOTICE_CHANGE_EVENT, handleDismissedVersionChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(DISMISSED_NOTICE_CHANGE_EVENT, handleDismissedVersionChange);
+  };
+}
+
+function getDismissedVersionSnapshot() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  return window.localStorage.getItem(DISMISSED_NOTICE_VERSION_KEY);
+}
+
+function getServerDismissedVersionSnapshot() {
+  return null;
+}
+
+export function DismissiblePublicNotice({ settings }: DismissiblePublicNoticeProps) {
+  const dismissedVersion = useSyncExternalStore(
+    subscribeToDismissedVersion,
+    getDismissedVersionSnapshot,
+    getServerDismissedVersionSnapshot,
+  );
+  const [sessionDismissed, setSessionDismissed] = useState(false);
+
+  if (!shouldRenderNotice(settings, sessionDismissed ? "__dismissed__" : dismissedVersion)) {
     return null;
   }
 
@@ -92,11 +121,11 @@ export function DismissiblePublicNotice({ settings }: DismissiblePublicNoticePro
                   DISMISSED_NOTICE_VERSION_KEY,
                   settings.public_notice_version,
                 );
-                setDismissedVersion(settings.public_notice_version);
+                window.dispatchEvent(new Event(DISMISSED_NOTICE_CHANGE_EVENT));
                 return;
               }
 
-              setDismissedVersion("__dismissed__");
+              setSessionDismissed(true);
             }}
           >
             关闭

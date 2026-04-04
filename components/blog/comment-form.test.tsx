@@ -38,7 +38,8 @@ describe("CommentForm", () => {
     expect(markup).toContain("bg-slate-100/90");
     expect(markup).toContain("focus:border-blue-500");
     expect(markup).toContain("focus-visible:ring-blue-500/40");
-    expect(markup).toContain("text-blue-700 dark:text-blue-300");
+    expect(markup).toContain("text-white");
+    expect(markup).toContain("dark:text-slate-900");
   });
 
   it("renders accent-themed reply link for reply mode", () => {
