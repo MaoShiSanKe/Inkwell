@@ -2,7 +2,7 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 
 import { getAdminSession } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { customPageMeta, customPages, media, users } from "@/lib/db/schema";
+import { customPageMeta, customPages, media } from "@/lib/db/schema";
 import { getAdminPath } from "@/lib/settings";
 
 import type { PageFormErrors, PageFormValues } from "./page-form";

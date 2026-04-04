@@ -1,7 +1,6 @@
-import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { customPages, users } from "@/lib/db/schema";
+import { users } from "@/lib/db/schema";
 
 import { cleanupIntegrationTables } from "../setup";
 

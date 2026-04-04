@@ -84,6 +84,7 @@ export default async function FriendLinksPage() {
             >
               <div className="flex items-center gap-4">
                 {friendLink.logoUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     alt={friendLink.logo?.altText || `${friendLink.siteName} logo`}
                     className={logoImageClass}

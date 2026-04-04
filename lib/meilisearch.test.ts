@@ -22,7 +22,7 @@ const clientState = vi.hoisted(() => {
 
 vi.mock("meilisearch", () => ({
   Meilisearch: class Meilisearch {
-    constructor(_options: unknown) {
+    constructor() {
       return clientState.client;
     }
   },

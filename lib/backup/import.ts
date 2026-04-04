@@ -48,8 +48,6 @@ type ExportedSettingsRow = {
   updatedAt?: unknown;
 };
 
-type RestorableSettingsRow = RawRow;
-
 type ImportBackupResult = {
   inputDir: string;
   importedTableCount: number;
@@ -230,7 +228,8 @@ async function resetImportTarget(
 }
 
 function stripRedactedMarker<T extends Record<string, unknown>>(row: T) {
-  const { redacted: _redacted, ...rest } = row;
+  const rest = { ...row };
+  delete rest.redacted;
   return rest;
 }
 

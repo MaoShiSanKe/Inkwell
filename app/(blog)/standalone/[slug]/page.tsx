@@ -113,6 +113,7 @@ export default async function StandalonePage({ params }: StandalonePageProps) {
             if (block.type === "image") {
               return (
                 <figure key={`${block.url}-${index}`} className="flex flex-col gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img alt={block.altText} className={`rounded-xl border ${surfaceClass}`} src={block.url} />
                   <figcaption className="text-sm text-slate-500 dark:text-slate-400">{block.altText}</figcaption>
                 </figure>
