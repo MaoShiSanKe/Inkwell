@@ -24,7 +24,7 @@ type ScheduledPostTransaction = {
   select: typeof import("@/lib/db").db.select;
   update: typeof import("@/lib/db").db.update;
   insert: typeof import("@/lib/db").db.insert;
-  delete: typeof import("@/lib/db").db.delete;
+  delete: typeof import("@/lib/db").db["delete"];
 };
 
 type ScheduledPostDbLike = typeof import("@/lib/db").db;

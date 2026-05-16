@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { AdminShell } from "@/components/admin/admin-shell";
 import { isAdminAuthenticated } from "@/lib/auth";
 
 type ProtectedAdminLayoutProps = {
@@ -23,5 +24,5 @@ export default async function ProtectedAdminLayout({
     redirect(`/${adminPath}/login?redirect=${encodeURIComponent(redirectPath)}`);
   }
 
-  return <>{children}</>;
+  return <AdminShell adminPath={adminPath}>{children}</AdminShell>;
 }
