@@ -8,6 +8,7 @@ import {
   SETTING_KEYS,
   parseSettingValue,
   type EmailNotificationScenario,
+  type SettingKey,
   type SettingValues,
 } from "@/lib/settings-config";
 import {
@@ -23,6 +24,71 @@ import {
   type SettingsFormErrors,
   type SettingsFormValues,
 } from "./settings-form";
+
+type SettingsFormSettingKey = Exclude<SettingKey, "public_notice_start_at" | "public_notice_end_at">;
+
+type SettingsFormRawInputs = Record<SettingKey, string>;
+
+const SETTINGS_FORM_SETTING_KEYS = SETTING_KEYS.filter(
+  (key): key is SettingsFormSettingKey =>
+    key !== "public_notice_start_at" && key !== "public_notice_end_at",
+);
+
+const PUBLIC_LAYOUT_SETTING_KEYS: SettingKey[] = [
+  "umami_enabled",
+  "umami_website_id",
+  "umami_script_url",
+  "public_head_html",
+  "public_footer_html",
+  "public_custom_css",
+  "site_brand_name",
+  "site_tagline",
+  "home_hero_title",
+  "home_hero_description",
+  "home_primary_cta_label",
+  "home_primary_cta_url",
+  "home_featured_links_title",
+  "home_featured_links_description",
+  "home_featured_link_1_label",
+  "home_featured_link_1_url",
+  "home_featured_link_1_description",
+  "home_featured_link_2_label",
+  "home_featured_link_2_url",
+  "home_featured_link_2_description",
+  "home_featured_link_3_label",
+  "home_featured_link_3_url",
+  "home_featured_link_3_description",
+  "home_recommended_pages_title",
+  "home_recommended_pages_description",
+  "home_recommended_page_1_id",
+  "home_recommended_page_2_id",
+  "home_recommended_page_3_id",
+  "home_posts_variant",
+  "home_featured_links_variant",
+  "home_show_post_excerpt",
+  "home_show_post_author",
+  "home_show_post_category",
+  "home_show_post_date",
+  "public_archive_posts_variant",
+  "public_longform_variant",
+  "public_layout_width",
+  "public_surface_variant",
+  "public_accent_theme",
+  "public_header_show_tagline",
+  "public_footer_blurb",
+  "public_footer_copyright",
+  "public_theme_default_mode",
+  "public_notice_enabled",
+  "public_notice_variant",
+  "public_notice_dismissible",
+  "public_notice_version",
+  "public_notice_start_at",
+  "public_notice_end_at",
+  "public_notice_title",
+  "public_notice_body",
+  "public_notice_link_label",
+  "public_notice_link_url",
+];
 
 export type UpdateAdminSettingsResult =
   | {
@@ -394,6 +460,29 @@ function getFieldErrorMessage(key: keyof SettingsFormValues) {
   }
 }
 
+function createRawSettingInputs(values: SettingsFormValues): SettingsFormRawInputs {
+  const rawSettingInputs = {} as SettingsFormRawInputs;
+
+  for (const key of SETTINGS_FORM_SETTING_KEYS) {
+    rawSettingInputs[key] = values[key];
+  }
+
+  rawSettingInputs.public_notice_start_at = values.public_notice_start_at
+    ? values.public_notice_start_at_iso
+    : "";
+  rawSettingInputs.public_notice_end_at = values.public_notice_end_at
+    ? values.public_notice_end_at_iso
+    : "";
+
+  return rawSettingInputs;
+}
+
+function hasPublicLayoutChanged(nextSettings: SettingValues, currentSettings: SettingValues) {
+  return PUBLIC_LAYOUT_SETTING_KEYS.some(
+    (key) => nextSettings[key] !== currentSettings[key],
+  );
+}
+
 function validateSettingsInput(values: SettingsFormValues):
   | { success: true; parsed: SettingValues }
   | { success: false; errors: SettingsFormErrors } {
@@ -408,73 +497,7 @@ function validateSettingsInput(values: SettingsFormValues):
     errors.public_notice_end_at = "公告结束时间格式无效。";
   }
 
-  const rawSettingInputs: Record<string, string> = {
-    admin_path: values.admin_path,
-    revision_limit: values.revision_limit,
-    revision_ttl_days: values.revision_ttl_days,
-    excerpt_length: values.excerpt_length,
-    comment_moderation: values.comment_moderation,
-    smtp_host: values.smtp_host,
-    smtp_port: values.smtp_port,
-    smtp_secure: values.smtp_secure,
-    smtp_username: values.smtp_username,
-    smtp_password: values.smtp_password,
-    smtp_from_email: values.smtp_from_email,
-    smtp_from_name: values.smtp_from_name,
-    umami_enabled: values.umami_enabled,
-    umami_website_id: values.umami_website_id,
-    umami_script_url: values.umami_script_url,
-    public_head_html: values.public_head_html,
-    public_footer_html: values.public_footer_html,
-    public_custom_css: values.public_custom_css,
-    site_brand_name: values.site_brand_name,
-    site_tagline: values.site_tagline,
-    home_hero_title: values.home_hero_title,
-    home_hero_description: values.home_hero_description,
-    home_primary_cta_label: values.home_primary_cta_label,
-    home_primary_cta_url: values.home_primary_cta_url,
-    home_featured_links_title: values.home_featured_links_title,
-    home_featured_links_description: values.home_featured_links_description,
-    home_featured_link_1_label: values.home_featured_link_1_label,
-    home_featured_link_1_url: values.home_featured_link_1_url,
-    home_featured_link_1_description: values.home_featured_link_1_description,
-    home_featured_link_2_label: values.home_featured_link_2_label,
-    home_featured_link_2_url: values.home_featured_link_2_url,
-    home_featured_link_2_description: values.home_featured_link_2_description,
-    home_featured_link_3_label: values.home_featured_link_3_label,
-    home_featured_link_3_url: values.home_featured_link_3_url,
-    home_featured_link_3_description: values.home_featured_link_3_description,
-    home_recommended_pages_title: values.home_recommended_pages_title,
-    home_recommended_pages_description: values.home_recommended_pages_description,
-    home_recommended_page_1_id: values.home_recommended_page_1_id,
-    home_recommended_page_2_id: values.home_recommended_page_2_id,
-    home_recommended_page_3_id: values.home_recommended_page_3_id,
-    home_posts_variant: values.home_posts_variant,
-    home_featured_links_variant: values.home_featured_links_variant,
-    home_show_post_excerpt: values.home_show_post_excerpt,
-    home_show_post_author: values.home_show_post_author,
-    home_show_post_category: values.home_show_post_category,
-    home_show_post_date: values.home_show_post_date,
-    public_archive_posts_variant: values.public_archive_posts_variant,
-    public_longform_variant: values.public_longform_variant,
-    public_layout_width: values.public_layout_width,
-    public_surface_variant: values.public_surface_variant,
-    public_accent_theme: values.public_accent_theme,
-    public_header_show_tagline: values.public_header_show_tagline,
-    public_footer_blurb: values.public_footer_blurb,
-    public_footer_copyright: values.public_footer_copyright,
-    public_theme_default_mode: values.public_theme_default_mode,
-    public_notice_enabled: values.public_notice_enabled,
-    public_notice_variant: values.public_notice_variant,
-    public_notice_dismissible: values.public_notice_dismissible,
-    public_notice_version: values.public_notice_version,
-    public_notice_start_at: values.public_notice_start_at ? values.public_notice_start_at_iso : "",
-    public_notice_end_at: values.public_notice_end_at ? values.public_notice_end_at_iso : "",
-    public_notice_title: values.public_notice_title,
-    public_notice_body: values.public_notice_body,
-    public_notice_link_label: values.public_notice_link_label,
-    public_notice_link_url: values.public_notice_link_url,
-  };
+  const rawSettingInputs = createRawSettingInputs(values);
 
   for (const key of SETTING_KEYS) {
     try {
@@ -692,60 +715,7 @@ export async function updateAdminSettings(
       nextAdminPath: nextSettings.admin_path,
       previousAdminPath: currentSettings.admin_path,
       adminPathChanged: nextSettings.admin_path !== currentSettings.admin_path,
-      publicLayoutChanged:
-        nextSettings.umami_enabled !== currentSettings.umami_enabled ||
-        nextSettings.umami_website_id !== currentSettings.umami_website_id ||
-        nextSettings.umami_script_url !== currentSettings.umami_script_url ||
-        nextSettings.public_head_html !== currentSettings.public_head_html ||
-        nextSettings.public_footer_html !== currentSettings.public_footer_html ||
-        nextSettings.public_custom_css !== currentSettings.public_custom_css ||
-        nextSettings.site_brand_name !== currentSettings.site_brand_name ||
-        nextSettings.site_tagline !== currentSettings.site_tagline ||
-        nextSettings.home_hero_title !== currentSettings.home_hero_title ||
-        nextSettings.home_hero_description !== currentSettings.home_hero_description ||
-        nextSettings.home_primary_cta_label !== currentSettings.home_primary_cta_label ||
-        nextSettings.home_primary_cta_url !== currentSettings.home_primary_cta_url ||
-        nextSettings.home_featured_links_title !== currentSettings.home_featured_links_title ||
-        nextSettings.home_featured_links_description !== currentSettings.home_featured_links_description ||
-        nextSettings.home_featured_link_1_label !== currentSettings.home_featured_link_1_label ||
-        nextSettings.home_featured_link_1_url !== currentSettings.home_featured_link_1_url ||
-        nextSettings.home_featured_link_1_description !== currentSettings.home_featured_link_1_description ||
-        nextSettings.home_featured_link_2_label !== currentSettings.home_featured_link_2_label ||
-        nextSettings.home_featured_link_2_url !== currentSettings.home_featured_link_2_url ||
-        nextSettings.home_featured_link_2_description !== currentSettings.home_featured_link_2_description ||
-        nextSettings.home_featured_link_3_label !== currentSettings.home_featured_link_3_label ||
-        nextSettings.home_featured_link_3_url !== currentSettings.home_featured_link_3_url ||
-        nextSettings.home_featured_link_3_description !== currentSettings.home_featured_link_3_description ||
-        nextSettings.home_recommended_pages_title !== currentSettings.home_recommended_pages_title ||
-        nextSettings.home_recommended_pages_description !== currentSettings.home_recommended_pages_description ||
-        nextSettings.home_recommended_page_1_id !== currentSettings.home_recommended_page_1_id ||
-        nextSettings.home_recommended_page_2_id !== currentSettings.home_recommended_page_2_id ||
-        nextSettings.home_recommended_page_3_id !== currentSettings.home_recommended_page_3_id ||
-        nextSettings.home_posts_variant !== currentSettings.home_posts_variant ||
-        nextSettings.home_featured_links_variant !== currentSettings.home_featured_links_variant ||
-        nextSettings.home_show_post_excerpt !== currentSettings.home_show_post_excerpt ||
-        nextSettings.home_show_post_author !== currentSettings.home_show_post_author ||
-        nextSettings.home_show_post_category !== currentSettings.home_show_post_category ||
-        nextSettings.home_show_post_date !== currentSettings.home_show_post_date ||
-        nextSettings.public_archive_posts_variant !== currentSettings.public_archive_posts_variant ||
-        nextSettings.public_longform_variant !== currentSettings.public_longform_variant ||
-        nextSettings.public_layout_width !== currentSettings.public_layout_width ||
-        nextSettings.public_surface_variant !== currentSettings.public_surface_variant ||
-        nextSettings.public_accent_theme !== currentSettings.public_accent_theme ||
-        nextSettings.public_header_show_tagline !== currentSettings.public_header_show_tagline ||
-        nextSettings.public_footer_blurb !== currentSettings.public_footer_blurb ||
-        nextSettings.public_footer_copyright !== currentSettings.public_footer_copyright ||
-        nextSettings.public_theme_default_mode !== currentSettings.public_theme_default_mode ||
-        nextSettings.public_notice_enabled !== currentSettings.public_notice_enabled ||
-        nextSettings.public_notice_variant !== currentSettings.public_notice_variant ||
-        nextSettings.public_notice_dismissible !== currentSettings.public_notice_dismissible ||
-        nextSettings.public_notice_version !== currentSettings.public_notice_version ||
-        nextSettings.public_notice_start_at !== currentSettings.public_notice_start_at ||
-        nextSettings.public_notice_end_at !== currentSettings.public_notice_end_at ||
-        nextSettings.public_notice_title !== currentSettings.public_notice_title ||
-        nextSettings.public_notice_body !== currentSettings.public_notice_body ||
-        nextSettings.public_notice_link_label !== currentSettings.public_notice_link_label ||
-        nextSettings.public_notice_link_url !== currentSettings.public_notice_link_url,
+      publicLayoutChanged: hasPublicLayoutChanged(nextSettings, currentSettings),
     };
   } catch {
     return {

@@ -170,6 +170,8 @@ Theme Framework v1 当前建议采用：
 - UI 组合呈现与固定槽位渲染
 - action 层的 auth / redirect / revalidation
 
+后台设置服务里的公开布局刷新字段应集中维护在 `PUBLIC_LAYOUT_SETTING_KEYS`，避免在保存结果中手写长串 `nextSettings.xxx !== currentSettings.xxx` 比较。新增会影响公开布局、首页、公告、统计脚本或代码注入的 setting 时，除了更新表单和解析逻辑，也要把 key 放入这个集合。
+
 后台设置页 UI 应优先复用 `SettingsTextField`、`SettingsSelectField`、`SettingsTextareaField`、`SettingsSection` 与 `SettingsNotice`，避免在 `settings-form.tsx` 中继续复制 label / input / help / error 结构。
 
 ### 3.5 判断是否需要 seed
