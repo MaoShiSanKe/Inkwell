@@ -50,7 +50,7 @@
 | 能力 | 入口层 | 共享实现 / 关键位置 | 行为要点 |
 | --- | --- | --- | --- |
 | 健康检查 | `app/api/health/route.ts` | 同文件 | 返回 `{ data: { status, timestamp }, error: null }` |
-| 定时发布 | `scripts/publish-scheduled-posts.ts` / `app/api/internal/posts/publish-scheduled/route.ts` | `lib/admin/posts.ts` | 发布到期文章、更新 sitemap、联动搜索与后续公开可见内容 |
+| 定时发布 | `scripts/publish-scheduled-posts.ts` / `app/api/internal/posts/publish-scheduled/route.ts` | `lib/publishing/scheduled-posts.ts`、`lib/admin/posts.ts` | 发布到期文章、更新 sitemap、联动搜索与后续公开可见内容 |
 | 搜索重建 | `scripts/reindex-search-posts.ts` | `lib/search/reindex-posts.ts`、`lib/meilisearch.ts` | 从 PostgreSQL 重建 `published_posts` 索引 |
 | 备份导出 | `scripts/export-backup.ts` | `lib/backup/export.ts` | 导出数据库快照与本地媒体，默认对 secret 脱敏 |
 | 备份导入 | `scripts/import-backup.ts` | `lib/backup/import.ts` | 校验 manifest / checksum / schema tag，必要时重建搜索 |
@@ -104,7 +104,8 @@ npm run posts:publish-scheduled
 - 发布文章
 - 更新 sitemap
 - 清理 revision
-- 联动后续公开可见内容变化
+- 同步 Meilisearch 中的已发布文章索引
+- 输出机器可读 JSON：`publishedCount`、`publishedPostIds`、`affectedSlugs`
 
 推荐优先用 CLI 的情况：
 - 你能直接登录宿主机

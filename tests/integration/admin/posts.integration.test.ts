@@ -231,7 +231,7 @@ describe("admin slug-history write paths", () => {
   it("preserves scheduled status and publishedAt when updating a scheduled post", async () => {
     const seed = createSeed();
     const editor = await signInAsEditor(`${seed}-scheduled`);
-    const scheduledAt = new Date("2026-04-05T08:30:00.000Z");
+    const scheduledAt = new Date("2026-07-05T08:30:00.000Z");
     const post = await createPost({
       authorId: editor.id,
       title: "Scheduled title",

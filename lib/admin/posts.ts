@@ -3,6 +3,7 @@ import "server-only";
 import { and, count, desc, eq, inArray, ne, sql } from "drizzle-orm";
 
 import { notifyPostPublished } from "@/lib/email-notifications";
+import { publishScheduledPostsWithDb } from "@/lib/publishing/scheduled-posts";
 import { getAdminSession, type AdminRole } from "@/lib/auth";
 import { getPublishedPostLikeCount } from "@/lib/blog/likes";
 import { getPublishedPostViewCount } from "@/lib/blog/views";
@@ -151,13 +152,6 @@ export type PublishScheduledPostsResult = {
   publishedCount: number;
   publishedPostIds: number[];
   affectedSlugs: string[];
-};
-
-type NewlyPublishedPostNotification = {
-  postId: number;
-  slug: string;
-  title: string;
-  excerpt: string | null;
 };
 
 type RevisionDbLike = {
@@ -746,100 +740,10 @@ export async function restoreAdminPostRevision(
 export async function publishScheduledPosts(
   now = new Date(),
 ): Promise<PublishScheduledPostsResult> {
-  const scheduledRows = await db
-    .select({
-      id: posts.id,
-      slug: posts.slug,
-      publishedAt: posts.publishedAt,
-    })
-    .from(posts)
-    .where(eq(posts.status, "scheduled"));
-
-  const dueRows = scheduledRows.filter(
-    (row) => row.publishedAt && row.publishedAt.getTime() <= now.getTime(),
-  );
-
-  if (dueRows.length === 0) {
-    return {
-      publishedCount: 0,
-      publishedPostIds: [],
-      affectedSlugs: [],
-    };
-  }
-
-  const retention = await getRevisionRetentionSettings();
-  const publishedPostIds: number[] = [];
-  const notifications: NewlyPublishedPostNotification[] = [];
-
-  for (const row of dueRows) {
-    const [publishedPost] = await db.transaction(async (tx) => {
-      const updatedRows = await tx
-        .update(posts)
-        .set({
-          status: "published",
-          updatedAt: now,
-        })
-        .where(and(eq(posts.id, row.id), eq(posts.status, "scheduled")))
-        .returning({
-          id: posts.id,
-          slug: posts.slug,
-          title: posts.title,
-          excerpt: posts.excerpt,
-        });
-
-      if (updatedRows.length === 0) {
-        return [];
-      }
-
-      await tx
-        .insert(sitemapEntries)
-        .values({
-          postId: row.id,
-          loc: buildPostPath(row.slug),
-          lastModifiedAt: now,
-        })
-        .onConflictDoUpdate({
-          target: sitemapEntries.postId,
-          set: {
-            loc: buildPostPath(row.slug),
-            lastModifiedAt: now,
-          },
-        });
-
-      await prunePostRevisions(tx, row.id, retention);
-
-      return updatedRows;
-    });
-
-    if (!publishedPost) {
-      continue;
-    }
-
-    await syncPostSearchIndex(publishedPost.id);
-
-    publishedPostIds.push(row.id);
-    notifications.push({
-      postId: publishedPost.id,
-      slug: publishedPost.slug,
-      title: publishedPost.title,
-      excerpt: publishedPost.excerpt,
-    });
-  }
-
-  for (const notification of notifications) {
-    await notifyPostPublished({
-      postId: notification.postId,
-      postSlug: notification.slug,
-      postTitle: notification.title,
-      excerpt: notification.excerpt,
-    });
-  }
-
-  return {
-    publishedCount: publishedPostIds.length,
-    publishedPostIds,
-    affectedSlugs: notifications.map((row) => row.slug),
-  };
+  return publishScheduledPostsWithDb(db, {
+    now,
+    notifyPostPublished,
+  });
 }
 
 export async function createAdminPost(

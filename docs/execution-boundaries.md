@@ -97,7 +97,8 @@ CLI 层负责：
 Inkwell 当前很多关键链路都有多个入口：
 
 ### 5.1 定时发布
-- service：`lib/admin/posts.ts`
+- CLI/API-safe service：`lib/publishing/scheduled-posts.ts`
+- Web service wrapper：`lib/admin/posts.ts`
 - CLI：`scripts/publish-scheduled-posts.ts`
 - internal API：`app/api/internal/posts/publish-scheduled/route.ts`
 
@@ -145,10 +146,13 @@ CLI 运行时不应该依赖只适用于 Next.js 应用服务端上下文的入�
 当前正确模式：
 - 在 CLI 或 CLI-shared 路径中使用显式数据库上下文
 - 不重新依赖 `server-only` 的 Web DB 入口
+- 如果 CLI 与 Web 入口共享业务规则，优先抽到不导入 `server-only` 的模块，再由 Web wrapper 注入 Web-only 能力
 
 参考：
 - `lib/search/reindex-posts.ts`
+- `lib/publishing/scheduled-posts.ts`
 - `scripts/reindex-search-posts.ts`
+- `scripts/publish-scheduled-posts.ts`
 
 ## 8. 如何做选择：决策树
 
