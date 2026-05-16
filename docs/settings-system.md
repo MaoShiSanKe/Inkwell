@@ -159,14 +159,18 @@ Theme Framework v1 当前建议采用：
 如果这个 setting 需要由后台修改，还要更新：
 - `lib/admin/settings.ts`
 - `lib/admin/settings-form.ts`
+- `components/admin/settings-fields.tsx`
 - `components/admin/settings-form.tsx`
 - `app/(admin)/[adminPath]/(protected)/settings/actions.ts`
 
 这几个层分别负责：
 - 校验和持久化
 - 表单 state
-- UI 呈现
+- UI 原子字段、分区容器与提示样式
+- UI 组合呈现与固定槽位渲染
 - action 层的 auth / redirect / revalidation
+
+后台设置页 UI 应优先复用 `SettingsTextField`、`SettingsSelectField`、`SettingsTextareaField`、`SettingsSection` 与 `SettingsNotice`，避免在 `settings-form.tsx` 中继续复制 label / input / help / error 结构。
 
 ### 3.5 判断是否需要 seed
 如果一个新 setting 必须有初始值，检查：
