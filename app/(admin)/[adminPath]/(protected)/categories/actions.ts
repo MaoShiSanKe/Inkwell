@@ -9,8 +9,7 @@ import {
   updateAdminTaxonomy,
 } from "@/lib/admin/taxonomies";
 import { createTaxonomyFormState } from "@/lib/admin/taxonomy-form";
-import { getAdminSession } from "@/lib/auth";
-import { getAdminPath } from "@/lib/settings";
+import { requireAuthenticatedAdminPath } from "../action-helpers";
 
 import type { TaxonomyFormState } from "@/lib/admin/taxonomy-form";
 
@@ -34,17 +33,10 @@ export async function createCategoryAction(
   _prevState: TaxonomyFormState,
   formData: FormData,
 ): Promise<TaxonomyFormState> {
-  const adminPath = String(formData.get("adminPath") ?? "");
-  const configuredAdminPath = await getAdminPath();
-  const effectiveAdminPath =
-    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
-  const session = await getAdminSession();
-
-  if (!session.isAuthenticated) {
-    redirect(
-      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/categories/new`)}`,
-    );
-  }
+  const effectiveAdminPath = await requireAuthenticatedAdminPath(
+    String(formData.get("adminPath") ?? ""),
+    (adminPath) => `/${adminPath}/categories/new`,
+  );
 
   const result = await createAdminTaxonomy("category", {
     name: String(formData.get("name") ?? ""),
@@ -65,18 +57,11 @@ export async function updateCategoryAction(
   _prevState: TaxonomyFormState,
   formData: FormData,
 ): Promise<TaxonomyFormState> {
-  const adminPath = String(formData.get("adminPath") ?? "");
-  const configuredAdminPath = await getAdminPath();
-  const effectiveAdminPath =
-    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
-  const session = await getAdminSession();
+  const effectiveAdminPath = await requireAuthenticatedAdminPath(
+    String(formData.get("adminPath") ?? ""),
+    (adminPath) => `/${adminPath}/categories/${String(formData.get("taxonomyId") ?? "")}`,
+  );
   const taxonomyId = Number.parseInt(String(formData.get("taxonomyId") ?? ""), 10);
-
-  if (!session.isAuthenticated) {
-    redirect(
-      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/categories/${String(formData.get("taxonomyId") ?? "")}`)}`,
-    );
-  }
 
   const result = await updateAdminTaxonomy("category", taxonomyId, {
     name: String(formData.get("name") ?? ""),
@@ -94,17 +79,10 @@ export async function updateCategoryAction(
 }
 
 export async function deleteCategoryAction(formData: FormData): Promise<void> {
-  const adminPath = String(formData.get("adminPath") ?? "");
-  const configuredAdminPath = await getAdminPath();
-  const effectiveAdminPath =
-    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
-  const session = await getAdminSession();
-
-  if (!session.isAuthenticated) {
-    redirect(
-      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/categories`)}`,
-    );
-  }
+  const effectiveAdminPath = await requireAuthenticatedAdminPath(
+    String(formData.get("adminPath") ?? ""),
+    (adminPath) => `/${adminPath}/categories`,
+  );
 
   const taxonomyId = Number.parseInt(String(formData.get("taxonomyId") ?? ""), 10);
   const result = await deleteAdminTaxonomy("category", taxonomyId);

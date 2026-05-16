@@ -9,8 +9,7 @@ import {
   updateAdminTaxonomy,
 } from "@/lib/admin/taxonomies";
 import { createTaxonomyFormState } from "@/lib/admin/taxonomy-form";
-import { getAdminSession } from "@/lib/auth";
-import { getAdminPath } from "@/lib/settings";
+import { requireAuthenticatedAdminPath } from "../action-helpers";
 
 import type { TaxonomyFormState } from "@/lib/admin/taxonomy-form";
 
@@ -34,17 +33,10 @@ export async function createTagAction(
   _prevState: TaxonomyFormState,
   formData: FormData,
 ): Promise<TaxonomyFormState> {
-  const adminPath = String(formData.get("adminPath") ?? "");
-  const configuredAdminPath = await getAdminPath();
-  const effectiveAdminPath =
-    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
-  const session = await getAdminSession();
-
-  if (!session.isAuthenticated) {
-    redirect(
-      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/tags/new`)}`,
-    );
-  }
+  const effectiveAdminPath = await requireAuthenticatedAdminPath(
+    String(formData.get("adminPath") ?? ""),
+    (adminPath) => `/${adminPath}/tags/new`,
+  );
 
   const result = await createAdminTaxonomy("tag", {
     name: String(formData.get("name") ?? ""),
@@ -64,18 +56,10 @@ export async function updateTagAction(
   _prevState: TaxonomyFormState,
   formData: FormData,
 ): Promise<TaxonomyFormState> {
-  const adminPath = String(formData.get("adminPath") ?? "");
-  const configuredAdminPath = await getAdminPath();
-  const effectiveAdminPath =
-    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
-  const session = await getAdminSession();
-
-  if (!session.isAuthenticated) {
-    redirect(
-      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/tags/${String(formData.get("taxonomyId") ?? "")}`)}`,
-    );
-  }
-
+  const effectiveAdminPath = await requireAuthenticatedAdminPath(
+    String(formData.get("adminPath") ?? ""),
+    (adminPath) => `/${adminPath}/tags/${String(formData.get("taxonomyId") ?? "")}`,
+  );
   const taxonomyId = Number.parseInt(String(formData.get("taxonomyId") ?? ""), 10);
   const result = await updateAdminTaxonomy("tag", taxonomyId, {
     name: String(formData.get("name") ?? ""),
@@ -92,17 +76,10 @@ export async function updateTagAction(
 }
 
 export async function deleteTagAction(formData: FormData): Promise<void> {
-  const adminPath = String(formData.get("adminPath") ?? "");
-  const configuredAdminPath = await getAdminPath();
-  const effectiveAdminPath =
-    adminPath === configuredAdminPath ? adminPath : configuredAdminPath;
-  const session = await getAdminSession();
-
-  if (!session.isAuthenticated) {
-    redirect(
-      `/${effectiveAdminPath}/login?redirect=${encodeURIComponent(`/${effectiveAdminPath}/tags`)}`,
-    );
-  }
+  const effectiveAdminPath = await requireAuthenticatedAdminPath(
+    String(formData.get("adminPath") ?? ""),
+    (adminPath) => `/${adminPath}/tags`,
+  );
 
   const taxonomyId = Number.parseInt(String(formData.get("taxonomyId") ?? ""), 10);
   const result = await deleteAdminTaxonomy("tag", taxonomyId);

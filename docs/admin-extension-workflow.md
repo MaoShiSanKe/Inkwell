@@ -56,6 +56,8 @@ Inkwell 当前的后台模块基本遵循同一套分层：
 - 调用 `lib/admin/*` 服务函数
 - 在成功后执行 `revalidatePath()` / `redirect()`
 
+新增或改造后台 action 时，优先复用 `app/(admin)/[adminPath]/(protected)/action-helpers.ts` 中的 `requireAuthenticatedAdminPath()`，避免在每个模块里重复实现 `getAdminPath()`、`getAdminSession()` 与登录跳转拼接。
+
 可参考：
 - `app/(admin)/[adminPath]/(protected)/posts/actions.ts`
 - `app/(admin)/[adminPath]/(protected)/categories/actions.ts`
@@ -95,11 +97,12 @@ Inkwell 当前的后台模块基本遵循同一套分层：
 - 不要把真实后台路径硬编码在组件中
 - server action 中要从 formData 或当前设置推导 `effectiveAdminPath`
 - 未登录时要跳转到 `/${effectiveAdminPath}/login?...`
+- 优先用 `requireAuthenticatedAdminPath()` 统一处理认证、后台路径和登录 redirect
 
 参考实现：
-- `app/(admin)/[adminPath]/(protected)/posts/actions.ts:36-45`
-- `app/(admin)/[adminPath]/(protected)/categories/actions.ts:37-46`
-- `app/(admin)/[adminPath]/(protected)/settings/actions.ts:38-50`
+- `app/(admin)/[adminPath]/(protected)/action-helpers.ts`
+- `app/(admin)/[adminPath]/(protected)/categories/actions.ts`
+- `app/(admin)/[adminPath]/(protected)/settings/actions.ts`
 
 ## 5. 标准实现步骤
 
