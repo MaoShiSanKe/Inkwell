@@ -16,6 +16,7 @@ const { isAdminAuthenticatedMock, redirectMock } = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   redirect: redirectMock,
+  usePathname: () => "/admin",
 }));
 
 vi.mock("@/lib/auth", () => ({

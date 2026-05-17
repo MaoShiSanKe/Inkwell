@@ -119,3 +119,8 @@ export const adminNavigationItems: AdminNavigationItem[] = [
 ];
 
 export const dashboardNavigationItems = adminNavigationItems.filter((item) => item.dashboard);
+
+export function isNavItemActive(itemHref: string, pathname: string) {
+  if (itemHref === pathname) return true;
+  return pathname.startsWith(itemHref + "/");
+}

@@ -4,6 +4,15 @@ import { useActionState } from "react";
 
 import { createFriendLinkAction } from "@/app/(admin)/[adminPath]/(protected)/friend-links/actions";
 import { initialCreateFriendLinkState } from "@/app/(admin)/[adminPath]/(protected)/friend-links/form-state";
+import { AdminNotice } from "@/components/admin/admin-feedback";
+import {
+  AdminField,
+  AdminFormShell,
+  AdminSelect,
+  AdminTextArea,
+  AdminTextInput,
+  adminSubmitButtonClassName,
+} from "@/components/admin/admin-form";
 import { MediaPicker, type MediaPickerOption } from "@/components/admin/media-picker";
 
 type FriendLinkCreateFormProps = {
@@ -18,32 +27,35 @@ export function FriendLinkCreateForm({ adminPath, mediaOptions }: FriendLinkCrea
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-6 rounded-2xl border border-slate-200 p-6 dark:border-slate-800">
+    <AdminFormShell action={formAction}>
       <input type="hidden" name="adminPath" value={adminPath} />
 
-      {state.errors.form ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200">
-          {state.errors.form}
-        </p>
-      ) : null}
+      {state.errors.form ? <AdminNotice tone="error">{state.errors.form}</AdminNotice> : null}
 
-      <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-        站点名
-        <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="text" name="siteName" defaultValue={state.values.siteName} required />
-        {state.errors.siteName ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.siteName}</span> : null}
-      </label>
+      <AdminField label="站点名" error={state.errors.siteName}>
+        <AdminTextInput type="text" name="siteName" defaultValue={state.values.siteName} required />
+      </AdminField>
 
-      <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-        链接地址
-        <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="url" name="url" defaultValue={state.values.url} required spellCheck={false} autoCapitalize="none" autoCorrect="off" placeholder="https://example.com" />
-        {state.errors.url ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.url}</span> : null}
-      </label>
+      <AdminField label="链接地址" error={state.errors.url}>
+        <AdminTextInput
+          type="url"
+          name="url"
+          defaultValue={state.values.url}
+          required
+          spellCheck={false}
+          autoCapitalize="none"
+          autoCorrect="off"
+          placeholder="https://example.com"
+        />
+      </AdminField>
 
-      <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-        描述
-        <textarea className="min-h-32 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="description" defaultValue={state.values.description} placeholder="简要说明这个站点的内容与推荐理由。" />
-        {state.errors.description ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.description}</span> : null}
-      </label>
+      <AdminField label="描述" error={state.errors.description}>
+        <AdminTextArea
+          name="description"
+          defaultValue={state.values.description}
+          placeholder="简要说明这个站点的内容与推荐理由。"
+        />
+      </AdminField>
 
       <MediaPicker
         adminPath={adminPath}
@@ -57,24 +69,21 @@ export function FriendLinkCreateForm({ adminPath, mediaOptions }: FriendLinkCrea
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-          排序
-          <input className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" type="number" name="sortOrder" defaultValue={state.values.sortOrder} required />
-          {state.errors.sortOrder ? <span className="text-sm text-red-600 dark:text-red-300">{state.errors.sortOrder}</span> : null}
-        </label>
+        <AdminField label="排序" error={state.errors.sortOrder}>
+          <AdminTextInput type="number" name="sortOrder" defaultValue={state.values.sortOrder} required />
+        </AdminField>
 
-        <label className="flex flex-col gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-          状态
-          <select className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" name="status" defaultValue={state.values.status}>
+        <AdminField label="状态">
+          <AdminSelect name="status" defaultValue={state.values.status}>
             <option value="draft">草稿</option>
             <option value="published">发布</option>
-          </select>
-        </label>
+          </AdminSelect>
+        </AdminField>
       </div>
 
-      <button className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300" type="submit" disabled={isPending}>
+      <button className={adminSubmitButtonClassName} type="submit" disabled={isPending}>
         {isPending ? "保存中..." : "保存友链"}
       </button>
-    </form>
+    </AdminFormShell>
   );
 }
