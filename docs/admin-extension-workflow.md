@@ -58,6 +58,17 @@ Inkwell 当前的后台模块基本遵循同一套分层：
 
 新增或改造后台 action 时，优先复用 `app/(admin)/[adminPath]/(protected)/action-helpers.ts` 中的 `requireAuthenticatedAdminPath()`，避免在每个模块里重复实现 `getAdminPath()`、`getAdminSession()` 与登录跳转拼接。
 
+### 3.3 页面布局与反馈组件
+后台页面应优先使用以下共享组件，而不是重复手写 `<main>` 外壳、通知条和表格容器：
+
+- `components/admin/admin-page.tsx`：`AdminPage`、`AdminPageHeader`、`AdminActionLink`、`AdminBackLink`
+- `components/admin/admin-feedback.tsx`：`AdminNotice`（支持 success/warning/error/info，自带 ARIA）
+- `components/admin/admin-table.tsx`：`AdminEmptyState`、`AdminTableContainer`
+- `components/admin/admin-form.tsx`：`AdminFormShell`、`AdminField`、`AdminTextInput`、`AdminSelect`、`AdminTextArea`
+- `components/admin/admin-confirm-button.tsx`：`AdminConfirmButton`（危险操作二次确认）
+- `components/admin/admin-shell.tsx`：`AdminShell`（持久导航壳层，含当前模块高亮）
+- `components/admin/admin-navigation.ts`：导航注册表，新模块需在此添加入口
+
 可参考：
 - `app/(admin)/[adminPath]/(protected)/posts/actions.ts`
 - `app/(admin)/[adminPath]/(protected)/categories/actions.ts`
